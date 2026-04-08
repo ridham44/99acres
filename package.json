@@ -15,9 +15,11 @@
         "dotenv": "^17.3.1",
         "express": "^5.2.1",
         "fast2sms": "^1.0.3",
+        "imagekit": "^6.0.0",
         "joi": "^18.0.2",
         "jsonwebtoken": "^9.0.3",
         "mongoose": "^9.3.1",
+        "multer": "^2.1.1",
         "nodemailer": "^8.0.2",
         "otp-generator": "^4.0.1"
     },
