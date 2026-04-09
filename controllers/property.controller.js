@@ -3,7 +3,6 @@ const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
 const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
 
-
 exports.createProperty = async (req, res) => {
     try {
         const imageFiles = req.files?.images || [];
@@ -61,10 +60,34 @@ exports.createProperty = async (req, res) => {
     }
 };
 
-
 exports.getProperties = async (req, res) => {
     try {
-        const { search, status: propertyStatus, city, listingType, propertyCategory, page, limit } = req.query;
+        const {
+            search,
+            status: propertyStatus,
+            city,
+            state,
+            locality,
+            listingType,
+            propertyCategory,
+            propertyType,
+            bhk,
+            bedrooms,
+            bathrooms,
+            minPrice,
+            maxPrice,
+            minArea,
+            maxArea,
+            facing,
+            furnishingIds,
+            amenityIds,
+            nearbyIds,
+            ownerId,
+            dealerId,
+            sortBy,
+            page,
+            limit,
+        } = req.query;
 
         const filter = { deletedAt: null };
 
@@ -76,6 +99,7 @@ exports.getProperties = async (req, res) => {
                 { locality: { $regex: search, $options: 'i' } },
                 { city: { $regex: search, $options: 'i' } },
                 { state: { $regex: search, $options: 'i' } },
+                { address: { $regex: search, $options: 'i' } },
             ];
         }
 
@@ -87,12 +111,119 @@ exports.getProperties = async (req, res) => {
             filter.city = { $regex: city, $options: 'i' };
         }
 
+        if (state) {
+            filter.state = { $regex: state, $options: 'i' };
+        }
+
+        if (locality) {
+            filter.locality = { $regex: locality, $options: 'i' };
+        }
+
         if (listingType) {
             filter.listingType = listingType;
         }
 
         if (propertyCategory) {
             filter.propertyCategory = propertyCategory;
+        }
+
+        if (propertyType) {
+            filter.propertyType = propertyType;
+        }
+
+        if (bhk) {
+            filter.bhk = Number(bhk);
+        }
+
+        if (bedrooms) {
+            filter.bedrooms = Number(bedrooms);
+        }
+
+        if (bathrooms) {
+            filter.bathrooms = Number(bathrooms);
+        }
+
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice) {
+                filter.price.$gte = Number(minPrice);
+            }
+            if (maxPrice) {
+                filter.price.$lte = Number(maxPrice);
+            }
+        }
+
+        if (minArea || maxArea) {
+            filter.area = {};
+            if (minArea) {
+                filter.area.$gte = Number(minArea);
+            }
+            if (maxArea) {
+                filter.area.$lte = Number(maxArea);
+            }
+        }
+
+        if (facing) {
+            filter.facing = facing;
+        }
+
+        if (ownerId) {
+            filter.ownerId = ownerId;
+        }
+
+        if (dealerId) {
+            filter.dealerId = dealerId;
+        }
+
+        if (furnishingIds) {
+            const furnishingArray = Array.isArray(furnishingIds)
+                ? furnishingIds
+                : String(furnishingIds)
+                      .split(',')
+                      .map((id) => id.trim())
+                      .filter(Boolean);
+
+            if (furnishingArray.length > 0) {
+                filter['furnishingIds.id'] = { $in: furnishingArray };
+            }
+        }
+
+        if (amenityIds) {
+            const amenityArray = Array.isArray(amenityIds)
+                ? amenityIds
+                : String(amenityIds)
+                      .split(',')
+                      .map((id) => id.trim())
+                      .filter(Boolean);
+
+            if (amenityArray.length > 0) {
+                filter.amenityIds = { $in: amenityArray };
+            }
+        }
+
+        if (nearbyIds) {
+            const nearbyArray = Array.isArray(nearbyIds)
+                ? nearbyIds
+                : String(nearbyIds)
+                      .split(',')
+                      .map((id) => id.trim())
+                      .filter(Boolean);
+
+            if (nearbyArray.length > 0) {
+                filter['nearbyIds.id'] = { $in: nearbyArray };
+            }
+        }
+
+        let sort = { createdAt: -1 };
+
+        if (sortBy === 'price_asc') {
+            sort = { price: 1 };
+        } else if (sortBy === 'price_desc') {
+            sort = { price: -1 };
+        } else if (sortBy === 'oldest') {
+            sort = { createdAt: 1 };
+        } else if (sortBy === 'newest') {
+            sort = { createdAt: -1 };
         }
 
         const currentPage = Number(page) || 1;
@@ -102,11 +233,11 @@ exports.getProperties = async (req, res) => {
         const [properties, total] = await Promise.all([
             Property.find(filter)
                 .select(
-                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city state status ownerId dealerId media',
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city state status ownerId dealerId media bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds',
                 )
                 .populate('ownerId', 'name role')
                 .populate('dealerId', 'name role')
-                .sort({ createdAt: -1 })
+                .sort(sort)
                 .skip(skip)
                 .limit(currentLimit),
             Property.countDocuments(filter),
@@ -124,6 +255,11 @@ exports.getProperties = async (req, res) => {
                 listingType: item.listingType,
                 price: item.price,
                 priceUnit: item.priceUnit,
+                bhk: item.bhk,
+                bedrooms: item.bedrooms,
+                bathrooms: item.bathrooms,
+                area: item.area,
+                facing: item.facing,
                 address: item.address,
                 locality: item.locality,
                 city: item.city,
@@ -152,7 +288,6 @@ exports.getProperties = async (req, res) => {
         });
     }
 };
-
 
 exports.getPropertyById = async (req, res) => {
     try {
