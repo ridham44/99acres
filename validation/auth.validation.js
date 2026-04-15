@@ -4,7 +4,9 @@ const nameRegex = /^[A-Za-z\s]+$/;
 const phoneRegex = /^[0-9]{10}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-exports.validateRegister = (req, res, next) => {
+const User = require('../models/user.model');
+
+exports.validateRegister = async (req, res, next) => {
     try {
         const { name, phone, role, agencyName, email } = req.body;
 
@@ -45,11 +47,26 @@ exports.validateRegister = (req, res, next) => {
             }
         }
 
-        if (email && !emailRegex.test(email)) {
-            return res.status(status.BadRequest).json({
-                success: false,
-                message: 'Invalid email format',
+        if (email) {
+            if (!emailRegex.test(email)) {
+                return res.status(status.BadRequest).json({
+                    success: false,
+                    message: 'Invalid email format',
+                });
+            }
+
+           
+            const existingEmail = await User.findOne({
+                email,
+                deletedAt: null
             });
+
+            if (existingEmail) {
+                return res.status(status.Conflict).json({
+                    success: false,
+                    message: 'Email already exists',
+                });
+            }
         }
 
         next();
