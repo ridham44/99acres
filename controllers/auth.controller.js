@@ -32,6 +32,7 @@ exports.register = async (req, res) => {
         return res.status(status.OK).json({
             success: true,
             message: 'OTP sent successfully',
+            otp: otp,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -134,6 +135,7 @@ exports.login = async (req, res) => {
         return res.status(status.OK).json({
             success: true,
             message: 'OTP sent for login',
+            otp: otp,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
