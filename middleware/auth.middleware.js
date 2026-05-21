@@ -43,35 +43,35 @@ module.exports = async (req, res, next) => {
             });
         }
 
-        if (logLogin.deviceId) {
-            if (!deviceId) {
-                return res.status(status.Unauthorized).json({
-                    success: false,
-                    message: 'Unauthorized: Device id is required',
-                });
-            }
+        // if (logLogin.deviceId) {
+        //     if (!deviceId) {
+        //         return res.status(status.Unauthorized).json({
+        //             success: false,
+        //             message: 'Unauthorized: Device id is required',
+        //         });
+        //     }
 
-            if (logLogin.deviceId !== deviceId) {
-                return res.status(status.Unauthorized).json({
-                    success: false,
-                    message: 'Unauthorized: This token is not allowed on this device',
-                });
-            }
-        }
+        //     if (logLogin.deviceId !== deviceId) {
+        //         return res.status(status.Unauthorized).json({
+        //             success: false,
+        //             message: 'Unauthorized: This token is not allowed on this device',
+        //         });
+        //     }
+        // }
 
-        const requestIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || req.ip || null;
+        // const requestIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || req.ip || null;
 
         // console.log('Saved IP:', logLogin.ipAddress);
         // console.log('Request IP:', requestIp);
 
-        if (logLogin.ipAddress && requestIp) {
-            if (logLogin.ipAddress !== requestIp) {
-                return res.status(status.Unauthorized).json({
-                    success: false,
-                    message: 'Unauthorized: IP address mismatch',
-                });
-            }
-        }
+        // if (logLogin.ipAddress && requestIp) {
+        //     if (logLogin.ipAddress !== requestIp) {
+        //         return res.status(status.Unauthorized).json({
+        //             success: false,
+        //             message: 'Unauthorized: IP address mismatch',
+        //         });
+        //     }
+        // }
 
         const user = (req.user = {
             id: decoded.id,
