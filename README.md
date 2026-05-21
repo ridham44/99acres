@@ -506,12 +506,14 @@ File fields:
 
 ```txt
 images = select image file, max 5
-videos = select video file, max 5
+videos = select one video file, max 1
 ```
 
 Allowed image types: `jpg`, `jpeg`, `png`, `webp`.
 Allowed video types: `mp4`, `mpeg`, `mov`, `avi`.
-Max file size: 5 MB per file.
+Max image size: 5 MB per file.
+Max video size: 50 MB.
+Videos are temporarily stored on disk and streamed to ImageKit so large uploads are not kept in server memory.
 
 Allowed enums:
 
@@ -615,7 +617,7 @@ images = select new image file
 videos = select new video file
 ```
 
-Note: uploaded media is appended to existing media.
+Note: uploaded images are appended to existing images. Uploaded video replaces the existing video because only one video is allowed per property.
 
 ### Delete Property
 

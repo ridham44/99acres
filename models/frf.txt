@@ -1,3 +1,0 @@
-user register login api 
-propetry add api 
-property list 

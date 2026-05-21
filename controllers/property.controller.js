@@ -392,6 +392,10 @@ exports.updateProperty = async (req, res) => {
 
         let media = existingProperty.media || [];
 
+        if (videoFiles.length > 0) {
+            media = media.filter((item) => item.type !== 'video');
+        }
+
         for (const file of imageFiles) {
             const uploaded = await uploadToImagekit(file, 'properties/images');
 
