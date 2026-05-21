@@ -585,6 +585,29 @@ nearbyIds=ID1,ID2
 furnishingIds=ID1,ID2
 ```
 
+### Get My Properties
+
+Returns properties uploaded/owned by the logged-in user. The user is taken from JWT.
+
+`GET {{baseUrl}}/properties/my-property?page=1&limit=10&listingType=Sale&status=Active`
+
+Headers: auth required.
+
+Optional filters:
+
+```txt
+search
+status
+listingType
+propertyCategory
+propertyType
+sortBy
+page
+limit
+```
+
+`sortBy` values: `price_asc`, `price_desc`, `oldest`, `newest`.
+
 ### Get Property By ID
 
 Returns full property details with populated owner/dealer/amenities/media URLs.

@@ -4,6 +4,35 @@ const { uploadToImagekit } = require('../utils/imagekitUpload');
 const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
 const { recordPropertyVisit } = require('./userHome.controller');
 
+const formatPropertyCard = (item) => {
+    const firstImage = (item.media || []).find((mediaItem) => mediaItem.type === 'image');
+
+    return {
+        _id: item._id,
+        title: item.title || item.propertyName,
+        propertyName: item.propertyName,
+        propertyType: item.propertyType,
+        propertyCategory: item.propertyCategory,
+        listingType: item.listingType,
+        price: item.price,
+        priceUnit: item.priceUnit,
+        bhk: item.bhk,
+        bedrooms: item.bedrooms,
+        bathrooms: item.bathrooms,
+        area: item.area,
+        facing: item.facing,
+        address: item.address,
+        locality: item.locality,
+        city_area: item.city_area,
+        city: item.city,
+        state: item.state,
+        status: item.status,
+        coverImage: firstImage ? getPropertyMediaUrl(firstImage.fileName, firstImage.type) : null,
+        postedBy: item.dealerId || item.ownerId || null,
+        createdAt: item.createdAt,
+    };
+};
+
 exports.createProperty = async (req, res) => {
     try {
         const imageFiles = req.files?.images || [];
@@ -249,38 +278,113 @@ exports.getProperties = async (req, res) => {
             Property.countDocuments(filter),
         ]);
 
-        const data = properties.map((item) => {
-            const firstImage = (item.media || []).find((mediaItem) => mediaItem.type === 'image');
-
-            return {
-                _id: item._id,
-                title: item.title || item.propertyName,
-                propertyName: item.propertyName,
-                propertyType: item.propertyType,
-                propertyCategory: item.propertyCategory,
-                listingType: item.listingType,
-                price: item.price,
-                priceUnit: item.priceUnit,
-                bhk: item.bhk,
-                bedrooms: item.bedrooms,
-                bathrooms: item.bathrooms,
-                area: item.area,
-                facing: item.facing,
-                address: item.address,
-                locality: item.locality,
-                city_area: item.city_area,
-                city: item.city,
-                state: item.state,
-                status: item.status,
-                coverImage: firstImage ? getPropertyMediaUrl(firstImage.fileName, firstImage.type) : null,
-                postedBy: item.dealerId || item.ownerId || null,
-            };
-        });
+        const data = properties.map(formatPropertyCard);
 
         return res.status(status.OK).json({
             success: true,
             message: 'Properties fetched successfully',
             data,
+            pagination: {
+                total,
+                page: currentPage,
+                limit: currentLimit,
+                totalPages: Math.ceil(total / currentLimit),
+            },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+exports.myProperty = async (req, res) => {
+    try {
+        const {
+            search,
+            status: propertyStatus,
+            listingType,
+            propertyCategory,
+            propertyType,
+            sortBy,
+            page,
+            limit,
+        } = req.query;
+
+        const userId = req.user.id;
+
+        const filter = {
+            deletedAt: null,
+            $or: [{ ownerId: userId }, { dealerId: userId }],
+        };
+
+        if (search) {
+            filter.$and = [
+                {
+                    $or: [
+                        { title: { $regex: search, $options: 'i' } },
+                        { propertyName: { $regex: search, $options: 'i' } },
+                        { propertyType: { $regex: search, $options: 'i' } },
+                        { locality: { $regex: search, $options: 'i' } },
+                        { city_area: { $regex: search, $options: 'i' } },
+                        { city: { $regex: search, $options: 'i' } },
+                        { state: { $regex: search, $options: 'i' } },
+                        { address: { $regex: search, $options: 'i' } },
+                    ],
+                },
+            ];
+        }
+
+        if (propertyStatus) {
+            filter.status = propertyStatus;
+        }
+
+        if (listingType) {
+            filter.listingType = listingType;
+        }
+
+        if (propertyCategory) {
+            filter.propertyCategory = propertyCategory;
+        }
+
+        if (propertyType) {
+            filter.propertyType = propertyType;
+        }
+
+        let sort = { createdAt: -1 };
+
+        if (sortBy === 'price_asc') {
+            sort = { price: 1 };
+        } else if (sortBy === 'price_desc') {
+            sort = { price: -1 };
+        } else if (sortBy === 'oldest') {
+            sort = { createdAt: 1 };
+        } else if (sortBy === 'newest') {
+            sort = { createdAt: -1 };
+        }
+
+        const currentPage = Number(page) || 1;
+        const currentLimit = Number(limit) || 10;
+        const skip = (currentPage - 1) * currentLimit;
+
+        const [properties, total] = await Promise.all([
+            Property.find(filter)
+                .select(
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media bhk bedrooms bathrooms area facing createdAt',
+                )
+                .populate('ownerId', 'name role')
+                .populate('dealerId', 'name role')
+                .sort(sort)
+                .skip(skip)
+                .limit(currentLimit),
+            Property.countDocuments(filter),
+        ]);
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'My properties fetched successfully',
+            data: properties.map(formatPropertyCard),
             pagination: {
                 total,
                 page: currentPage,
