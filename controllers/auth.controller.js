@@ -248,6 +248,7 @@ exports.resendOtp = async (req, res) => {
 
         return res.status(status.OK).json({
             success: true,
+            otp: result.otp,
             message: 'OTP resent successfully',
         });
     } catch (error) {

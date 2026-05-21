@@ -5,7 +5,6 @@ const phoneRegex = /^[0-9]{10}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const User = require('../models/user.model');
-
 exports.validateRegister = async (req, res, next) => {
     try {
         const { name, phone, role, agencyName, email } = req.body;
@@ -38,6 +37,19 @@ exports.validateRegister = async (req, res, next) => {
             });
         }
 
+        // Check duplicate phone
+        const existingPhone = await User.findOne({
+            phone,
+            deletedAt: null
+        });
+
+        if (existingPhone) {
+            return res.status(status.Conflict).json({
+                success: false,
+                message: 'Phone number already exists',
+            });
+        }
+
         if (['broker', 'dealer', 'builder'].includes(role)) {
             if (!agencyName) {
                 return res.status(status.BadRequest).json({
@@ -55,7 +67,7 @@ exports.validateRegister = async (req, res, next) => {
                 });
             }
 
-           
+            // Check duplicate email
             const existingEmail = await User.findOne({
                 email,
                 deletedAt: null
@@ -70,6 +82,7 @@ exports.validateRegister = async (req, res, next) => {
         }
 
         next();
+
     } catch (error) {
         return res.status(status.InternalServerError).json({
             success: false,

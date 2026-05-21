@@ -50,6 +50,12 @@ const propertySchema = new mongoose.Schema(
             trim: true,
         },
 
+        city_area:{
+            type:String,
+            required:true,
+            trim:true,
+        },
+
         state: {
             type: String,
             required: true,
