@@ -434,6 +434,7 @@ propertyCategory = Residential
 propertyType = Apartment
 listingType = Sale
 city = Ahmedabad
+city_area = SG Highway
 state = Gujarat
 locality = Satellite
 address = Near ISKCON Cross Road
@@ -517,6 +518,7 @@ Optional filters:
 search
 status
 city
+city_area
 state
 locality
 listingType
@@ -778,6 +780,31 @@ Public endpoint.
 
 Returns counts like listed, sale, rent, active, inactive properties.
 
+## User Home API
+
+Returns all home screen sections in one response:
+
+- `recentlyVisited`: last 10 unique properties opened by logged-in user.
+- `newLaunchProperties`: latest 5 properties by created time.
+- `sponsoredProperties`: currently latest 3 properties, marked with `isSponsored: true`.
+- `topAreas`: top visited city areas, each with top 3 properties by visit count.
+
+`GET {{baseUrl}}/user-home`
+
+Headers: auth required.
+
+Optional query params:
+
+```txt
+visitedLimit = 10
+newLaunchLimit = 5
+sponsoredLimit = 3
+topAreaLimit = 3
+topPropertyLimit = 3
+```
+
+Note: user visits are recorded automatically when `GET /properties/{{propertyId}}` is called.
+
 ## Quick Postman Test Flow
 
 1. `POST /auth/register`
@@ -795,7 +822,8 @@ Returns counts like listed, sale, rent, active, inactive properties.
 8. `POST /reviews`.
 9. `GET /reviews/property/{{propertyId}}/summary`.
 10. `POST /shortlist`, then `GET /shortlist/my`.
-11. `POST /auth/logout`.
+11. `GET /user-home`.
+12. `POST /auth/logout`.
 
 ## Frontend Notes
 

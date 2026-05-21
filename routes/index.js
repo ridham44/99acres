@@ -12,6 +12,7 @@ router.use('/positive-keywords', require('./positiveKeyword.route'));
 router.use('/negative-keywords', require('./negativeKeyword.route'));
 router.use('/reviews', require('./review.route'));
 router.use('/shortlist', require('./shortlist.route'));
+router.use('/user-home', require('./userHome.route'));
 router.use('/user-status', require('./userStatus.route'));
 router.use('/property-documents', require('./propertyDocument.route'));
 

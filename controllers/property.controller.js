@@ -2,6 +2,7 @@ const Property = require('../models/property.model');
 const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
 const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
+const { recordPropertyVisit } = require('./userHome.controller');
 
 exports.createProperty = async (req, res) => {
     try {
@@ -68,6 +69,7 @@ exports.getProperties = async (req, res) => {
             city,
             state,
             locality,
+            city_area,
             listingType,
             propertyCategory,
             propertyType,
@@ -117,6 +119,10 @@ exports.getProperties = async (req, res) => {
 
         if (locality) {
             filter.locality = { $regex: locality, $options: 'i' };
+        }
+
+        if (city_area) {
+            filter.city_area = { $regex: city_area, $options: 'i' };
         }
 
         if (listingType) {
@@ -233,7 +239,7 @@ exports.getProperties = async (req, res) => {
         const [properties, total] = await Promise.all([
             Property.find(filter)
                 .select(
-                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city state status ownerId dealerId media bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds',
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds',
                 )
                 .populate('ownerId', 'name role')
                 .populate('dealerId', 'name role')
@@ -262,6 +268,7 @@ exports.getProperties = async (req, res) => {
                 facing: item.facing,
                 address: item.address,
                 locality: item.locality,
+                city_area: item.city_area,
                 city: item.city,
                 state: item.state,
                 status: item.status,
@@ -299,9 +306,9 @@ exports.getPropertyById = async (req, res) => {
         })
             .populate('ownerId', 'name email phone role')
             .populate('dealerId', 'name email phone role')
-            .populate('amenityIds', 'name')
-            .populate('furnishings.furnishingId', 'name')
-            .populate('nearbyPlaces.nearbyId', 'name');
+            .populate('amenityIds', 'amenityName')
+            .populate('furnishings.furnishingId', 'furnitureName')
+            .populate('nearbyPlaces.nearbyId', 'placeName placeType city locality');
 
         if (!property) {
             return res.status(status.NotFound).json({
@@ -310,12 +317,33 @@ exports.getPropertyById = async (req, res) => {
             });
         }
 
+        try {
+            await recordPropertyVisit(req.user.id, id);
+        } catch (visitError) {
+            console.log('PROPERTY VISIT TRACKING ERROR:', visitError.message);
+        }
+
         const propertyObj = property.toObject();
 
         // ✅ map media using helper
         propertyObj.media = (propertyObj.media || []).map((item) => ({
             ...item,
             url: getPropertyMediaUrl(item.fileName, item.type),
+        }));
+
+        propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => ({
+            furnishingId: {
+                ...(item.furnishingId || {}),
+                quantity: item.quantity,
+            },
+        }));
+
+        propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => ({
+            nearbyId: {
+                ...(item.nearbyId || {}),
+                distance: item.distance,
+                distanceUnit: item.distanceUnit,
+            },
         }));
 
         return res.status(status.OK).json({
@@ -395,14 +423,31 @@ exports.updateProperty = async (req, res) => {
         )
             .populate('ownerId', 'name email phone role')
             .populate('dealerId', 'name email phone role')
-            .populate('amenityIds', 'name')
-            .populate('furnishings.furnishingId', 'name')
-            .populate('nearbyPlaces.nearbyId', 'name');
+            .populate('amenityIds', 'amenityName')
+            .populate('furnishings.furnishingId', 'furnitureName')
+            .populate('nearbyPlaces.nearbyId', 'placeName placeType city locality');
+
+        const propertyObj = property.toObject();
+
+        propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => ({
+            furnishingId: {
+                ...(item.furnishingId || {}),
+                quantity: item.quantity,
+            },
+        }));
+
+        propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => ({
+            nearbyId: {
+                ...(item.nearbyId || {}),
+                distance: item.distance,
+                distanceUnit: item.distanceUnit,
+            },
+        }));
 
         return res.status(status.OK).json({
             success: true,
             message: 'Property updated successfully',
-            data: property,
+            data: propertyObj,
         });
     } catch (error) {
         console.log('UPDATE PROPERTY ERROR:', error);

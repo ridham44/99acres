@@ -103,6 +103,7 @@ const validateCreateProperty = (req, res, next) => {
             propertyType,
             listingType,
             city,
+            city_area,
             state,
             locality,
             address,
@@ -155,6 +156,10 @@ const validateCreateProperty = (req, res, next) => {
 
         if (!validateRequiredString(city)) {
             return sendError(res, 'City is required');
+        }
+
+        if (!validateRequiredString(city_area)) {
+            return sendError(res, 'City area is required');
         }
 
         if (!validateRequiredString(state)) {
@@ -317,6 +322,7 @@ const validateUpdateProperty = (req, res, next) => {
             propertyType,
             listingType,
             city,
+            city_area,
             state,
             locality,
             address,
@@ -373,6 +379,10 @@ const validateUpdateProperty = (req, res, next) => {
 
         if (city !== undefined && !validateRequiredString(city)) {
             return sendError(res, 'City cannot be empty');
+        }
+
+        if (city_area !== undefined && !validateRequiredString(city_area)) {
+            return sendError(res, 'City area cannot be empty');
         }
 
         if (state !== undefined && !validateRequiredString(state)) {
