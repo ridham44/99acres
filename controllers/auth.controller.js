@@ -5,12 +5,64 @@ const LogLogin = require('../models/logLogin');
 const service = require('./auth.service');
 const { generateToken } = require('../utils/jwt');
 const status = require('../utils/statusCodes');
+const { uploadToImagekit } = require('../utils/imagekitUpload');
+const { getUserProfileImageUrl, getUserDocumentUrl } = require('../utils/imagekitUrl');
+
+const normalizeDocuments = (documents) => {
+    if (!documents) {
+        return [];
+    }
+
+    if (Array.isArray(documents)) {
+        return documents;
+    }
+
+    if (typeof documents === 'string') {
+        try {
+            const parsed = JSON.parse(documents);
+            return Array.isArray(parsed) ? parsed : [documents];
+        } catch (error) {
+            return [documents];
+        }
+    }
+
+    return [];
+};
+
+const formatUserResponse = (user) => ({
+    id: user._id,
+    name: user.name,
+    role: user.role,
+    agencyName: user.agencyName,
+    phone: user.phone,
+    email: user.email,
+    city: user.city,
+    state: user.state,
+    documents: user.documents,
+    documentUrls: (user.documents || []).map((fileName) => getUserDocumentUrl(fileName)),
+    profileImage: user.profileImage,
+    profileImageUrl: getUserProfileImageUrl(user.profileImage),
+    isVerified: user.isVerified,
+});
 
 exports.register = async (req, res) => {
     try {
         const { name, phone, role, agencyName, email, city, state, documents } = req.body;
 
         let user = await User.findOne({ phone, deletedAt: null });
+
+        let profileImage = null;
+        const documentFileNames = [...normalizeDocuments(documents)];
+
+        if (req.files?.profileImage?.[0]) {
+            const uploaded = await uploadToImagekit(req.files.profileImage[0], 'users/profile-images');
+            profileImage = uploaded.fileName;
+        }
+
+        for (const file of req.files?.documents || []) {
+            const uploaded = await uploadToImagekit(file, 'users/documents');
+            documentFileNames.push(uploaded.fileName);
+        }
 
         if (!user) {
             user = await User.create({
@@ -21,7 +73,8 @@ exports.register = async (req, res) => {
                 email,
                 city,
                 state,
-                documents: Array.isArray(documents) ? documents : [],
+                documents: documentFileNames,
+                profileImage,
             });
         }
 
@@ -94,18 +147,7 @@ exports.verifyRegisterOtp = async (req, res) => {
             success: true,
             message: 'Registration successful',
             token,
-            data: {
-                id: user._id,
-                name: user.name,
-                role: user.role,
-                agencyName: user.agencyName,
-                phone: user.phone,
-                email: user.email,
-                city: user.city,
-                state: user.state,
-                documents: user.documents,
-                isVerified: user.isVerified,
-            },
+            data: formatUserResponse(user),
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -194,18 +236,7 @@ exports.verifyLoginOtp = async (req, res) => {
             success: true,
             message: 'Login successful',
             token,
-            data: {
-                id: user._id,
-                name: user.name,
-                role: user.role,
-                agencyName: user.agencyName,
-                phone: user.phone,
-                email: user.email,
-                city: user.city,
-                state: user.state,
-                documents: user.documents,
-                isVerified: user.isVerified,
-            },
+            data: formatUserResponse(user),
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

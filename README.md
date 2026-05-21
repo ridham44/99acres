@@ -102,7 +102,23 @@ Creates a user if the phone does not already exist, then sends OTP. In this deve
 
 `POST {{baseUrl}}/auth/register`
 
-Body:
+Body type: `json` or `form-data`.
+
+Use `form-data` when uploading a profile image:
+
+```txt
+name = Rahul Sharma
+phone = 9876543210
+role = user
+email = rahul@example.com
+city = Ahmedabad
+state = Gujarat
+profileImage = select jpg/jpeg/png/webp file
+documents = select pdf/image/doc/docx file
+documents = select another document file
+```
+
+JSON body without image:
 
 ```json
 {
@@ -247,7 +263,20 @@ Headers: auth required.
 
 Headers: auth required.
 
-Body:
+Body type: `json` or `form-data`.
+
+Use `form-data` when uploading a profile image:
+
+```txt
+name = Rahul Sharma
+email = rahul.new@example.com
+agencyName = Prime Realty
+profileImage = select jpg/jpeg/png/webp file
+documents = select pdf/image/doc/docx file
+documents = select another document file
+```
+
+JSON body without image:
 
 ```json
 {
@@ -258,6 +287,8 @@ Body:
 ```
 
 Allowed update fields only: `name`, `phone`, `email`, `agencyName`.
+Profile image is uploaded as file field `profileImage`; only the ImageKit file name is stored in DB, and APIs return `profileImageUrl`.
+User documents are uploaded as repeated file field `documents`; only ImageKit file names are stored in DB, and APIs return `documentUrls`.
 
 ## Master Data APIs
 

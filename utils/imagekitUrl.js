@@ -26,7 +26,20 @@ const getPropertyDocumentUrl = (fileName) => {
     return `${process.env.IMAGEKIT_URL_ENDPOINT}/properties/documents/${fileName}`;
 };
 
+const getUserProfileImageUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${process.env.IMAGEKIT_URL_ENDPOINT}/users/profile-images/${fileName}`;
+};
+
+const getUserDocumentUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${process.env.IMAGEKIT_URL_ENDPOINT}/users/documents/${fileName}`;
+};
+
 module.exports = {
+    getImagekitFileUrl: exports.getImagekitFileUrl,
     getPropertyMediaUrl,
     getPropertyDocumentUrl,
+    getUserProfileImageUrl,
+    getUserDocumentUrl,
 };

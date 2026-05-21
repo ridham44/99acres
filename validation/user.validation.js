@@ -26,7 +26,7 @@ exports.validateUpdateProfile = (req, res, next) => {
     try {
         const { name, phone, email, agencyName } = req.body;
 
-        const allowedFields = ['name', 'phone', 'email', 'agencyName'];
+        const allowedFields = ['name', 'phone', 'email', 'agencyName', 'documents'];
         const requestFields = Object.keys(req.body);
 
         const isValidField = requestFields.every((field) => allowedFields.includes(field));
