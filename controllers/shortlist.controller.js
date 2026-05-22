@@ -124,20 +124,11 @@ exports.removeFromShortlist = async (req, res) => {
         const { propertyId } = req.params;
         const userId = req.user.id;
 
-        const shortlist = await Shortlist.findOneAndUpdate(
-            {
-                userId,
-                propertyId,
-                deletedAt: null,
-            },
-            {
-                $set: {
-                    deletedAt: new Date(),
-                    updatedAt: new Date(),
-                },
-            },
-            { new: true },
-        );
+        const shortlist = await Shortlist.findOneAndDelete({
+            userId,
+            propertyId,
+            deletedAt: null,
+        });
 
         if (!shortlist) {
             return res.status(status.NotFound).json({

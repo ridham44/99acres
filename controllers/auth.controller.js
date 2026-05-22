@@ -396,3 +396,26 @@ exports.getLogLoginList = async (req, res) => {
         });
     }
 };
+
+exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({})
+            .select('-password -__v')
+            .sort({ createdAt: -1 });
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'All users fetched successfully',
+            totalUsers: users.length,
+            data: users,
+        });
+    } catch (error) {
+        console.error('Get All Users Error:', error);
+
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: 'Failed to fetch users',
+            error: error.message,
+        });
+    }
+};

@@ -21,5 +21,6 @@ router.post('/verify-login-otp', validateVerifyLoginOtp, controller.verifyLoginO
 router.post('/resend-otp', controller.resendOtp);
 router.post('/logout', auth, controller.logout);
 router.get('/log-login', auth, controller.getLogLoginList);
+router.get('/getAllUsers', controller.getAllUsers);
 
 module.exports = router;
