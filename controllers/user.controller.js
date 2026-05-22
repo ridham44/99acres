@@ -1,4 +1,6 @@
 const User = require('../models/user.model');
+const Shortlist = require('../models/shortlist.model');
+const PropertyVisit = require('../models/propertyVisit.model');
 const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
 const { getUserProfileImageUrl, getUserDocumentUrl } = require('../utils/imagekitUrl');
@@ -36,11 +38,33 @@ const formatUserProfile = (user) => {
 
 exports.getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('-__v');
+        const userId = req.user.id;
+        const user = await User.findById(userId).select('-__v');
+
+        if (!user) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+
+        const [shortlistedCount, propertyViewedCount] = await Promise.all([
+            Shortlist.countDocuments({ userId, deletedAt: null }),
+            PropertyVisit.countDocuments({ userId }),
+        ]);
+
+        const profileData = formatUserProfile(user);
 
         return res.status(status.OK).json({
             success: true,
-            data: formatUserProfile(user),
+            data: {
+                ...profileData,
+                stats: {
+                    shortlisted: shortlistedCount,
+                    contacted: 0, // Placeholder as no contact model was found
+                    propertyViewed: propertyViewedCount,
+                },
+            },
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
