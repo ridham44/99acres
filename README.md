@@ -85,6 +85,7 @@ token =
 deviceId = postman-web-001
 userId =
 propertyId =
+requirementId = 
 amenityId =
 furnitureId =
 nearbyPlaceId =
@@ -966,6 +967,106 @@ Each item includes normal property card fields plus `visitCount` and `lastVisite
 
 Note: user visits are recorded automatically when `GET /properties/{{propertyId}}` is called.
 
+## Requirement APIs (Share Requirement)
+
+All requirement endpoints require auth.
+
+### Share Requirement (Create)
+
+Users share what they are looking for so agents can find matches.
+
+`POST {{baseUrl}}/requirements`
+
+Headers: auth required.
+
+Body (JSON):
+
+```json
+{
+  "transactionType": "Buy",
+  "locations": ["Ahmedabad", "Satellite"],
+  "propertyTypes": ["Apartment", "Independent House"],
+  "bhks": ["2 BHK", "3 BHK"],
+  "minBudget": 5000000,
+  "maxBudget": 10000000,
+  "minArea": 1000,
+  "maxArea": 2000,
+  "furnishingStatus": ["Semi-Furnished"],
+  "constructionStatus": ["Ready to Move"],
+  "lookingTo": "Family",
+  "minimumBathrooms": 2,
+  "isReraApproved": true
+}
+```
+
+Wait, most fields are optional and vary by type (Residential vs Commercial vs PG) as per the Theory Guide.
+
+Example Response:
+
+```json
+{
+  "success": true,
+  "message": "Requirement shared successfully",
+  "data": {
+    "_id": "64f000000000000000000001",
+    "userId": "64f000000000000000000002",
+    "transactionType": "Buy",
+    "locations": ["Ahmedabad", "Satellite"],
+    "status": "Active",
+    "createdAt": "2024-05-22T10:00:00.000Z"
+  }
+}
+```
+
+### Get My Requirements
+
+Returns a list of requirements submitted by the logged-in user.
+
+`GET {{baseUrl}}/requirements/my`
+
+### Get All Requirements (Lead Discovery for Agents)
+
+Allows agents to discover buyer/renter leads.
+
+`GET {{baseUrl}}/requirements/all?city=Ahmedabad&transactionType=Buy&page=1&limit=10`
+
+**Constraint:** Only accessible by users with roles `broker`, `dealer`, `builder`, or `admin`.
+
+Optional Query Params: `transactionType`, `city`, `minBudget`, `maxBudget`, `page`, `limit`.
+
+### Get Matched Properties for Requirement
+
+Returns properties that match the criteria of a specific requirement, including a **matchPercentage**.
+
+`GET {{baseUrl}}/requirements/{{requirementId}}/matches`
+
+Example Response:
+
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "_id": "64f0b...",
+      "title": "Luxury Apartment",
+      "price": 7500000,
+      "matchPercentage": 100
+    },
+    {
+      "_id": "64f0c...",
+      "title": "Standard Flat",
+      "price": 5500000,
+      "matchPercentage": 75
+    }
+  ]
+}
+```
+
+### Delete Requirement
+
+`DELETE {{baseUrl}}/requirements/{{requirementId}}`
+
 ## Quick Postman Test Flow
 
 1. `POST /auth/register`
@@ -979,12 +1080,13 @@ Note: user visits are recorded automatically when `GET /properties/{{propertyId}
    - `POST /positive-keywords`
    - `POST /negative-keywords`
 6. `POST /properties` using form-data.
-7. `GET /properties` and `GET /properties/{{propertyId}}`.
-8. `POST /reviews`.
-9. `GET /reviews/property/{{propertyId}}/summary`.
-10. `POST /shortlist`, then `GET /shortlist/my`.
-11. `GET /user-home`.
-12. `POST /auth/logout`.
+7. `POST /requirements` to share what you need.
+8. `GET /requirements/{{requirementId}}/matches` to see properties matching the requirement.
+9. `POST /reviews`.
+10. `GET /reviews/property/{{propertyId}}/summary`.
+11. `POST /shortlist`, then `GET /shortlist/my`.
+12. `GET /user-home`.
+13. `POST /auth/logout`.
 
 ## Frontend Notes
 
