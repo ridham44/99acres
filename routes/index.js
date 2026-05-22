@@ -15,5 +15,7 @@ router.use('/shortlist', require('./shortlist.route'));
 router.use('/user-home', require('./userHome.route'));
 router.use('/user-status', require('./userStatus.route'));
 router.use('/property-documents', require('./propertyDocument.route'));
+router.use('/subscription-plans', require('./subscriptionPlan.route'));
+router.use('/user-subscriptions', require('./userSubscription.route'));
 
 module.exports = router;

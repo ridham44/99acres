@@ -66,6 +66,62 @@ const getRecentlyVisitedProperties = async (userId, limit = 10) => {
         );
 };
 
+const getVisitedProperties = async (userId, page = 1, limit = 10) => {
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const skip = (page - 1) * limit;
+
+    const [result] = await PropertyVisit.aggregate([
+        {
+            $match: {
+                userId: userObjectId,
+            },
+        },
+        {
+            $lookup: {
+                from: 'properties',
+                localField: 'propertyId',
+                foreignField: '_id',
+                as: 'property',
+            },
+        },
+        { $unwind: '$property' },
+        {
+            $match: {
+                'property.deletedAt': null,
+            },
+        },
+        {
+            $sort: {
+                lastVisitedAt: -1,
+            },
+        },
+        {
+            $facet: {
+                data: [{ $skip: skip }, { $limit: limit }],
+                total: [{ $count: 'count' }],
+            },
+        },
+    ]);
+
+    const total = result?.total?.[0]?.count || 0;
+    const properties = (result?.data || []).map((visit) =>
+        formatPropertyCard(visit.property, {
+            visitCount: visit.visitCount,
+            lastVisitedAt: visit.lastVisitedAt,
+        }),
+    );
+
+    return {
+        properties,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+};
+
 const getNewLaunchProperties = async (limit = 5) => {
     const properties = await Property.find({ deletedAt: null })
         .select(propertyCardFields)
@@ -197,6 +253,7 @@ const recordPropertyVisit = async (userId, propertyId) => {
 
 exports.recordPropertyVisit = recordPropertyVisit;
 exports.getRecentlyVisitedProperties = getRecentlyVisitedProperties;
+exports.getVisitedProperties = getVisitedProperties;
 exports.getNewLaunchProperties = getNewLaunchProperties;
 exports.getSponsoredProperties = getSponsoredProperties;
 exports.getTopAreas = getTopAreas;
@@ -226,6 +283,28 @@ exports.getUserHome = async (req, res) => {
                 sponsoredProperties,
                 topAreas,
             },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+exports.getMyVisitedProperties = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const page = req.query.page || 1;
+        const limit = req.query.limit || 10;
+
+        const { properties, pagination } = await getVisitedProperties(userId, page, limit);
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Visited properties fetched successfully',
+            data: properties,
+            pagination,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

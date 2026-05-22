@@ -836,6 +836,88 @@ Public endpoint.
 
 Returns counts like listed, sale, rent, active, inactive properties.
 
+## Subscription Plan Admin APIs
+
+All subscription plan endpoints require an admin auth token.
+
+### Create Subscription Plan
+
+`POST {{baseUrl}}/subscription-plans`
+
+Body:
+
+```json
+{
+  "planName": "Premium",
+  "planDescription": "Better visibility for serious sellers",
+  "durationInMonths": 3,
+  "listingVisibilityPercentage": 75,
+  "planBenefits": ["Higher property ranking", "More buyer reach"],
+  "planPrice": 2999,
+  "isActive": true
+}
+```
+
+### Get Subscription Plans
+
+`GET {{baseUrl}}/subscription-plans?page=1&limit=10&search=premium&isActive=true`
+
+Optional query params: `page`, `limit`, `search`, `isActive`.
+
+### Get Subscription Plan By ID
+
+`GET {{baseUrl}}/subscription-plans/{{subscriptionPlanId}}`
+
+### Update Subscription Plan
+
+`PUT {{baseUrl}}/subscription-plans/{{subscriptionPlanId}}`
+
+Send any fields from the create body.
+
+### Delete Subscription Plan
+
+Soft deletes a subscription plan.
+
+`DELETE {{baseUrl}}/subscription-plans/{{subscriptionPlanId}}`
+
+## User Subscription APIs
+
+All user subscription endpoints require auth.
+
+### Active Plans For User
+
+Returns active plans that users can buy.
+
+`GET {{baseUrl}}/user-subscriptions/plans`
+
+### Buy Subscription Plan
+
+Creates an active subscription for the logged-in user. For now, this marks payment as paid directly until a payment gateway is added.
+
+`POST {{baseUrl}}/user-subscriptions/buy`
+
+Body:
+
+```json
+{
+  "planId": "{{subscriptionPlanId}}"
+}
+```
+
+Note: only one active subscription is allowed per user. Expired active subscriptions are marked expired automatically during subscription checks.
+
+### My Subscriptions
+
+`GET {{baseUrl}}/user-subscriptions/my?page=1&limit=10&status=active`
+
+Optional query params: `page`, `limit`, `status`.
+
+Allowed `status` values: `pending`, `active`, `expired`, `cancelled`.
+
+### My Active Subscription
+
+`GET {{baseUrl}}/user-subscriptions/active`
+
 ## User Home API
 
 Returns all home screen sections in one response:
@@ -858,6 +940,23 @@ sponsoredLimit = 3
 topAreaLimit = 3
 topPropertyLimit = 3
 ```
+
+### My Visited Properties
+
+Returns all properties visited by the logged-in user, sorted by latest visit.
+
+`GET {{baseUrl}}/user-home/visited-properties?page=1&limit=10`
+
+Headers: auth required.
+
+Optional query params:
+
+```txt
+page = 1
+limit = 10
+```
+
+Each item includes normal property card fields plus `visitCount` and `lastVisitedAt`.
 
 Note: user visits are recorded automatically when `GET /properties/{{propertyId}}` is called.
 
