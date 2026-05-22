@@ -268,7 +268,7 @@ exports.getProperties = async (req, res) => {
         const [properties, total] = await Promise.all([
             Property.find(filter)
                 .select(
-                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds',
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds ownership flooring waterSource otherKeyFacilities',
                 )
                 .populate('ownerId', 'name role')
                 .populate('dealerId', 'name role')

@@ -257,6 +257,30 @@ const propertySchema = new mongoose.Schema(
             },
         ],
 
+        ownership: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+
+        flooring: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+
+        waterSource: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+
+        otherKeyFacilities: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+
         status: {
             type: String,
             enum: ['Draft', 'Active', 'Inactive', 'Sold', 'Rented'],

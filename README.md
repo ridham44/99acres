@@ -256,6 +256,8 @@ Optional query params: `page`, `limit`, `isAdmin`, `isLogin`, `userId`, `deviceT
 `GET {{baseUrl}}/user/profile`
 
 Headers: auth required.
+ 
+ Response includes a `stats` object with `shortlisted`, `contacted`, and `propertyViewed` counts.
 
 ### Update My Profile
 
@@ -500,6 +502,10 @@ status = Active
 amenityIds = ["{{amenityId}}"]
 furnishings = [{"furnishingId":"{{furnitureId}}","quantity":2}]
 nearbyPlaces = [{"nearbyId":"{{nearbyPlaceId}}","distance":1.5,"distanceUnit":"km"}]
+ownership = Freehold
+flooring = Vitrified Tiles
+waterSource = Municipal Corporation, Borewell
+otherKeyFacilities = Gas pipeline, Internet connectivity
 ```
 
 File fields:

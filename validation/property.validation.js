@@ -127,6 +127,10 @@ const validateCreateProperty = (req, res, next) => {
             amenityIds,
             furnishings,
             nearbyPlaces,
+            ownership,
+            flooring,
+            waterSource,
+            otherKeyFacilities,
             status: propertyStatus,
         } = req.body;
 
@@ -346,6 +350,10 @@ const validateUpdateProperty = (req, res, next) => {
             amenityIds,
             furnishings,
             nearbyPlaces,
+            ownership,
+            flooring,
+            waterSource,
+            otherKeyFacilities,
             status: propertyStatus,
         } = req.body;
 
