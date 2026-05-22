@@ -36,10 +36,16 @@ const getUserDocumentUrl = (fileName) => {
     return `${process.env.IMAGEKIT_URL_ENDPOINT}/users/documents/${fileName}`;
 };
 
+const getAgentCompanyImageUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${process.env.IMAGEKIT_URL_ENDPOINT}/agents/company-images/${fileName}`;
+};
+
 module.exports = {
     getImagekitFileUrl: exports.getImagekitFileUrl,
     getPropertyMediaUrl,
     getPropertyDocumentUrl,
     getUserProfileImageUrl,
     getUserDocumentUrl,
+    getAgentCompanyImageUrl,
 };
