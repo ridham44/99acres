@@ -21,5 +21,6 @@ router.use('/requirements', require('./requirement.route'));
 router.use('/agents', require('./agent.route'));
 router.use('/privacy-policy', require('./privacyPolicy.route'));
 router.use('/terms-conditions', require('./termsCondition.route'));
+router.use('/support', require('./support.route'));
 
 module.exports = router;

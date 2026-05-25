@@ -95,6 +95,7 @@ reviewId =
 documentId =
 privacyPolicyId =
 termsConditionsId =
+faqId =
 ```
 
 ## Auth APIs
@@ -1409,6 +1410,82 @@ Note: Setting `isActive: true` on this record will auto-deactivate all other T&C
 `DELETE {{baseUrl}}/terms-conditions/admin/{{termsConditionsId}}`
 
 Soft deletes the record and sets `isActive: false`.
+
+---
+
+## Help & Support APIs
+
+### Get Support Data (Public)
+Fetches support contact details, help topics, and FAQs. Supports search and category filtering. If the database is empty, it automatically populates default data.
+
+`GET {{baseUrl}}/support`
+
+**Query Parameters:**
+- `search` (string, optional) - Search in FAQ questions and answers.
+- `topic` (string, optional) - Filter by Topic ID.
+
+**Response Body Snippet:**
+```json
+{
+  "success": true,
+  "data": {
+    "supportContact": {
+      "phone": "+91 9574156067",
+      "email": "support@realestate.com",
+      "availability": "24/7"
+    },
+    "helpTopics": [...],
+    "faqs": [...]
+  }
+}
+```
+
+### Submit Support Ticket
+Submits a user inquiry or ticket. If the user is logged in (auth header provided), the ticket is linked to their profile.
+
+`POST {{baseUrl}}/support/ticket`
+
+**Body:**
+```json
+{
+  "subject": "User Inquiry from App Help Section",
+  "message": "User needs assistance with billing packages.",
+  "type": "email"
+}
+```
+
+---
+
+### Admin FAQ Management (Admin Only)
+
+#### Get All FAQs (Admin)
+`GET {{baseUrl}}/support/admin/faqs`
+
+#### Create FAQ (Admin)
+`POST {{baseUrl}}/support/admin/faqs`
+
+**Body:**
+```json
+{
+  "topicId": "user_profile",
+  "question": "How can I de-activate my account?",
+  "answer": "To deactivate your RealEstate account, please login to your profile settings and select the 'Deactivate Account' option. Your data will be preserved for 30 days."
+}
+```
+
+#### Update FAQ (Admin)
+`PATCH {{baseUrl}}/support/admin/faqs/{{faqId}}`
+
+**Body:**
+```json
+{
+  "question": "Updated question?",
+  "answer": "Updated answer."
+}
+```
+
+#### Delete FAQ (Admin)
+`DELETE {{baseUrl}}/support/admin/faqs/{{faqId}}`
 
 ---
 
