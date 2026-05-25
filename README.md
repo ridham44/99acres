@@ -845,6 +845,104 @@ Public endpoint.
 
 Returns counts like listed, sale, rent, active, inactive properties.
 
+## Agent APIs
+
+All agent endpoints require auth.
+
+Agent profile uses `userId` as a foreign key to the logged-in user. Agent response takes `name` and `profileImage` from the User model and returns `profileImageUrl`. Company image is uploaded to ImageKit like user/property images, and APIs return `companyImageUrl`.
+
+### Register Agent
+
+Registers the logged-in user as an agent. Only users with role `broker` or `dealer` can register as an agent.
+
+`POST {{baseUrl}}/agents/register`
+
+Headers: auth required.
+
+Body type: `form-data`.
+
+```txt
+companyName = Shree Realty
+expertInAreas = ["Satellite","Bopal","SG Highway"]
+companyImage = select jpg/jpeg/png/webp file
+```
+
+You can also send `expertInAreas` as comma-separated text:
+
+```txt
+expertInAreas = Satellite,Bopal,SG Highway
+```
+
+Allowed image types: `jpg`, `jpeg`, `png`, `webp`.
+
+Max image size: 5 MB.
+
+If the logged-in user role is not `broker` or `dealer`, API returns forbidden:
+
+```json
+{
+  "success": false,
+  "message": "Only broker and dealer users can register as agents"
+}
+```
+
+Successful response includes:
+
+```json
+{
+  "success": true,
+  "message": "Agent profile saved successfully",
+  "data": {
+    "_id": "agent id",
+    "userId": "user id",
+    "name": "Amit Broker",
+    "profileImage": "user-profile-file-name.jpg",
+    "profileImageUrl": "https://ik.imagekit.io/.../users/profile-images/user-profile-file-name.jpg",
+    "propertiesListed": 10,
+    "verifiedProperties": 4,
+    "expertInAreas": ["Satellite", "Bopal", "SG Highway"],
+    "companyName": "Shree Realty",
+    "companyImage": "company-file-name.jpg",
+    "companyImageUrl": "https://ik.imagekit.io/.../agents/company-images/company-file-name.jpg"
+  }
+}
+```
+
+### Create Or Update My Agent Profile
+
+Same as register agent. This endpoint can be used when the frontend wants a "save my agent profile" API name.
+
+`POST {{baseUrl}}/agents/me`
+
+Headers: auth required.
+
+Body type: `form-data`.
+
+Fields are same as `POST /agents/register`: `companyName`, `expertInAreas`, `companyImage`.
+
+### Get Agents Around Me
+
+Returns agents whose `expertInAreas` match the passed location.
+
+`GET {{baseUrl}}/agents/around-me/Satellite?page=1&limit=10`
+
+Headers: auth required.
+
+Path params:
+
+```txt
+location = Satellite
+```
+
+Optional query params:
+
+```txt
+page = 1
+limit = 10
+```
+
+Response includes user name/profile image, agent company data, property count, verified property count, and expert areas.
+
 ## Subscription Plan Admin APIs
 
 All subscription plan endpoints require an admin auth token.
@@ -1320,16 +1418,17 @@ Soft deletes the record and sets `isActive: false`.
 2. Copy returned `otp`.
 3. `POST /auth/verify-register-otp`
 4. Save returned `token` using the test script.
-5. Create master data:
+5. For broker/dealer users, register agent profile with `POST /agents/register`.
+6. Get nearby agents with `GET /agents/around-me/{{location}}`.
+7. Create master data:
    - `POST /amenities`
    - `POST /furniture`
    - `POST /nearby-places`
    - `POST /positive-keywords`
    - `POST /negative-keywords`
 6. `POST /properties` using form-data.
-7. `POST /requirements` to share what you need — save returned `_id` as `requirementId`.
-8. `PUT /requirements/{{requirementId}}` to update the requirement (e.g., change status or budget).
-9. `GET /requirements/{{requirementId}}/matches` to see properties matching the requirement.
+7. `POST /requirements` to share what you need.
+8. `GET /requirements/{{requirementId}}/matches` to see properties matching the requirement.
 9. `POST /reviews`.
 10. `GET /reviews/property/{{propertyId}}/summary`.
 11. `POST /shortlist`, then `GET /shortlist/my`.
