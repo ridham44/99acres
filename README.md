@@ -93,6 +93,8 @@ positiveKeywordId =
 negativeKeywordId =
 reviewId =
 documentId =
+privacyPolicyId =
+termsConditionsId =
 ```
 
 ## Auth APIs
@@ -1063,9 +1065,254 @@ Example Response:
 }
 ```
 
+### Update Requirement
+
+Allows the **owner** of a requirement to update it. Fields not sent are left unchanged. Protected fields (`userId`, `createdAt`, `deletedAt`) are ignored even if sent.
+
+`PUT {{baseUrl}}/requirements/{{requirementId}}`
+
+Headers: auth required.
+
+Body (JSON — all fields optional, send only what you want to change):
+
+```json
+{
+  "status": "Fulfilled",
+  "locations": ["Mumbai", "Thane"],
+  "propertyTypes": ["Apartment"],
+  "bhks": ["2 BHK", "3 BHK"],
+  "minBudget": 5000000,
+  "maxBudget": 12000000,
+  "minArea": 900,
+  "maxArea": 2200,
+  "furnishingStatus": ["Fully Furnished"],
+  "constructionStatus": ["Ready to Move"],
+  "minimumBathrooms": 2,
+  "isReraApproved": false
+}
+```
+
+Allowed `status` values: `Active`, `Fulfilled`, `Closed`.
+
+Example Response:
+
+```json
+{
+  "success": true,
+  "message": "Requirement updated successfully",
+  "data": {
+    "_id": "64f000000000000000000001",
+    "userId": "64f000000000000000000002",
+    "transactionType": "Buy",
+    "locations": ["Mumbai", "Thane"],
+    "status": "Fulfilled",
+    "updatedAt": "2024-05-25T10:00:00.000Z"
+  }
+}
+```
+
+Error cases:
+
+| Status | Reason |
+|--------|--------|
+| `403 Forbidden` | Logged-in user is not the owner of this requirement |
+| `404 Not Found` | Requirement does not exist or has been soft-deleted |
+
 ### Delete Requirement
 
 `DELETE {{baseUrl}}/requirements/{{requirementId}}`
+
+## Privacy Policy APIs
+
+### Get Active Privacy Policy (Public — User Side)
+
+Returns the currently active privacy policy with full HTML content. No auth required.
+
+`GET {{baseUrl}}/privacy-policy`
+
+Example Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "64f000000000000000000010",
+    "title": "Privacy Policy",
+    "content": "<h1>Privacy Policy</h1><p>...</p>",
+    "isActive": true,
+    "createdAt": "2026-01-22T10:00:00.000Z",
+    "updatedAt": "2026-01-22T10:00:00.000Z"
+  }
+}
+```
+
+> **Note:** The `content` field is raw HTML. Render it directly with `innerHTML` or a safe HTML renderer on the frontend.
+
+---
+
+### Admin CRUD (Admin Auth Required)
+
+All admin routes require `Authorization: Bearer {{token}}` with an `admin` role account.
+
+#### Create Privacy Policy
+
+`POST {{baseUrl}}/privacy-policy/admin`
+
+Body (JSON — `content` is HTML):
+
+```json
+{
+  "title": "Privacy Policy",
+  "isActive": true,
+  "content": "<h1>Privacy Policy</h1>\n<p><strong>Last Updated:</strong> January 22, 2026</p>\n<hr />\n<h2>Welcome to RealEstate</h2>\n<p>RealEstate is India's No. 1 Property Portal. We value your privacy and are committed to protecting your personal data.</p>\n<hr />\n<h3>01. Information We Collect</h3>\n<p>We collect personal information such as name, email, phone number, and account details. We also collect technical data like IP address, device type, and usage behavior.</p>\n<h3>02. Use of Information</h3>\n<p>Your data is used to operate, maintain, and improve our services, personalize user experience, and provide customer support.</p>\n<h3>03. Information Sharing</h3>\n<p>RealEstate does not sell personal data. Information may be shared with trusted partners or legal authorities when required by law.</p>\n<h3>04. Data Security</h3>\n<p>We implement reasonable technical and organizational measures to protect your information against unauthorized access.</p>\n<h3>05. User Rights</h3>\n<p>You may access, update, or request deletion of your personal information by contacting us or through your account settings.</p>\n<hr />\n<div class=\"important-notice\">\n  <strong>Consent</strong>\n  <p>By using RealEstate, you agree to this Privacy Policy.</p>\n</div>\n<hr />\n<h2>Contact Us</h2>\n<ul>\n  <li><strong>Email:</strong> legal@RealEstate.com</li>\n  <li><strong>Phone:</strong> +91-22-1234-5678</li>\n  <li><strong>Location:</strong> RealEstate, Mumbai, India</li>\n</ul>"
+}
+```
+
+Rules:
+- If `isActive` is `true`, all other existing policies are automatically deactivated.
+- If `content` is omitted, the built-in default HTML content is used.
+- Only one policy should be active at a time.
+
+Postman test script:
+
+```js
+const json = pm.response.json();
+if (json.data && json.data._id) {
+  pm.environment.set("privacyPolicyId", json.data._id);
+}
+```
+
+#### Get All Privacy Policies (Admin)
+
+Returns paginated list of all versions (including inactive).
+
+`GET {{baseUrl}}/privacy-policy/admin?page=1&limit=10&isActive=true`
+
+Optional query params: `page`, `limit`, `isActive`.
+
+#### Get Privacy Policy By ID (Admin)
+
+`GET {{baseUrl}}/privacy-policy/admin/{{privacyPolicyId}}`
+
+#### Update Privacy Policy (Admin)
+
+`PUT {{baseUrl}}/privacy-policy/admin/{{privacyPolicyId}}`
+
+Body (send only fields to change):
+
+```json
+{
+  "title": "Updated Privacy Policy",
+  "isActive": true,
+  "content": "<h1>Updated Privacy Policy</h1><p>...</p>"
+}
+```
+
+Note: Setting `isActive: true` on this record will auto-deactivate all other policy records.
+
+#### Delete Privacy Policy (Admin — Soft Delete)
+
+`DELETE {{baseUrl}}/privacy-policy/admin/{{privacyPolicyId}}`
+
+Soft deletes the policy and sets `isActive: false`.
+
+---
+
+## Terms & Conditions APIs
+
+### Get Active Terms & Conditions (Public — User Side)
+
+Returns the currently active Terms & Conditions with full HTML content. No auth required.
+
+`GET {{baseUrl}}/terms-conditions`
+
+Example Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "64f000000000000000000020",
+    "title": "Terms & Conditions",
+    "content": "<h1>Terms &amp; Conditions</h1><p>...</p>",
+    "isActive": true,
+    "createdAt": "2026-01-22T10:00:00.000Z",
+    "updatedAt": "2026-01-22T10:00:00.000Z"
+  }
+}
+```
+
+> **Note:** The `content` field is raw HTML. Render it directly with `innerHTML` or a safe HTML renderer on the frontend.
+
+---
+
+### Admin CRUD (Admin Auth Required)
+
+All admin routes require `Authorization: Bearer {{token}}` with an `admin` role account.
+
+#### Create Terms & Conditions
+
+`POST {{baseUrl}}/terms-conditions/admin`
+
+Body (JSON — `content` is HTML):
+
+```json
+{
+  "title": "Terms & Conditions",
+  "isActive": true,
+  "content": "<h1>Terms &amp; Conditions</h1>\n<p><strong>Last Updated:</strong> January 22, 2026</p>\n<hr />\n<h2>Welcome to RealEstate</h2>\n<p>RealEstate is India's No. 1 Property Portal. By accessing our platform, you agree to our Terms &amp; Conditions.</p>\n<hr />\n<h3>01. General Terms &amp; Conditions</h3>\n<p>These Terms constitute a legally binding agreement between you and <strong>RealEstate</strong> regarding your use of <a href=\"http://www.RealEstate.com\">www.RealEstate.com</a>.</p>\n<h3>02. User Agreement</h3>\n<p>By using the Site and Services, you agree to be bound by these Terms. Continued use constitutes acceptance of any updates.</p>\n<h3>03. Privacy &amp; Data</h3>\n<p>Our Privacy Policy explains how we collect, use, and protect your personal information. By using our services, you consent to such processing.</p>\n<h3>04. Service Terms</h3>\n<p>RealEstate provides a platform for property listings and related services. We do not guarantee listing accuracy.</p>\n<hr />\n<div class=\"warning-notice\"><strong>Important Notice</strong><p>These Terms may be updated periodically. Continued use after updates constitutes acceptance.</p></div>\n<div class=\"important-notice\"><strong>Acceptance of Terms</strong><p>By continuing to use RealEstate, you agree to be bound by these Terms &amp; Conditions.</p></div>\n<hr />\n<h2>Contact Us</h2>\n<ul>\n  <li><strong>Email:</strong> legal@RealEstate.com</li>\n  <li><strong>Phone:</strong> +91-22-1234-5678</li>\n  <li><strong>Location:</strong> RealEstate, Mumbai, India</li>\n</ul>"
+}
+```
+
+Rules:
+- If `isActive` is `true`, all other existing records are automatically deactivated.
+- If `content` is omitted, the built-in default HTML content (full T&C) is used.
+- Only one record should be active at a time.
+
+Postman test script:
+
+```js
+const json = pm.response.json();
+if (json.data && json.data._id) {
+  pm.environment.set("termsConditionsId", json.data._id);
+}
+```
+
+#### Get All Terms & Conditions (Admin)
+
+Returns paginated list of all versions (including inactive).
+
+`GET {{baseUrl}}/terms-conditions/admin?page=1&limit=10&isActive=true`
+
+Optional query params: `page`, `limit`, `isActive`.
+
+#### Get Terms & Conditions By ID (Admin)
+
+`GET {{baseUrl}}/terms-conditions/admin/{{termsConditionsId}}`
+
+#### Update Terms & Conditions (Admin)
+
+`PUT {{baseUrl}}/terms-conditions/admin/{{termsConditionsId}}`
+
+Body (send only fields to change):
+
+```json
+{
+  "title": "Updated Terms & Conditions",
+  "isActive": true,
+  "content": "<h1>Updated Terms &amp; Conditions</h1><p>...</p>"
+}
+```
+
+Note: Setting `isActive: true` on this record will auto-deactivate all other T&C records.
+
+#### Delete Terms & Conditions (Admin — Soft Delete)
+
+`DELETE {{baseUrl}}/terms-conditions/admin/{{termsConditionsId}}`
+
+Soft deletes the record and sets `isActive: false`.
+
+---
 
 ## Quick Postman Test Flow
 
@@ -1080,8 +1327,9 @@ Example Response:
    - `POST /positive-keywords`
    - `POST /negative-keywords`
 6. `POST /properties` using form-data.
-7. `POST /requirements` to share what you need.
-8. `GET /requirements/{{requirementId}}/matches` to see properties matching the requirement.
+7. `POST /requirements` to share what you need — save returned `_id` as `requirementId`.
+8. `PUT /requirements/{{requirementId}}` to update the requirement (e.g., change status or budget).
+9. `GET /requirements/{{requirementId}}/matches` to see properties matching the requirement.
 9. `POST /reviews`.
 10. `GET /reviews/property/{{propertyId}}/summary`.
 11. `POST /shortlist`, then `GET /shortlist/my`.

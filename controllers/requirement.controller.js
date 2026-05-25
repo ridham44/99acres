@@ -182,6 +182,51 @@ exports.getMatchedPropertiesForRequirement = async (req, res) => {
     }
 };
 
+// Update Requirement (Owner only)
+exports.updateRequirement = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // Fields that must NOT be changed by the client
+        const { userId: _u, createdAt: _c, deletedAt: _d, ...updateData } = req.body;
+
+        const requirement = await Requirement.findOne({ _id: id, deletedAt: null });
+
+        if (!requirement) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Requirement not found',
+            });
+        }
+
+        // Only the owner can update
+        if (requirement.userId.toString() !== userId.toString()) {
+            return res.status(status.Forbidden).json({
+                success: false,
+                message: 'You are not authorized to update this requirement',
+            });
+        }
+
+        const updated = await Requirement.findByIdAndUpdate(
+            id,
+            { ...updateData, updatedAt: new Date() },
+            { new: true, runValidators: true },
+        );
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Requirement updated successfully',
+            data: updated,
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 // Delete Requirement (Soft Delete)
 exports.deleteRequirement = async (req, res) => {
     try {

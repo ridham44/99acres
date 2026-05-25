@@ -10,6 +10,7 @@ router.post('/', protect, requirementController.createRequirement);
 router.get('/my', protect, requirementController.getMyRequirements);
 router.get('/all', protect, role(AGENT_ROLES), requirementController.getAllRequirements);
 router.get('/:requirementId/matches', protect, requirementController.getMatchedPropertiesForRequirement);
+router.put('/:id', protect, requirementController.updateRequirement);
 router.delete('/:id', protect, requirementController.deleteRequirement);
 
 module.exports = router;
