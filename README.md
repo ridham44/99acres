@@ -636,11 +636,110 @@ limit
 
 ### Get Property By ID
 
-Returns full property details with populated owner/dealer/amenities/media URLs.
+Returns full property details with populated owner/dealer/amenities/media URLs. This endpoint includes all technical audit fields for residential and commercial views.
 
 `GET {{baseUrl}}/properties/{{propertyId}}`
 
-Headers: auth required.
+**Headers:**
+- `Authorization: Bearer {{token}}`
+
+**Response Example:**
+
+```json
+{
+  "success": true,
+  "message": "Property fetched successfully",
+  "data": {
+    "_id": "6742fb0b28e23588df8e9766",
+    "title": "3 BHK Flat For Sale in Unique Luxuria",
+    "propertyName": "Unique Luxuria",
+    "propertyCategory": "Residential",
+    "propertyType": "Apartment",
+    "listingType": "Sale",
+    "city": "Ahmedabad",
+    "price": 85000000,
+    "locationCoordinates": {
+      "latitude": 23.0786,
+      "longitude": 72.5312
+    },
+    "nearbyLandmarks": [
+      {
+        "category": "Educational Institute",
+        "icon": "school_outlined",
+        "places": [
+          { "name": "Sai City International School", "distance": "4.5 Km" },
+          { "name": "Moulya School", "distance": "2.3 Km" }
+        ]
+      }
+    ],
+    "keyHighlights": {
+      "propertyFeatures": ["Pet Friendly", "Power Backup", "Visitor Parking", "Security"],
+      "projectHighlights": ["Green Project", "1.25 Lakh sq.ft. Central Park", "Modern Design"]
+    },
+    "floorPlans": [
+      {
+        "bhk": "3 BHK",
+        "superArea": "1169 sq.ft.",
+        "price": "₹1.3 Cr onwards",
+        "estimatedEmi": "1L",
+        "possessionDate": "Dec, 2025",
+        "imageUrl": "https://images.unsplash.com/..."
+      }
+    ],
+    "legalCertificates": {
+      "lastUpdated": "2025-09-09",
+      "certificates": [
+        { "name": "Encumbrance Certificate", "isValid": true },
+        { "name": "Commencement Certificate", "isValid": true },
+        { "name": "Occupancy Certificate", "isValid": false }
+      ]
+    },
+    "propWorthInsights": {
+      "currentLocality": "Gota",
+      "localityTrend": [7200, 7000, 7100, 6800, 7300],
+      "projectTrend": [6000, 6100, 5900, 6000, 5800],
+      "timeframe": "1Y"
+    },
+    "aiSummary": "Unique Luxuria in Gota is a highly recommended project with modern design...",
+    "reviewTopics": ["Excellent Construction", "Timely Possession", "Luxurious Flats"],
+    "aboutProject": {
+      "name": "Yash Arian",
+      "priceRange": "37.5 Lac - 1.05 Cr Onwards",
+      "totalUnits": 183
+    },
+    "aboutLocality": {
+      "name": "Memnagar",
+      "pincode": "380052",
+      "rating": 4.0,
+      "totalReviews": 20
+    },
+    "topAgents": [
+      {
+        "name": "Mahendra Prajapati",
+        "agency": "Plinth Realty",
+        "experience": "Operating since 2023",
+        "avatarUrl": "https://..."
+      }
+    ],
+    "preLeasedDetails": {
+      "leaseAmount": "₹ 5.5 L/month",
+      "leaseTenure": "5.0 years"
+    },
+    "projectDetails": {
+      "projectName": "Supernova Astralis",
+      "landZone": "Commercial",
+      "reraNumber": "UPRERAPRJ7263",
+      "passengerLifts": "3 lifts",
+      "occupancyCertificate": "Yes"
+    },
+    "media": [
+      { "type": "image", "url": "https://ik.imagekit.io/..." }
+    ]
+  }
+}
+```
+
+---
 
 ### Update Property
 
@@ -1137,19 +1236,30 @@ Example Response:
 
 ### Get My Requirements
 
-Returns a list of requirements submitted by the logged-in user.
+Returns a list of requirements submitted by the logged-in user. By default, only **Active** requirements are shown.
 
 `GET {{baseUrl}}/requirements/my`
 
+**Query Parameters:**
+- `status` (string, optional) - Filter by status (e.g., `Active`, `Inactive`, `Fulfilled`, `Closed`). Use `All` to see everything.
+
 ### Get All Requirements (Lead Discovery for Agents)
 
-Allows agents to discover buyer/renter leads.
+Allows agents to discover buyer/renter leads. By default, only **Active** requirements are shown.
 
 `GET {{baseUrl}}/requirements/all?city=Ahmedabad&transactionType=Buy&page=1&limit=10`
 
 **Constraint:** Only accessible by users with roles `broker`, `dealer`, `builder`, or `admin`.
 
-Optional Query Params: `transactionType`, `city`, `minBudget`, `maxBudget`, `page`, `limit`.
+**Query Parameters:**
+- `status` (string, optional) - Filter by status (defaults to `Active`).
+- `transactionType`, `city`, `minBudget`, `maxBudget`, `page`, `limit`.
+
+### Get Requirement Detail
+
+Returns full details for a specific requirement.
+
+`GET {{baseUrl}}/requirements/{{requirementId}}`
 
 ### Get Matched Properties for Requirement
 
@@ -1233,9 +1343,20 @@ Error cases:
 | `403 Forbidden` | Logged-in user is not the owner of this requirement |
 | `404 Not Found` | Requirement does not exist or has been soft-deleted |
 
-### Delete Requirement
+### Toggle Requirement Status (Active/Inactive)
 
-`DELETE {{baseUrl}}/requirements/{{requirementId}}`
+Toggles the status of a requirement between `Active` and `Inactive`. This replaces the previous delete functionality.
+
+`PATCH {{baseUrl}}/requirements/{{requirementId}}/status`
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "message": "Requirement marked as Inactive",
+  "data": { ... }
+}
+```
 
 ## Privacy Policy APIs
 
@@ -1427,20 +1548,20 @@ Note: Setting `isActive: true` on this record will auto-deactivate all other T&C
 
 Soft deletes the record and sets `isActive: false`.
 
----
-
 ## Help & Support APIs
 
-### Get Support Data (Public)
-Fetches support contact details, help topics, and FAQs. Supports search and category filtering. If the database is empty, it automatically populates default data.
+This section outlines the API endpoints, database fields, and JSON payloads required to support the Help & Support features.
 
-`GET {{baseUrl}}/support`
+### 1. Fetch Support Data & FAQs
+Fetches support contact details, help topics, and frequently asked questions (FAQs). Supports search and category filtering. If the database is empty, it automatically populates default data.
 
-**Query Parameters:**
-- `search` (string, optional) - Search in FAQ questions and answers.
-- `topic` (string, optional) - Filter by Topic ID.
+*   **Method:** `GET`
+*   **Path:** `{{baseUrl}}/support`
+*   **Query Parameters:**
+    *   `search` (string, optional) - Filters FAQs based on the search query (questions and answers).
+    *   `topic` (string, optional) - Filters FAQs by a specific Help Topic ID.
 
-**Response Body Snippet:**
+#### Response JSON Payload (`200 OK`)
 ```json
 {
   "success": true,
@@ -1450,29 +1571,72 @@ Fetches support contact details, help topics, and FAQs. Supports search and cate
       "email": "support@realestate.com",
       "availability": "24/7"
     },
-    "helpTopics": [...],
-    "faqs": [...]
+    "helpTopics": [
+      {
+        "id": "user_profile",
+        "title": "User Profile",
+        "iconKey": "person_outline"
+      },
+      {
+        "id": "search_properties",
+        "title": "Search Properties",
+        "iconKey": "search"
+      },
+      {
+        "id": "realestate_features",
+        "title": "RealEstate Features",
+        "iconKey": "featured_play_list_outlined"
+      },
+      {
+        "id": "realestate_prime",
+        "title": "RealEstate Prime",
+        "iconKey": "star_border"
+      },
+      {
+        "id": "payments",
+        "title": "Payments & Billing",
+        "iconKey": "payment"
+      },
+      {
+        "id": "property_listings",
+        "title": "Property Listings",
+        "iconKey": "home_work_outlined"
+      }
+    ],
+    "faqs": [
+      {
+        "id": "faq_001",
+        "topicId": "user_profile",
+        "question": "How can I de-activate my account?",
+        "answer": "To deactivate your RealEstate account, please login to your profile settings and select the 'Deactivate Account' option. Your data will be preserved for 30 days."
+      },
+      {
+        "id": "faq_002",
+        "topicId": "payments",
+        "question": "How can I know the status or validity of my package?",
+        "answer": "You can check your package status by going to 'My Packages' section in your dashboard. All active and expired packages will be displayed with their validity dates."
+      },
+      {
+        "id": "faq_003",
+        "topicId": "property_listings",
+        "question": "When will my Property become visible on the site?",
+        "answer": "Properties go through a verification process that takes up to 24 hours. Once approved, your property will be visible immediately on the site."
+      }
+    ]
   }
 }
 ```
 
-### Submit Support Ticket
-Submits a user inquiry or ticket. If the user is logged in (auth header provided), the ticket is linked to their profile.
+### 2. Submit Support Ticket
+Allows users to submit a support request.
 
-`POST {{baseUrl}}/support/ticket`
-
-**Body:**
+*   **Method:** `POST`
+*   **Path:** `{{baseUrl}}/support/ticket`
+*   **Request Body JSON:**
 ```json
 {
   "subject": "User Inquiry from App Help Section",
   "message": "User needs assistance with billing packages.",
-  "type": "email"
-}
-```
-
----
-
-### Admin FAQ Management (Admin Only)
 
 #### Get All FAQs (Admin)
 `GET {{baseUrl}}/support/admin/faqs`

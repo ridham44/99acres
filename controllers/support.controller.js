@@ -93,6 +93,12 @@ exports.getSupportData = async (req, res) => {
       "topicId title iconKey -_id",
     );
 
+    const formattedTopics = helpTopics.map((t) => ({
+      id: t.topicId,
+      title: t.title,
+      iconKey: t.iconKey,
+    }));
+
     // Fetch FAQs with filters
     let faqQuery = {};
     if (topic) {
@@ -119,7 +125,7 @@ exports.getSupportData = async (req, res) => {
       success: true,
       data: {
         supportContact: supportContact || defaultSupportContact,
-        helpTopics,
+        helpTopics: formattedTopics,
         faqs: formattedFaqs,
       },
     });

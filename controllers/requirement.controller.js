@@ -30,7 +30,14 @@ exports.createRequirement = async (req, res) => {
 exports.getMyRequirements = async (req, res) => {
     try {
         const userId = req.user.id;
-        const requirements = await Requirement.find({ userId, deletedAt: null }).sort({ createdAt: -1 });
+        const { status: reqStatus = 'Active' } = req.query; // Default to Active
+        
+        const filter = { userId, deletedAt: null };
+        if (reqStatus !== 'All') {
+            filter.status = reqStatus;
+        }
+
+        const requirements = await Requirement.find(filter).sort({ createdAt: -1 });
 
         return res.status(status.OK).json({
             success: true,
@@ -44,12 +51,40 @@ exports.getMyRequirements = async (req, res) => {
     }
 };
 
+// Get Requirement Detail
+exports.getRequirementById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const requirement = await Requirement.findOne({ _id: id, deletedAt: null }).populate('userId', 'name phone email');
+
+        if (!requirement) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Requirement not found',
+            });
+        }
+
+        return res.status(status.OK).json({
+            success: true,
+            data: requirement,
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 // Get All Requirements (For Agents/Lead Discovery)
 exports.getAllRequirements = async (req, res) => {
     try {
-        const { transactionType, city, minBudget, maxBudget, page = 1, limit = 10 } = req.query;
+        const { transactionType, city, minBudget, maxBudget, status: reqStatus = 'Active', page = 1, limit = 10 } = req.query;
 
-        const filter = { deletedAt: null, status: 'Active' };
+        const filter = { deletedAt: null };
+        if (reqStatus !== 'All') {
+            filter.status = reqStatus;
+        }
 
         if (transactionType) filter.transactionType = transactionType;
         if (city) filter.locations = { $in: [new RegExp(city, 'i')] };
@@ -227,15 +262,37 @@ exports.updateRequirement = async (req, res) => {
     }
 };
 
-// Delete Requirement (Soft Delete)
-exports.deleteRequirement = async (req, res) => {
+// Toggle Requirement Status (Active/Inactive)
+exports.toggleRequirementStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        await Requirement.findByIdAndUpdate(id, { deletedAt: new Date() });
+        const userId = req.user.id;
+
+        const requirement = await Requirement.findOne({ _id: id, deletedAt: null });
+
+        if (!requirement) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Requirement not found',
+            });
+        }
+
+        // Only the owner can toggle status
+        if (requirement.userId.toString() !== userId.toString()) {
+            return res.status(status.Forbidden).json({
+                success: false,
+                message: 'You are not authorized to modify this requirement',
+            });
+        }
+
+        const newStatus = requirement.status === 'Active' ? 'Inactive' : 'Active';
+        requirement.status = newStatus;
+        await requirement.save();
 
         return res.status(status.OK).json({
             success: true,
-            message: 'Requirement deleted successfully',
+            message: `Requirement marked as ${newStatus}`,
+            data: requirement,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

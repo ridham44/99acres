@@ -177,7 +177,7 @@ const requirementSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ['Active', 'Fulfilled', 'Closed'],
+            enum: ['Active', 'Inactive', 'Fulfilled', 'Closed'],
             default: 'Active',
         },
 
