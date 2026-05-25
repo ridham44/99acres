@@ -18,5 +18,8 @@ router.use('/property-documents', require('./propertyDocument.route'));
 router.use('/subscription-plans', require('./subscriptionPlan.route'));
 router.use('/user-subscriptions', require('./userSubscription.route'));
 router.use('/requirements', require('./requirement.route'));
+router.use('/agents', require('./agent.route'));
+router.use('/privacy-policy', require('./privacyPolicy.route'));
+router.use('/terms-conditions', require('./termsCondition.route'));
 
 module.exports = router;
