@@ -27,8 +27,8 @@ exports.createPropertyDocument = async (req, res) => {
             documentType,
             title,
             fileName: uploaded.fileName,
-            fileSize: req.file.size || 0,
-            status: documentStatus || 'Active',
+            fileSize: (req.file && req.file.size) || 0,
+            status: 'Pending',
             createdAt: new Date(),
             updatedAt: new Date(),
         });
@@ -172,6 +172,7 @@ exports.updatePropertyDocument = async (req, res) => {
 
         const updateData = {
             ...req.body,
+            status: 'Pending', // Any edit resets status to Pending
             updatedAt: new Date(),
         };
 
@@ -226,6 +227,44 @@ exports.deletePropertyDocument = async (req, res) => {
         return res.status(status.OK).json({
             success: true,
             message: 'Property document deleted successfully',
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+// Admin/Authorized status update
+exports.updateDocumentStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status: newStatus } = req.body;
+
+        if (!['Pending', 'Approved', 'Rejected'].includes(newStatus)) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: 'Invalid status. Must be Pending, Approved, or Rejected',
+            });
+        }
+
+        const document = await PropertyDocument.findOneAndUpdate(
+            { _id: id, deletedAt: null },
+            { status: newStatus, updatedAt: new Date() },
+            { new: true },
+        ).populate('propertyId', 'title propertyName');
+
+        if (!document) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Property document not found',
+            });
+        }
+
+        return res.status(status.OK).json({
+            success: true,
+            message: `Property document status updated to ${newStatus}`,
+            data: document,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

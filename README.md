@@ -793,7 +793,6 @@ Body type: `form-data`
 propertyId = {{propertyId}}
 documentType = Ownership Proof
 title = Sale Deed
-status = Active
 document = select pdf/jpg/jpeg/png/doc/docx file
 ```
 
@@ -809,7 +808,12 @@ ID Proof
 Other
 ```
 
-Allowed `status`: `Active`, `Inactive`.
+Document status is managed by the system:
+- Default on upload: `Pending`
+- Admin approves: `Approved`
+- Admin rejects: `Rejected`
+- User edits document: automatically reset to `Pending`
+
 
 Allowed file types: `pdf`, `jpg`, `jpeg`, `png`, `doc`, `docx`.
 Max file size: 5 MB.
@@ -849,10 +853,35 @@ Body type: `form-data`
 
 ```txt
 title = Updated Sale Deed
-status = Active
 documentType = Agreement
 document = select optional replacement file
 ```
+
+> **Note:** Any update to a document automatically resets its `status` back to `Pending` for re-review by admin.
+
+### Update Document Status (Admin)
+
+`PATCH {{baseUrl}}/property-documents/{{documentId}}/status`
+
+Headers: auth required.
+
+Body (JSON):
+
+```json
+{
+  "status": "Approved"
+}
+```
+
+Allowed `status` values: `Pending`, `Approved`, `Rejected`.
+
+Error cases:
+
+| Status | Reason |
+|--------|--------|
+| `400 Bad Request` | Invalid status value |
+| `404 Not Found` | Document does not exist or has been soft-deleted |
+
 
 ### Delete Property Document
 

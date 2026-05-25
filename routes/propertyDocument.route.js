@@ -31,6 +31,12 @@ router.put(
     controller.updatePropertyDocument,
 );
 
+router.patch(
+    '/:id/status',
+    auth,
+    controller.updateDocumentStatus,
+);
+
 router.delete(
     '/:id',
     auth,

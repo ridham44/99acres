@@ -30,7 +30,7 @@ exports.createRequirement = async (req, res) => {
 exports.getMyRequirements = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { status: reqStatus = 'Active' } = req.query; // Default to Active
+        const { status: reqStatus = 'All' } = req.query; // Default to All to show both active/inactive
         
         const filter = { userId, deletedAt: null };
         if (reqStatus !== 'All') {
@@ -46,7 +46,7 @@ exports.getMyRequirements = async (req, res) => {
     } catch (error) {
         return res.status(status.InternalServerError).json({
             success: false,
-            message: error.message,
+            message: error.message, 
         });
     }
 };

@@ -33,8 +33,8 @@ const propertyDocumentSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ['Active', 'Inactive'],
-            default: 'Active',
+            enum: ['Pending', 'Approved', 'Rejected'],
+            default: 'Pending',
         },
 
         createdAt: {
