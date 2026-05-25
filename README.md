@@ -565,51 +565,40 @@ if (json.data && json.data._id) {
 
 ### Get Properties
 
-Returns paginated property cards/list data.
+Returns paginated property cards/list data with advanced filtering based on the Custom Filter Screen requirements.
 
-`GET {{baseUrl}}/properties?page=1&limit=10&city=Ahmedabad&listingType=Sale&sortBy=newest`
+`GET {{baseUrl}}/properties?page=1&limit=10&locations=Ahmedabad,Satellite&sortBy=Price (H-L)`
 
-Headers: auth required.
+**Headers:** auth required.
 
-Optional filters:
+**Comprehensive Filtering Parameters:**
 
-```txt
-search
-status
-city
-city_area
-state
-locality
-listingType
-propertyCategory
-propertyType
-bhk
-bedrooms
-bathrooms
-minPrice
-maxPrice
-minArea
-maxArea
-facing
-furnishingIds
-amenityIds
-nearbyIds
-ownerId
-dealerId
-sortBy
-page
-limit
-```
+| Key | Type | Description |
+| :--- | :--- | :--- |
+| `locations` | `String` | Comma-separated cities, localities, or areas (searches city, locality, area, and address fields). |
+| `propertyCategory`| `String` | Main category: `Residential`, `Commercial`, or `PG`. |
+| `propertyTypes` | `String` | Comma-separated sub-types (e.g., `Flat/Apartment,House/Villa,Ready Offices`). |
+| `minBudget` | `Number` | Minimum price (budget) in INR. |
+| `maxBudget` | `Number` | Maximum price (budget) in INR. |
+| `minArea` | `Number` | Minimum area size. |
+| `maxArea` | `Number` | Maximum area size. |
+| `postedBy` | `String` | Comma-separated poster types: `Owner`, `Agent`, `Builder`. |
+| `saleType` | `String` | Comma-separated: `New`, `Resale`. (Maps to property age). |
+| `furnishing` | `String` | Comma-separated: `Furnished`, `Semi-Furnished`, `Unfurnished`. |
+| `amenities` | `String` | Comma-separated amenity names (e.g., `Parking,Lift,Pool`). Case-insensitive lookup. |
+| `facing` | `String` | Comma-separated directions (e.g., `East,North,West-Facing`). |
+| `minFloor` | `String` | Min floor level (e.g., `Ground`, `Basement`, `1`, `5th`). |
+| `maxFloor` | `String` | Max floor level (e.g., `10`, `Top Floor`). |
+| `sortBy` | `String` | `Price (H-L)`, `Price (L-H)`, `Most Recent`, `price_desc`, `price_asc`, `newest`, `oldest`. |
+| `search` | `String` | Global keyword search across title, name, type, and address. |
+| `page` / `limit` | `Number` | Pagination controls (Default: page 1, limit 10). |
 
-`sortBy` values: `price_asc`, `price_desc`, `oldest`, `newest`.
+**Legacy / ID-based filters (Still Supported):**
+`city`, `locality`, `city_area`, `state`, `listingType`, `bhk`, `bedrooms`, `bathrooms`, `minPrice`, `maxPrice`, `ownerId`, `dealerId`.
 
-For multi-value IDs, send comma-separated values:
+**Example Complex Query:**
+`{{baseUrl}}/properties?locations=Ahmedabad,Gota&propertyCategory=Residential&propertyTypes=Flat/Apartment&minBudget=5000000&postedBy=Agent&amenities=Parking,Lift&sortBy=Price (H-L)`
 
-```txt
-amenityIds=ID1,ID2
-nearbyIds=ID1,ID2
-furnishingIds=ID1,ID2
-```
 
 ### Get My Properties
 
