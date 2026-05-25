@@ -89,12 +89,18 @@ const DEFAULT_CONTENT = `
 // GET /terms-conditions  — returns the currently active T&C
 exports.getActiveTerms = async (req, res) => {
     try {
-        const terms = await TermsCondition.findOne({ isActive: true, deletedAt: null }).sort({ createdAt: -1 });
+        let terms = await TermsCondition.findOne({ isActive: true, deletedAt: null }).sort({ createdAt: -1 });
 
+        // If no active terms exists, return the default one instead of 404
         if (!terms) {
-            return res.status(status.NotFound).json({
-                success: false,
-                message: 'Terms & Conditions not found',
+            return res.status(status.OK).json({
+                success: true,
+                data: {
+                    title: 'Terms & Conditions',
+                    content: DEFAULT_CONTENT,
+                    isActive: true,
+                    isDefault: true
+                },
             });
         }
 

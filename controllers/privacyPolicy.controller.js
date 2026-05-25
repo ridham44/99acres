@@ -79,12 +79,18 @@ const DEFAULT_CONTENT = `
 // GET /privacy-policy  — returns the currently active policy
 exports.getActivePrivacyPolicy = async (req, res) => {
     try {
-        const policy = await PrivacyPolicy.findOne({ isActive: true, deletedAt: null }).sort({ createdAt: -1 });
+        let policy = await PrivacyPolicy.findOne({ isActive: true, deletedAt: null }).sort({ createdAt: -1 });
 
+        // If no active policy exists, return the default one instead of 404
         if (!policy) {
-            return res.status(status.NotFound).json({
-                success: false,
-                message: 'Privacy policy not found',
+            return res.status(status.OK).json({
+                success: true,
+                data: {
+                    title: 'Privacy Policy',
+                    content: DEFAULT_CONTENT,
+                    isActive: true,
+                    isDefault: true
+                },
             });
         }
 
