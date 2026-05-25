@@ -510,6 +510,22 @@ ownership = Freehold
 flooring = Vitrified Tiles
 waterSource = Municipal Corporation, Borewell
 otherKeyFacilities = Gas pipeline, Internet connectivity
+nearbyLandmarks = [{"category":"School","places":[{"name":"Sai School","distance":"2km"}]}]
+locationCoordinates = {"latitude": 23.0786, "longitude": 72.5312}
+keyHighlights = {"propertyFeatures":["Pet Friendly"],"projectHighlights":["Green Project"]}
+floorPlans = [{"bhk":"3 BHK","superArea":"1169 sqft","price":"1.3Cr"}]
+legalCertificates = {"certificates":[{"name":"Ec","isValid":true}]}
+propWorthInsights = {"currentLocality":"Gota","localityTrend":[7200,7400]}
+aiSummary = Unique project in Gota...
+reviewTopics = ["Quality","Possession"]
+preLeasedDetails = {"leaseAmount":"5.5L","leaseTenure":"5 years"}
+approvedIndustryTypes = ["Electronics"]
+keySpecifications = [{"label":"Cabins","value":"2"}]
+projectDetails = {"projectName":"Nova","landZone":"Commercial"}
+aboutProject = {"name":"Yash","totalUnits":183}
+aboutLocality = {"name":"Memnagar","rating":4}
+aboutDeveloper = {"name":"Group","experienceYears":34}
+topAgents = [{"name":"Mahendra","agency":"Plinth"}]
 ```
 
 File fields:

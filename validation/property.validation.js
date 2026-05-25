@@ -76,6 +76,51 @@ const normalizeBody = (req) => {
     req.body.furnishings = toJsonArray(req.body.furnishings);
     req.body.nearbyPlaces = toJsonArray(req.body.nearbyPlaces);
 
+    // --- Technical Audit Fields Normalization ---
+    req.body.nearbyLandmarks = toJsonArray(req.body.nearbyLandmarks);
+    req.body.locationCoordinates = toJsonArray(req.body.locationCoordinates);
+    req.body.keyHighlights = toJsonArray(req.body.keyHighlights);
+    req.body.floorPlans = toJsonArray(req.body.floorPlans);
+    req.body.legalCertificates = toJsonArray(req.body.legalCertificates);
+    req.body.propWorthInsights = toJsonArray(req.body.propWorthInsights);
+    req.body.reviewTopics = toJsonArray(req.body.reviewTopics);
+    req.body.preLeasedDetails = toJsonArray(req.body.preLeasedDetails);
+    req.body.approvedIndustryTypes = toJsonArray(req.body.approvedIndustryTypes);
+    req.body.keySpecifications = toJsonArray(req.body.keySpecifications);
+    req.body.projectDetails = toJsonArray(req.body.projectDetails);
+    req.body.aboutProject = toJsonArray(req.body.aboutProject);
+    req.body.aboutLocality = toJsonArray(req.body.aboutLocality);
+    req.body.aboutDeveloper = toJsonArray(req.body.aboutDeveloper);
+    req.body.topAgents = toJsonArray(req.body.topAgents);
+
+    // Numeric conversions for nested fields
+    if (req.body.locationCoordinates) {
+        req.body.locationCoordinates.latitude = toNumber(req.body.locationCoordinates.latitude);
+        req.body.locationCoordinates.longitude = toNumber(req.body.locationCoordinates.longitude);
+    }
+    if (req.body.propWorthInsights) {
+        if (Array.isArray(req.body.propWorthInsights.localityTrend)) {
+            req.body.propWorthInsights.localityTrend = req.body.propWorthInsights.localityTrend.map(toNumber);
+        }
+        if (Array.isArray(req.body.propWorthInsights.projectTrend)) {
+            req.body.propWorthInsights.projectTrend = req.body.propWorthInsights.projectTrend.map(toNumber);
+        }
+    }
+    if (req.body.aboutProject) req.body.aboutProject.totalUnits = toNumber(req.body.aboutProject.totalUnits);
+    if (req.body.aboutLocality) {
+        req.body.aboutLocality.rating = toNumber(req.body.aboutLocality.rating);
+        req.body.aboutLocality.totalReviews = toNumber(req.body.aboutLocality.totalReviews);
+    }
+    if (req.body.aboutDeveloper) req.body.aboutDeveloper.experienceYears = toNumber(req.body.aboutDeveloper.experienceYears);
+    if (Array.isArray(req.body.topAgents)) {
+        req.body.topAgents = req.body.topAgents.map(agent => ({
+            ...agent,
+            buyersServed: toNumber(agent.buyersServed),
+            propertiesForSale: toNumber(agent.propertiesForSale),
+            propertiesForRent: toNumber(agent.propertiesForRent)
+        }));
+    }
+
     if (Array.isArray(req.body.furnishings)) {
         req.body.furnishings = req.body.furnishings.map((item) => ({
             ...item,

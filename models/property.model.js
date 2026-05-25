@@ -301,6 +301,104 @@ const propertySchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
+
+        // --- Technical Audit Fields ---
+        nearbyLandmarks: [
+            {
+                category: String,
+                icon: String,
+                places: [{ name: String, distance: String }]
+            }
+        ],
+
+        locationCoordinates: {
+            latitude: Number,
+            longitude: Number
+        },
+
+        keyHighlights: {
+            propertyFeatures: [String],
+            projectHighlights: [String]
+        },
+
+        floorPlans: [
+            {
+                bhk: String,
+                superArea: String,
+                price: String,
+                estimatedEmi: String,
+                possessionDate: String,
+                imageUrl: String
+            }
+        ],
+
+        legalCertificates: {
+            lastUpdated: String,
+            certificates: [{ name: String, isValid: Boolean }]
+        },
+
+        propWorthInsights: {
+            currentLocality: String,
+            localityTrend: [Number],
+            projectTrend: [Number],
+            timeframe: String
+        },
+
+        aiSummary: String,
+        
+        reviewTopics: [String],
+
+        preLeasedDetails: {
+            leaseAmount: String,
+            leaseTenure: String
+        },
+
+        approvedIndustryTypes: [String],
+
+        keySpecifications: [
+            { label: String, value: String }
+        ],
+
+        projectDetails: {
+            projectName: String,
+            landZone: String,
+            reraNumber: String,
+            passengerLifts: String,
+            serviceLifts: String,
+            occupancyCertificate: String,
+            fireNoc: String
+        },
+
+        aboutProject: {
+            name: String,
+            priceRange: String,
+            totalUnits: Number
+        },
+
+        aboutLocality: {
+            name: String,
+            pincode: String,
+            rating: Number,
+            totalReviews: Number
+        },
+
+        aboutDeveloper: {
+            name: String,
+            experienceYears: Number,
+            officeAddress: String
+        },
+
+        topAgents: [
+            {
+                name: String,
+                agency: String,
+                experience: String,
+                buyersServed: Number,
+                propertiesForSale: Number,
+                propertiesForRent: Number,
+                avatarUrl: String
+            }
+        ],
     },
     {
         timestamps: false,

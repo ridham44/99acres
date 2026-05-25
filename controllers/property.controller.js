@@ -70,6 +70,24 @@ exports.createProperty = async (req, res) => {
             ownerId = userId;
         }
 
+        // --- Parse Technical Audit Fields (if they come as JSON strings from form-data) ---
+        const jsonFields = [
+            'nearbyLandmarks', 'locationCoordinates', 'keyHighlights', 'floorPlans',
+            'legalCertificates', 'propWorthInsights', 'reviewTopics', 'preLeasedDetails',
+            'approvedIndustryTypes', 'keySpecifications', 'projectDetails', 'aboutProject',
+            'aboutLocality', 'aboutDeveloper', 'topAgents', 'amenityIds', 'furnishings', 'nearbyPlaces'
+        ];
+
+        jsonFields.forEach(field => {
+            if (req.body[field] && typeof req.body[field] === 'string') {
+                try {
+                    req.body[field] = JSON.parse(req.body[field]);
+                } catch (e) {
+                    console.log(`Error parsing ${field}:`, e.message);
+                }
+            }
+        });
+
         const property = await Property.create({
             ...req.body,
             ownerId,
@@ -479,17 +497,23 @@ exports.updateProperty = async (req, res) => {
             });
         }
 
-        if (req.body.amenityIds) {
-            req.body.amenityIds = JSON.parse(req.body.amenityIds);
-        }
+        // --- Parse Technical Audit Fields (if they come as JSON strings from form-data) ---
+        const jsonFields = [
+            'nearbyLandmarks', 'locationCoordinates', 'keyHighlights', 'floorPlans',
+            'legalCertificates', 'propWorthInsights', 'reviewTopics', 'preLeasedDetails',
+            'approvedIndustryTypes', 'keySpecifications', 'projectDetails', 'aboutProject',
+            'aboutLocality', 'aboutDeveloper', 'topAgents', 'amenityIds', 'furnishings', 'nearbyPlaces'
+        ];
 
-        if (req.body.furnishings) {
-            req.body.furnishings = JSON.parse(req.body.furnishings);
-        }
-
-        if (req.body.nearbyPlaces) {
-            req.body.nearbyPlaces = JSON.parse(req.body.nearbyPlaces);
-        }
+        jsonFields.forEach(field => {
+            if (req.body[field] && typeof req.body[field] === 'string') {
+                try {
+                    req.body[field] = JSON.parse(req.body[field]);
+                } catch (e) {
+                    console.log(`Error parsing ${field}:`, e.message);
+                }
+            }
+        });
 
         const imageFiles = req.files?.images || [];
         const videoFiles = req.files?.videos || [];
