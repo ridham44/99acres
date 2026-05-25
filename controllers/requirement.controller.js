@@ -285,7 +285,8 @@ exports.toggleRequirementStatus = async (req, res) => {
             });
         }
 
-        const newStatus = requirement.status === 'Active' ? 'Inactive' : 'Active';
+        const { status: bodyStatus } = req.body;
+        const newStatus = bodyStatus || (requirement.status === 'Active' ? 'Inactive' : 'Active');
         requirement.status = newStatus;
         await requirement.save();
 
