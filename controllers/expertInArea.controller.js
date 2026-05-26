@@ -17,9 +17,9 @@ exports.createExpertInArea = async (req, res) => {
     // Normalize to Sentence Case (e.g. Ahmedabad)
     const normalizedName = trimmedAreaName.charAt(0).toUpperCase() + trimmedAreaName.slice(1).toLowerCase();
 
-    // Check if an ACTIVE area with the same name exists
+    // Check if an ACTIVE area with the same name exists (case-insensitive check)
     const existingArea = await ExpertInArea.findOne({
-      areaName: normalizedName,
+      areaName: { $regex: new RegExp(`^${normalizedName}$`, "i") },
       deletedAt: null,
     });
 
@@ -168,10 +168,10 @@ exports.updateExpertInArea = async (req, res) => {
     const trimmedAreaName = areaName.trim();
     const normalizedName = trimmedAreaName.charAt(0).toUpperCase() + trimmedAreaName.slice(1).toLowerCase();
 
-    // Check if another ACTIVE area has this name
+    // Check if another ACTIVE area has this name (case-insensitive)
     const existingArea = await ExpertInArea.findOne({
       _id: { $ne: id },
-      areaName: normalizedName,
+      areaName: { $regex: new RegExp(`^${normalizedName}$`, "i") },
       deletedAt: null,
     });
 
