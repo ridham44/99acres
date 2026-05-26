@@ -296,6 +296,62 @@ Allowed update fields only: `name`, `phone`, `email`, `agencyName`.
 Profile image is uploaded as file field `profileImage`; only the ImageKit file name is stored in DB, and APIs return `profileImageUrl`.
 User documents are uploaded as repeated file field `documents`; only ImageKit file names are stored in DB, and APIs return `documentUrls`.
 
+## Agent APIs
+
+All agent endpoints require auth. Only users with the role `broker` or `dealer` can register as agents.
+
+### Register / Update Agent Profile
+
+`POST {{baseUrl}}/agents/register` OR `POST {{baseUrl}}/agents/me`
+
+Handles both creation and update of the agent profile for the logged-in user.
+
+**Headers:** auth required.
+
+**Body Type:** `form-data` (recommended if uploading image) or `json`.
+
+**Fields:**
+
+| Key | Type | Description |
+| :--- | :--- | :--- |
+| `name` | `String` | Full name of the agent. (Allowed in Register & Update) |
+| `email` | `String` | Contact email. (Allowed in Register & Update) |
+| `phone number` | `String` | Contact phone number. (Allowed in Register & Update) |
+| `agency_name` | `String` | Name of the real estate agency. (Allowed in Register & Update) |
+| `country` | `String` | Country (Default: India). (Allowed in Register & Update) |
+| `state` | `String` | State. (Allowed in Register & Update) |  
+| `city` | `String` | City. (Allowed in Register & Update) |
+| `expertInAreas` | `Array/String` | Areas of expertise. (**Update Only**) |
+| `companyImage` | `File` | Optional company image. (**Update Only**) |
+
+**Example (form-data):**
+
+```txt
+name = Rahul Sharma
+email = rahul.agent@example.com
+phone number = 9876543210
+agency_name = Prime Realty
+country = India
+state = Gujarat
+city = Ahmedabad
+expertInAreas = ["Satellite", "Prahlad Nagar"]
+companyImage = select logo.jpg
+```
+
+### Get Agents Around Me
+
+Returns a list of agents who are experts in the specified location.
+
+`GET {{baseUrl}}/agents/around-me/:location?page=1&limit=10`
+
+**Headers:** auth required.
+
+**Path Parameter:**
+* `location`: The area name to search for in agent expertise (e.g., `Satellite`).
+
+**Query Parameters:**
+* `page`, `limit` (optional)
+
 ## Master Data APIs
 
 These resources are used to build dropdowns/filters for property forms.
@@ -448,7 +504,7 @@ Create/update body:
 }
 ```
 
-## Property APIs
+  ## Property APIs
 
 All property endpoints require auth.
 
@@ -746,7 +802,7 @@ Example fields:
 title = Updated 3 BHK Flat
 price = 8300000
 status = Active
-parking = true
+parking = true6
 amenityIds = ["{{amenityId}}"]
 furnishings = [{"furnishingId":"{{furnitureId}}","quantity":1}]
 nearbyPlaces = [{"nearbyId":"{{nearbyPlaceId}}","distance":1,"distanceUnit":"km"}]

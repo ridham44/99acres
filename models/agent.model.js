@@ -10,6 +10,43 @@ const agentSchema = new mongoose.Schema(
             index: true,
         },
 
+        name: {
+            type: String,
+            trim: true,
+        },
+
+        email: {
+            type: String,
+            trim: true,
+            lowercase: true,
+        },
+
+        phone: {
+            type: String,
+            trim: true,
+        },
+
+        agencyName: {
+            type: String,
+            trim: true,
+        },
+
+        country: {
+            type: String,
+            trim: true,
+            default: 'India',
+        },
+
+        state: {
+            type: String,
+            trim: true,
+        },
+
+        city: {
+            type: String,
+            trim: true,
+        },
+
         propertiesListed: {
             type: Number,
             default: 0,
@@ -28,12 +65,6 @@ const agentSchema = new mongoose.Schema(
                 trim: true,
             },
         ],
-
-        companyName: {
-            type: String,
-            trim: true,
-            default: '',
-        },
 
         companyImage: {
             type: String,

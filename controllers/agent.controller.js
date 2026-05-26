@@ -71,12 +71,17 @@ const formatAgent = async (agent) => {
     return {
         _id: data._id,
         userId: user?._id || data.userId,
-        name: user?.name || null,
+        name: data.name || user?.name || null,
+        email: data.email || user?.email || null,
+        phone: data.phone || user?.phone || null,
+        agencyName: data.agencyName || user?.agencyName || '',
+        country: data.country || 'India',
+        state: data.state || '',
+        city: data.city || '',
         profileImageUrl: getUserProfileImageUrl(user?.profileImage),
         propertiesListed: stats.propertiesListed,
         verifiedProperties: stats.verifiedProperties,
         selectedAreas: data.expertInAreas || [],
-        companyName: data.companyName || '',
         companyImageUrl: getAgentCompanyImageUrl(data.companyImage),
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
@@ -102,24 +107,34 @@ exports.createOrUpdateMyAgent = async (req, res) => {
             });
         }
 
+        const existingAgent = await Agent.findOne({ userId, deletedAt: null });
+        const isNew = !existingAgent;
         const updateData = {};
-        const expertInAreas = normalizeAreas(req.body.expertInAreas);
 
-        if (expertInAreas !== undefined) {
-            updateData.expertInAreas = expertInAreas;
+        // Basic payload for Register (and also allowed in Update)
+        if (req.body.name !== undefined) updateData.name = String(req.body.name).trim();
+        if (req.body.email !== undefined) updateData.email = String(req.body.email).trim().toLowerCase();
+        if (req.body['phone number'] !== undefined) updateData.phone = String(req.body['phone number']).trim();
+        if (req.body.agency_name !== undefined) updateData.agencyName = String(req.body.agency_name).trim();
+        if (req.body.country !== undefined) updateData.country = String(req.body.country).trim();
+        if (req.body.state !== undefined) updateData.state = String(req.body.state).trim();
+        if (req.body.city !== undefined) updateData.city = String(req.body.city).trim();
+
+        // "Rest of it" allowed during Update only
+        if (!isNew) {
+            const expertInAreas = normalizeAreas(req.body.expertInAreas);
+            if (expertInAreas !== undefined) {
+                updateData.expertInAreas = expertInAreas;
+            }
+
+            if (req.file) {
+                const uploaded = await uploadToImagekit(req.file, 'agents/company-images');
+                updateData.companyImage = uploaded.fileName;
+            }
         }
 
-        if (req.body.companyName !== undefined) {
-            updateData.companyName = String(req.body.companyName).trim();
-        }
-
-        if (req.file) {
-            const uploaded = await uploadToImagekit(req.file, 'agents/company-images');
-            updateData.companyImage = uploaded.fileName;
-        }
-
+        // Stats are updated on every request (create or update)
         const stats = await getPropertyStats(userId);
-
         updateData.propertiesListed = stats.propertiesListed;
         updateData.verifiedProperties = stats.verifiedProperties;
         updateData.deletedAt = null;
