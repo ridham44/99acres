@@ -641,7 +641,7 @@ exports.updateProperty = async (req, res) => {
 
         propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => ({
             nearbyId: {
-                ...(item.nearbyId || {}),
+                ...(item.nearbyId || {}), 
                 distance: item.distance,
                 distanceUnit: item.distanceUnit,
             },
