@@ -13,20 +13,25 @@ exports.createExpertInArea = async (req, res) => {
       });
     }
 
+    const trimmedAreaName = areaName.trim();
+    // Normalize to Sentence Case (e.g. Ahmedabad)
+    const normalizedName = trimmedAreaName.charAt(0).toUpperCase() + trimmedAreaName.slice(1).toLowerCase();
+
+    // Check if an ACTIVE area with the same name exists
     const existingArea = await ExpertInArea.findOne({
-      areaName: areaName.trim(),
+      areaName: normalizedName,
       deletedAt: null,
     });
 
     if (existingArea) {
       return res.status(status.Conflict).json({
         success: false,
-        message: "Expert in area already exists",
+        message: "Expert in area already exists and is active",
       });
     }
 
     const expertInArea = await ExpertInArea.create({
-      areaName: areaName.trim(),
+      areaName: normalizedName,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -160,20 +165,24 @@ exports.updateExpertInArea = async (req, res) => {
       });
     }
 
+    const trimmedAreaName = areaName.trim();
+    const normalizedName = trimmedAreaName.charAt(0).toUpperCase() + trimmedAreaName.slice(1).toLowerCase();
+
+    // Check if another ACTIVE area has this name
     const existingArea = await ExpertInArea.findOne({
       _id: { $ne: id },
-      areaName: areaName.trim(),
+      areaName: normalizedName,
       deletedAt: null,
     });
 
     if (existingArea) {
       return res.status(status.Conflict).json({
         success: false,
-        message: "Expert in area already exists",
+        message: "Another active expert in area already has this name",
       });
     }
 
-    expertInArea.areaName = areaName.trim();
+    expertInArea.areaName = normalizedName;
     expertInArea.updatedAt = new Date();
     await expertInArea.save();
 
