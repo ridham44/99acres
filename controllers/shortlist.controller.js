@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Shortlist = require('../models/shortlist.model');
 const Property = require('../models/property.model');
 const status = require('../utils/statusCodes');
+const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
 
 exports.addToShortlist = async (req, res) => {
     try {
@@ -77,10 +78,12 @@ exports.getMyShortlists = async (req, res) => {
             deletedAt: null,
         };
 
+        const propertySelect = 'title propertyName name price address city state propertyType propertyCategory listingType area measureType media createdAt';
+
         let query = Shortlist.find(filter)
             .populate({
                 path: 'propertyId',
-                select: 'title propertyName name price address city state propertyType category lookingFor images createdAt',
+                select: propertySelect,
             })
             .sort({ shortListedAt: -1 });
 
@@ -105,10 +108,22 @@ exports.getMyShortlists = async (req, res) => {
 
         const shortlists = await query;
 
+        // Map media URLs
+        const data = shortlists.map((item) => {
+            const shortlistObj = item.toObject();
+            if (shortlistObj.propertyId && shortlistObj.propertyId.media) {
+                shortlistObj.propertyId.media = shortlistObj.propertyId.media.map((m) => ({
+                    ...m,
+                    url: getPropertyMediaUrl(m.fileName, m.type),
+                }));
+            }
+            return shortlistObj;
+        });
+
         return res.status(status.OK).json({
             success: true,
             message: 'Shortlisted properties fetched successfully',
-            data: shortlists,
+            data,
             pagination,
         });
     } catch (error) {
