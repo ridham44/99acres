@@ -4,7 +4,7 @@ const requirementController = require('../controllers/requirement.controller');
 const protect = require('../middleware/auth.middleware');
 const role = require('../middleware/role.middleware');
 
-const AGENT_ROLES = ['broker', 'dealer', 'builder', 'admin'];
+const AGENT_ROLES = ['broker', 'channel_partner', 'builder', 'admin'];
 
 router.post('/', protect, requirementController.createRequirement);
 router.get('/my', protect, requirementController.getMyRequirements);

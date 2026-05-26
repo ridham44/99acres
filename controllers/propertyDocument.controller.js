@@ -67,6 +67,52 @@ exports.getPropertyDocuments = async (req, res) => {
             filter.status = documentStatus;
         }
 
+        // Restrict documents to properties belonging to the requesting user (unless admin)
+        const requesterId = req.user && req.user.id;
+        const requesterRole = req.user && req.user.role;
+
+        if (requesterId && requesterRole !== 'admin') {
+            if (propertyId) {
+                const prop = await Property.findOne({ _id: propertyId, deletedAt: null }).select('ownerId dealerId');
+
+                if (!prop) {
+                    return res.status(status.NotFound).json({
+                        success: false,
+                        message: 'Property not found',
+                    });
+                }
+
+                const ownerId = prop.ownerId ? prop.ownerId.toString() : null;
+                const dealerIdVal = prop.dealerId ? prop.dealerId.toString() : null;
+
+                if (ownerId !== requesterId && dealerIdVal !== requesterId) {
+                    return res.status(status.Forbidden).json({
+                        success: false,
+                        message: 'Not authorized to view these documents',
+                    });
+                }
+            } else {
+                const userProperties = await Property.find({ deletedAt: null, $or: [{ ownerId: requesterId }, { dealerId: requesterId }] }).select('_id');
+                const propIds = userProperties.map((p) => p._id);
+
+                if (propIds.length === 0) {
+                    return res.status(status.OK).json({
+                        success: true,
+                        message: 'Property documents fetched successfully',
+                        data: [],
+                        pagination: {
+                            total: 0,
+                            page: Number(page) || 1,
+                            limit: Number(limit) || 10,
+                            totalPages: 0,
+                        },
+                    });
+                }
+
+                filter.propertyId = { $in: propIds };
+            }
+        }
+
         const currentPage = Number(page) || 1;
         const currentLimit = Number(limit) || 10;
         const skip = (currentPage - 1) * currentLimit;

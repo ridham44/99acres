@@ -23,6 +23,118 @@ Production/start command:
 npm start
 ```
 
+## Database Cleanup - Deleted Users
+
+If you have users that were deleted from the database **before** the cascading delete middleware was implemented, their orphaned data is still in the database. Use the cleanup scripts to remove it.
+
+**These scripts work for ALL user types:** user, broker, channel_partner, builder, admin - regardless of role, all deleted user data is cleaned up.
+
+### Step 1: Diagnose Database (Optional)
+
+First, see what's in your database without removing anything:
+
+```bash
+node diagnose-db.js
+```
+
+This will show you:
+- ✓ Total users in database (all types)
+- ✓ Soft-deleted users (marked with `deletedAt`)
+- ✓ Orphaned records (data from users who no longer exist)
+- ✓ Which cleanup script to run
+
+**Example Output:**
+```
+========== DATABASE DIAGNOSTIC REPORT ==========
+
+1. SOFT-DELETED USERS (deletedAt is not null):
+   Found 2 soft-deleted users:
+   - John Doe - broker (john@example.com) - Deleted: 2026-05-20T10:00:00.000Z
+   - Jane Smith - channel_partner (jane@example.com) - Deleted: 2026-05-21T14:30:00.000Z
+
+2. ALL USERS IN DATABASE:
+   Total users: 50
+
+3. ORPHANED DATA (records with deleted user references):
+   - Shortlists: 12 orphaned records
+   - Reviews: 5 orphaned records
+   - Properties: 8 orphaned records
+   - Property Documents: 15 orphaned records
+
+   TOTAL ORPHANED RECORDS: 40
+
+========== SUMMARY ==========
+Total Users: 50
+Soft-Deleted Users: 2
+Orphaned Records: 40
+
+→ Run: node cleanup-deleted-users.js
+→ Run: node cleanup-orphaned-data.js
+```
+
+### Step 2: Run Cleanup Script
+
+Choose the appropriate cleanup script:
+
+**For soft-deleted users** (users with `deletedAt` field - any role):
+```bash
+node cleanup-deleted-users.js
+```
+
+**For hard-deleted users** (users completely removed, leaving orphaned data - any role):
+```bash
+node cleanup-orphaned-data.js
+```
+
+**What it does:**
+- Finds records with deleted user references (works for all user types/roles)
+- Removes all their associated data:
+  - Shortlists
+  - Property visits
+  - OTPs
+  - Reviews
+  - Requirements
+  - Support tickets
+  - User subscriptions
+  - Login logs
+  - Agent profiles (for brokers/channel_partners)
+  - Properties (owned/managed by any user type)
+  - Property documents
+- Displays a detailed summary of what was cleaned
+
+**Example Output:**
+```
+Starting cleanup of orphaned user data...
+
+Found 50 active users in database
+
+Checking for orphaned records...
+
+  Found 12 orphaned Shortlists
+  ✓ Deleted 12 records
+
+  Found 5 orphaned Reviews
+  ✓ Deleted 5 records
+
+  Found 8 orphaned Properties
+  ✓ Deleted 8 property documents
+  ✓ Deleted 8 properties
+
+========== CLEANUP SUMMARY ==========
+Total orphaned records removed: 40
+
+Breakdown by type:
+  - Shortlists: 12
+  - Reviews: 5
+  - Properties: 8
+  - Property Documents: 15
+
+✓ All orphaned data has been successfully removed!
+========== CLEANUP COMPLETE ==========
+```
+
+**Note:** Going forward, all new user deletions (regardless of role) will automatically cascade-delete associated data via MongoDB middleware, so you won't need to run these scripts again unless you delete more users directly from the database.
+
 ## Common Response Format
 
 Most successful APIs return:
@@ -96,6 +208,7 @@ documentId =
 privacyPolicyId =
 termsConditionsId =
 faqId =
+expertInAreaId =
 ```
 
 ## Auth APIs
@@ -136,7 +249,7 @@ JSON body without image:
 }
 ```
 
-Broker/dealer/builder must include `agencyName`:
+Broker/channel_partner/builder must include `agencyName`:
 
 ```json
 {
@@ -150,7 +263,7 @@ Broker/dealer/builder must include `agencyName`:
 }
 ```
 
-Allowed roles: `user`, `broker`, `dealer`, `builder`, `admin`.
+Allowed roles: `user`, `broker`, `channel_partner`, `builder`, `admin`.
 
 ### Verify Register OTP
 
@@ -296,9 +409,53 @@ Allowed update fields only: `name`, `phone`, `email`, `agencyName`.
 Profile image is uploaded as file field `profileImage`; only the ImageKit file name is stored in DB, and APIs return `profileImageUrl`.
 User documents are uploaded as repeated file field `documents`; only ImageKit file names are stored in DB, and APIs return `documentUrls`.
 
+### Delete My Account
+
+Permanently deletes the logged-in user account and all associated data in cascade.
+
+`DELETE {{baseUrl}}/user/profile`
+
+Headers: auth required.
+
+**Cascading Delete:**
+When a user is deleted, the following data is also removed:
+- User account
+- All shortlists
+- All property visits/viewed properties
+- All OTP records
+- All reviews submitted by the user
+- All requirements/leads shared
+- All support tickets
+- User status records
+- All subscriptions
+- Login/session logs
+- Agent profile (if user is a broker or channel_partner)
+- All properties (owned or managed by the user)
+- All property documents (for user's properties)
+
+**Database-Level Cascading:**
+This cascading delete is enforced at the database level using MongoDB middleware. This means:
+- ✓ Cascading deletes work when deleting via API endpoint
+- ✓ Cascading deletes also work if a user is deleted directly from the database
+- ✓ All related data is automatically cleaned up regardless of deletion method
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "message": "User account and all associated data deleted successfully",
+  "data": {
+    "userId": "64f000000000000000000002",
+    "deletedAt": "2026-05-26T10:00:00.000Z"
+  }
+}
+```
+
+**Important:** This action is irreversible and will delete all user data from the system, whether deleted through the API or directly from the database.
+
 ## Agent APIs
 
-All agent endpoints require auth. Only users with the role `broker` or `dealer` can register as agents.
+All agent endpoints require auth. Only users with the role `broker` or `channel_partner` can register as agents.
 
 ### Register / Update Agent Profile
 
@@ -501,6 +658,75 @@ Create/update body:
 ```json
 {
   "name": "Traffic Noise"
+}
+```
+
+### Expert In Area
+
+Master data for areas where agents have expertise. Used by agents to specify their specialist locations.
+
+Public read APIs:
+
+```txt
+GET {{baseUrl}}/expert-in-areas
+GET {{baseUrl}}/expert-in-areas?search=Satellite&page=1&limit=10
+GET {{baseUrl}}/expert-in-areas/{{expertInAreaId}}
+```
+
+Protected write APIs (require auth):
+
+```txt
+POST {{baseUrl}}/expert-in-areas
+PUT {{baseUrl}}/expert-in-areas/{{expertInAreaId}}
+DELETE {{baseUrl}}/expert-in-areas/{{expertInAreaId}}
+```
+
+Create/update body:
+
+```json
+{
+  "areaName": "Satellite"
+}
+```
+
+Postman test for create:
+
+```js
+const json = pm.response.json();
+if (json.data && json.data._id) {
+  pm.environment.set("expertInAreaId", json.data._id);
+}
+```
+
+**Schema:**
+- `areaName` (String, required, unique) - Name of the area where agents have expertise.
+- `createdAt` (Date) - Record creation timestamp.
+- `updatedAt` (Date) - Record last update timestamp.
+- `deletedAt` (Date) - Soft delete timestamp (null if not deleted).
+
+**Response Example (List):**
+```json
+{
+  "success": true,
+  "message": "Expert in areas fetched successfully",
+  "data": [
+    {
+      "_id": "64f000000000000000000001",
+      "areaName": "Satellite",
+      "createdAt": "2026-01-22T10:00:00.000Z",
+      "updatedAt": "2026-01-22T10:00:00.000Z",
+      "deletedAt": null
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  },
+  "meta": {
+    "totalExpertInAreas": 1
+  }
 }
 ```
 
@@ -784,6 +1010,15 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
 }
 ```
 
+  Notes:
+  - The single-property response now includes a `postedBy` field (same semantics as the list `postedBy`): it contains the `dealerId` if present, otherwise the `ownerId`.
+
+  Quick verification (replace placeholders):
+  ```bash
+  curl -H "Authorization: Bearer <TOKEN>" \
+    "{{baseUrl}}/properties/<propertyId>"
+  ```
+
 ---
 
 ### Update Property
@@ -881,6 +1116,20 @@ if (json.data && json.data._id) {
 Headers: auth required.
 
 Optional filters: `propertyId`, `documentType`, `status`, `page`, `limit`.
+
+Notes:
+- This endpoint is restricted to documents belonging to properties owned or managed by the requesting user. If you query with `propertyId`, the API will verify that the logged-in user is the `ownerId` or `dealerId` of that property (admins bypass this check). If the user does not own/manage the property, a `403 Forbidden` is returned.
+
+Quick verification (replace placeholders):
+```bash
+# Get documents for a specific property (will verify ownership)
+curl -H "Authorization: Bearer <TOKEN>" \
+  "{{baseUrl}}/property-documents?propertyId=<propertyId>&page=1&limit=10"
+
+# Get documents for properties owned/managed by the logged-in user
+curl -H "Authorization: Bearer <TOKEN>" \
+  "{{baseUrl}}/property-documents?page=1&limit=10"
+```
 
 ### Get Property Document By ID
 
@@ -1043,7 +1292,7 @@ Agent profile uses `userId` as a foreign key to the logged-in user. Agent respon
 
 ### Register Agent
 
-Registers the logged-in user as an agent. Only users with role `broker` or `dealer` can register as an agent.
+Registers the logged-in user as an agent. Only users with role `broker` or `channel_partner` can register as an agent.
 
 `POST {{baseUrl}}/agents/register`
 
@@ -1067,12 +1316,12 @@ Allowed image types: `jpg`, `jpeg`, `png`, `webp`.
 
 Max image size: 5 MB.
 
-If the logged-in user role is not `broker` or `dealer`, API returns forbidden:
+If the logged-in user role is not `broker` or `channel_partner`, API returns forbidden:
 
 ```json
 {
   "success": false,
-  "message": "Only broker and dealer users can register as agents"
+  "message": "Only broker and channel_partner users can register as agents"
 }
 ```
 
@@ -1323,7 +1572,7 @@ Allows agents to discover buyer/renter leads. By default, only **Active** requir
 
 `GET {{baseUrl}}/requirements/all?city=Ahmedabad&transactionType=Buy&page=1&limit=10`
 
-**Constraint:** Only accessible by users with roles `broker`, `dealer`, `builder`, or `admin`.
+**Constraint:** Only accessible by users with roles `broker`, `channel_partner`, `builder`, or `admin`.
 
 **Query Parameters:**
 - `status` (string, optional) - Filter by status (defaults to `Active`).
@@ -1749,7 +1998,7 @@ Allows users to submit a support request.
 2. Copy returned `otp`.
 3. `POST /auth/verify-register-otp`
 4. Save returned `token` using the test script.
-5. For broker/dealer users, register agent profile with `POST /agents/register`.
+5. For broker/channel_partner users, register agent profile with `POST /agents/register`.
 6. Get nearby agents with `GET /agents/around-me/{{location}}`.
 7. Create master data:
    - `POST /amenities`

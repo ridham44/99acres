@@ -17,5 +17,6 @@ router.put(
     validation.validateUpdateProfile,
     controller.updateProfile,
 );
+router.delete('/profile', authMiddleware, controller.deleteProfile);
 
 module.exports = router;
