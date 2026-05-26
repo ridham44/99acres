@@ -4,6 +4,23 @@ const Property = require('../models/property.model');
 const status = require('../utils/statusCodes');
 const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
 
+/**
+ * Converts a populated Shortlist document into a plain object
+ * with full media URLs resolved for the nested property.
+ */
+const formatShortlistItem = (item) => {
+    const doc = item.toObject ? item.toObject() : { ...item };
+
+    if (doc.propertyId && Array.isArray(doc.propertyId.media)) {
+        doc.propertyId.media = doc.propertyId.media.map((m) => ({
+            ...m,
+            url: getPropertyMediaUrl(m.fileName, m.type),
+        }));
+    }
+
+    return doc;
+};
+
 exports.addToShortlist = async (req, res) => {
     try {
         const { propertyId } = req.body;
@@ -54,7 +71,7 @@ exports.addToShortlist = async (req, res) => {
         return res.status(status.CREATED).json({
             success: true,
             message: 'Property shortlisted successfully',
-            data: shortlist,
+            data: formatShortlistItem(shortlist),
         });
     } catch (error) {
         if (error.code === 11000) {
@@ -107,10 +124,14 @@ exports.getMyShortlists = async (req, res) => {
 
         const shortlists = await query;
 
+        const formattedShortlists = shortlists
+            .filter((item) => item.propertyId !== null)
+            .map(formatShortlistItem);
+
         return res.status(status.OK).json({
             success: true,
             message: 'Shortlisted properties fetched successfully',
-            data: shortlists.filter(item => item.propertyId !== null),
+            data: formattedShortlists,
             pagination,
         });
     } catch (error) {
