@@ -41,7 +41,7 @@ exports.addToShortlist = async (req, res) => {
             });
         }
 
-        const shortlist = await Shortlist.create({
+        let shortlist = await Shortlist.create({
             userId,
             propertyId,
             shortListedAt: new Date(),
@@ -49,10 +49,24 @@ exports.addToShortlist = async (req, res) => {
             updatedAt: new Date(),
         });
 
+        // Populate property details for the response
+        shortlist = await shortlist.populate({
+            path: 'propertyId',
+            select: 'title propertyName name price address city state propertyType propertyCategory listingType area measureType media createdAt',
+        });
+
+        const data = shortlist.toObject();
+        if (data.propertyId && data.propertyId.media) {
+            data.propertyId.media = data.propertyId.media.map((m) => ({
+                ...m,
+                url: getPropertyMediaUrl(m.fileName, m.type),
+            }));
+        }
+
         return res.status(status.CREATED).json({
             success: true,
             message: 'Property shortlisted successfully',
-            data: shortlist,
+            data,
         });
     } catch (error) {
         if (error.code === 11000) {
@@ -108,17 +122,28 @@ exports.getMyShortlists = async (req, res) => {
 
         const shortlists = await query;
 
-        // Map media URLs
-        const data = shortlists.map((item) => {
-            const shortlistObj = item.toObject();
-            if (shortlistObj.propertyId && shortlistObj.propertyId.media) {
-                shortlistObj.propertyId.media = shortlistObj.propertyId.media.map((m) => ({
-                    ...m,
-                    url: getPropertyMediaUrl(m.fileName, m.type),
-                }));
-            }
-            return shortlistObj;
-        });
+        // Map media URLs and filter out null propertyId (deleted properties)
+        const data = shortlists
+            .map((item) => {
+                const shortlistObj = item.toObject();
+                
+                // If property was deleted but reference exists in shortlist
+                if (!shortlistObj.propertyId || typeof shortlistObj.propertyId === 'string') {
+                    return null;
+                }
+
+                if (shortlistObj.propertyId.media) {
+                    shortlistObj.propertyId.media = shortlistObj.propertyId.media.map((m) => ({
+                        ...m,
+                        url: getPropertyMediaUrl(m.fileName, m.type),
+                    }));
+                } else {
+                    shortlistObj.propertyId.media = [];
+                }
+
+                return shortlistObj;
+            })
+            .filter(Boolean); // Remove null entries
 
         return res.status(status.OK).json({
             success: true,
