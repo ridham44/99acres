@@ -12,7 +12,7 @@ exports.uploadToImagekit = async (file, folder = 'properties') => {
             folder: `/${folder}`,
             useUniqueFileName: false,
         });
-
+        
         return {
             fileName: response.name,
             filePath: response.filePath,

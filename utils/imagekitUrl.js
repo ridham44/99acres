@@ -1,15 +1,18 @@
+const getBaseUrl = () =>
+    'https://ik.imagekit.io/aj6cyp5nm';
+
 exports.getImagekitFileUrl = (fileName, folder = 'properties') => {
     if (!fileName) {
         return null;
     }
 
-    return `${process.env.IMAGEKIT_URL_ENDPOINT}/${folder}/${fileName}`;
+    return `${getBaseUrl()}/${folder}/${fileName}`;
 };
 
 const getPropertyMediaUrl = (fileName, type) => {
     if (!fileName) return null;
 
-    const baseUrl = process.env.IMAGEKIT_URL_ENDPOINT;
+    const baseUrl = getBaseUrl();
 
     if (type === 'image') {
         return `${baseUrl}/properties/images/${fileName}`;
@@ -23,22 +26,22 @@ const getPropertyMediaUrl = (fileName, type) => {
 };
 const getPropertyDocumentUrl = (fileName) => {
     if (!fileName) return null;
-    return `${process.env.IMAGEKIT_URL_ENDPOINT}/properties/documents/${fileName}`;
+    return `${getBaseUrl()}/properties/documents/${fileName}`;
 };
 
 const getUserProfileImageUrl = (fileName) => {
     if (!fileName) return null;
-    return `${process.env.IMAGEKIT_URL_ENDPOINT}/users/profile-images/${fileName}`;
+    return `${getBaseUrl()}/users/profile-images/${fileName}`;
 };
 
 const getUserDocumentUrl = (fileName) => {
     if (!fileName) return null;
-    return `${process.env.IMAGEKIT_URL_ENDPOINT}/users/documents/${fileName}`;
+    return `${getBaseUrl()}/users/documents/${fileName}`;
 };
 
 const getAgentCompanyImageUrl = (fileName) => {
     if (!fileName) return null;
-    return `${process.env.IMAGEKIT_URL_ENDPOINT}/agents/company-images/${fileName}`;
+    return `${getBaseUrl()}/agents/company-images/${fileName}`;
 };
 
 module.exports = {

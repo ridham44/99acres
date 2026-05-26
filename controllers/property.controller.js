@@ -495,7 +495,7 @@ exports.getPropertyById = async (req, res) => {
 
         // ✅ map media using helper
         propertyObj.media = (propertyObj.media || []).map((item) => ({
-            ...item,
+            ...item,    
             url: getPropertyMediaUrl(item.fileName, item.type),
         }));
 

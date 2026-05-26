@@ -96,6 +96,7 @@ documentId =
 privacyPolicyId =
 termsConditionsId =
 faqId =
+expertInAreaId =
 ```
 
 ## Auth APIs
@@ -501,6 +502,75 @@ Create/update body:
 ```json
 {
   "name": "Traffic Noise"
+}
+```
+
+### Expert In Area
+
+Master data for areas where agents have expertise. Used by agents to specify their specialist locations.
+
+Public read APIs:
+
+```txt
+GET {{baseUrl}}/expert-in-area
+GET {{baseUrl}}/expert-in-area?search=Satellite&page=1&limit=10
+GET {{baseUrl}}/expert-in-area/{{expertInAreaId}}
+```
+
+Protected write APIs (require auth):
+
+```txt
+POST {{baseUrl}}/expert-in-area
+PUT {{baseUrl}}/expert-in-area/{{expertInAreaId}}
+DELETE {{baseUrl}}/expert-in-area/{{expertInAreaId}}
+```
+
+Create/update body:
+
+```json
+{
+  "areaName": "Satellite"
+}
+```
+
+Postman test for create:
+
+```js
+const json = pm.response.json();
+if (json.data && json.data._id) {
+  pm.environment.set("expertInAreaId", json.data._id);
+}
+```
+
+**Schema:**
+- `areaName` (String, required, unique) - Name of the area where agents have expertise.
+- `createdAt` (Date) - Record creation timestamp.
+- `updatedAt` (Date) - Record last update timestamp.
+- `deletedAt` (Date) - Soft delete timestamp (null if not deleted).
+
+**Response Example (List):**
+```json
+{
+  "success": true,
+  "message": "Expert in areas fetched successfully",
+  "data": [
+    {
+      "_id": "64f000000000000000000001",
+      "areaName": "Satellite",
+      "createdAt": "2026-01-22T10:00:00.000Z",
+      "updatedAt": "2026-01-22T10:00:00.000Z",
+      "deletedAt": null
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  },
+  "meta": {
+    "totalExpertInAreas": 1
+  }
 }
 ```
 
