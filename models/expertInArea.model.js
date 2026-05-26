@@ -5,8 +5,6 @@ const expertInAreaSchema = new mongoose.Schema(
     areaName: {
       type: String,
       required: true,
-      trim: true,
-      unique: true,
     },
     createdAt: {
       type: Date,
