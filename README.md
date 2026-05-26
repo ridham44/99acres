@@ -2030,3 +2030,306 @@ nearbyPlaces = [{"nearbyId":"64f000000000000000000003","distance":1.2,"distanceU
 - Public read APIs exist for master data, keywords, reviews, review summary, and public user status.
 - Property list/detail are currently protected, so frontend must call them after login.
 - Deletions are soft deletes using `deletedAt`.
+
+---
+
+## Inquiry APIs
+
+All inquiry endpoints require auth (`Authorization: Bearer {{token}}`).
+
+**Base path:** `{{baseUrl}}/inquiries`
+
+---
+
+### 1. Submit Inquiry
+
+User submits an inquiry on a property. After submission, the response includes the full property detail and the contact person (dealer if assigned, otherwise owner) so the frontend can show who to reach.
+
+`POST {{baseUrl}}/inquiries`
+
+Headers: auth required.
+
+Body (JSON):
+
+```json
+{
+  "username": "Rahul Sharma",
+  "phoneNumber": "9876543210",
+  "property_id": "{{propertyId}}",
+  "isAgent": "No"
+}
+```
+
+**Field rules:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `username` | string | ✅ | Non-empty string |
+| `phoneNumber` | string | ✅ | 10 digits, must start with 6–9 |
+| `property_id` | string | ✅ | Valid MongoDB ObjectId of an existing, non-deleted property |
+| `isAgent` | string | ❌ | "Yes" or "No" (defaults to "No") |
+
+**Duplicate prevention:** If the user has already submitted an open (`status: true`) inquiry for the same property, a `409 Conflict` is returned.
+
+**Success Response `201 Created`:**
+
+```json
+{
+  "success": true,
+  "message": "Inquiry submitted successfully",
+  "data": {
+    "inquiry": {
+      "_id": "664f000000000000000000a1",
+      "username": "Rahul Sharma",
+      "phoneNumber": "9876543210",
+      "isAgent": "No",
+      "status": true,
+      "property_id": "664f000000000000000000b1",
+      "createdAt": "2026-05-26T10:00:00.000Z"
+    },
+    "contactPerson": {
+      "_id": "664f000000000000000000c1",
+      "name": "Amit Broker",
+      "email": "amit@example.com",
+      "phone": "9123456789",
+      "role": "broker"
+    },
+    "property": {
+      "_id": "664f000000000000000000b1",
+      "title": "3 BHK Apartment in Satellite",
+      "propertyName": "Green Valley Apartment",
+      "propertyType": "Apartment",
+      "propertyCategory": "Residential",
+      "listingType": "Sale",
+      "price": 7500000,
+      "priceUnit": "total",
+      "area": 1500,
+      "measureType": "sqft",
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "address": "Block A, Green Valley, Satellite",
+      "status": "Active",
+      "media": [
+        {
+          "fileName": "property-img-1.jpg",
+          "type": "image",
+          "uploadedAt": "2026-05-01T08:00:00.000Z",
+          "url": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg"
+        }
+      ],
+      "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg",
+      "ownerId": { "_id": "...", "name": "...", "email": "...", "phone": "...", "role": "user" },
+      "dealerId": { "_id": "...", "name": "Amit Broker", "email": "amit@example.com", "phone": "9123456789", "role": "broker" },
+      "amenityIds": [{ "_id": "...", "amenityName": "Swimming Pool" }],
+      "furnishings": [{ "furnishingId": { "_id": "...", "furnitureName": "Sofa", "quantity": 1 } }],
+      "nearbyPlaces": [{ "nearbyId": { "_id": "...", "placeName": "Metro Station", "distance": 0.5, "distanceUnit": "km" } }],
+      "createdAt": "2026-05-01T08:00:00.000Z"
+    }
+  }
+}
+```
+
+**Error cases:**
+
+| Status | Reason |
+|---|---|
+| `400 Bad Request` | Missing or invalid `username`, `phoneNumber`, or `property_id` |
+| `404 Not Found` | Property not found or soft-deleted |
+| `409 Conflict` | User already has an open inquiry for this property |
+
+Postman test script:
+
+```js
+const json = pm.response.json();
+if (json.data && json.data.inquiry && json.data.inquiry._id) {
+  pm.environment.set("inquiryId", json.data.inquiry._id);
+}
+```
+
+---
+
+### 2. Get Received Inquiries (Owner / Dealer View)
+
+Returns all inquiries submitted on the logged-in user's properties. Each item includes the **user who inquired** and the **full property detail** with media URLs.
+
+`GET {{baseUrl}}/inquiries/received`
+
+Headers: auth required.
+
+Optional query params:
+
+```txt
+page  = 1
+limit = 10
+```
+
+**Success Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "message": "Received inquiries fetched successfully",
+  "data": [
+    {
+      "_id": "664f000000000000000000a1",
+      "username": "Rahul Sharma",
+      "phoneNumber": "9876543210",
+      "status": true,
+      "createdAt": "2026-05-26T10:00:00.000Z",
+      "userDetail": {
+        "_id": "664f000000000000000000d1",
+        "name": "Rahul Sharma",
+        "email": "rahul@example.com",
+        "phone": "9876543210",
+        "role": "user"
+      },
+      "property": {
+        "_id": "664f000000000000000000b1",
+        "title": "3 BHK Apartment in Satellite",
+        "propertyName": "Green Valley Apartment",
+        "propertyType": "Apartment",
+        "propertyCategory": "Residential",
+        "listingType": "Sale",
+        "price": 7500000,
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "address": "Block A, Green Valley, Satellite",
+        "status": "Active",
+        "media": [
+          {
+            "fileName": "property-img-1.jpg",
+            "type": "image",
+            "uploadedAt": "2026-05-01T08:00:00.000Z",
+            "url": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg"
+          }
+        ],
+        "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg",
+        "amenityIds": [{ "_id": "...", "amenityName": "Gym" }],
+        "createdAt": "2026-05-01T08:00:00.000Z"
+      }
+    }
+  ],
+  "pagination": {
+    "total": 5,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
+> If the user has no properties listed, returns `data: []` immediately without a DB scan.
+
+```
+
+---
+
+### 3. Check Inquiry Status
+
+Check if the current user has already submitted an active inquiry for a specific property.
+
+`GET {{baseUrl}}/inquiries/status/{{propertyId}}`
+
+Headers: auth required.
+
+**Success Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "message": "Inquiry status fetched successfully",
+  "data": {
+    "propertyId": "664f000000000000000000b1",
+    "isInquired": true
+  }
+}
+```
+
+---
+
+### 4. My Contacts (User — Inquiries I Submitted)
+
+Returns all properties the logged-in user has submitted inquiries for, with full property details and media URLs.
+
+`GET {{baseUrl}}/inquiries/mycontacts`
+
+Headers: auth required.
+
+Optional query params:
+
+```txt
+page  = 1
+limit = 10
+```
+
+**Success Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "message": "Your inquiries fetched successfully",
+  "data": [
+    {
+      "_id": "664f000000000000000000a1",
+      "username": "Rahul Sharma",
+      "phoneNumber": "9876543210",
+      "status": true,
+      "createdAt": "2026-05-26T10:00:00.000Z",
+      "property": {
+        "_id": "664f000000000000000000b1",
+        "title": "3 BHK Apartment in Satellite",
+        "propertyName": "Green Valley Apartment",
+        "propertyType": "Apartment",
+        "propertyCategory": "Residential",
+        "listingType": "Sale",
+        "price": 7500000,
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "address": "Block A, Green Valley, Satellite",
+        "status": "Active",
+        "media": [
+          {
+            "fileName": "property-img-1.jpg",
+            "type": "image",
+            "uploadedAt": "2026-05-01T08:00:00.000Z",
+            "url": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg"
+          }
+        ],
+        "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg",
+        "ownerId": { "_id": "...", "name": "Owner Name", "email": "owner@example.com", "phone": "9000000001", "role": "user" },
+        "dealerId": { "_id": "...", "name": "Amit Broker", "email": "amit@example.com", "phone": "9123456789", "role": "broker" },
+        "amenityIds": [{ "_id": "...", "amenityName": "Swimming Pool" }],
+        "furnishings": [{ "furnishingId": { "_id": "...", "furnitureName": "Sofa", "quantity": 1 } }],
+        "nearbyPlaces": [{ "nearbyId": { "_id": "...", "placeName": "Metro Station", "distance": 0.5, "distanceUnit": "km" } }],
+        "createdAt": "2026-05-01T08:00:00.000Z"
+      }
+    }
+  ],
+  "pagination": {
+    "total": 3,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### Inquiry Schema Reference
+
+| Field | Type | Description |
+|---|---|---|
+| `_id` | ObjectId | Auto-generated |
+| `userId` | ObjectId (ref: User) | Logged-in user who submitted |
+| `property_id` | ObjectId (ref: Property) | Target property |
+| `username` | String | Contact name provided by user |
+| `phoneNumber` | String | 10-digit phone starting with 6–9 |
+| `isAgent` | String | "Yes" or "No" |
+| `status` | Boolean | `true` = open, `false` = resolved/closed |
+| `createdAt` | Date | Submission timestamp |
+| `updatedAt` | Date | Last update timestamp |
+| `deletedAt` | Date | Soft delete marker (null = active) |
+

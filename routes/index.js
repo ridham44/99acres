@@ -23,5 +23,6 @@ router.use("/privacy-policy", require("./privacyPolicy.route"));
 router.use("/terms-conditions", require("./termsCondition.route"));
 router.use("/support", require("./support.route"));
 router.use("/expert-in-areas", require("./expertInArea.route"));
+router.use("/inquiries", require("./inquiry.route"));
 
 module.exports = router;
