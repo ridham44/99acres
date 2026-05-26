@@ -11,6 +11,7 @@ const SupportTicket = require('../models/supportTicket.model');
 const UserStatus = require('../models/userStatus.model');
 const UserSubscription = require('../models/userSubscription.model');
 const LogLogin = require('../models/logLogin');
+const Inquiry = require('../models/inquiry.model');
 const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
 const { getUserProfileImageUrl, getUserDocumentUrl } = require('../utils/imagekitUrl');
@@ -58,9 +59,10 @@ exports.getProfile = async (req, res) => {
             });
         }
 
-        const [shortlistedCount, propertyViewedCount] = await Promise.all([
+        const [shortlistedCount, propertyViewedCount, contactedCount] = await Promise.all([
             Shortlist.countDocuments({ userId, deletedAt: null }),
             PropertyVisit.countDocuments({ userId }),
+            Inquiry.countDocuments({ userId, deletedAt: null }),
         ]);
 
         const profileData = formatUserProfile(user);
@@ -71,7 +73,7 @@ exports.getProfile = async (req, res) => {
                 ...profileData,
                 stats: {
                     shortlisted: shortlistedCount,
-                    contacted: 0, // Placeholder as no contact model was found
+                    contacted: contactedCount,
                     propertyViewed: propertyViewedCount,
                 },
             },
