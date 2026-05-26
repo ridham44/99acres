@@ -17,7 +17,6 @@ const formatShortlistItem = (item) => {
             url: getPropertyMediaUrl(m.fileName, m.type),
         }));
     }
-
     return doc;
 };
 

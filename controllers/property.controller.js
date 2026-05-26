@@ -100,10 +100,17 @@ exports.createProperty = async (req, res) => {
             createdAt: new Date(),
         });
 
+        const propertyObj = property.toObject();
+
+        propertyObj.media = (propertyObj.media || []).map((item) => ({
+            ...item,
+            url: getPropertyMediaUrl(item.fileName, item.type),
+        }));
+
         return res.status(status.CREATED).json({
             success: true,
             message: 'Property created successfully',
-            data: property,
+            data: propertyObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -615,6 +622,15 @@ exports.updateProperty = async (req, res) => {
             .populate('nearbyPlaces.nearbyId', 'placeName placeType city locality');
 
         const propertyObj = property.toObject();
+
+        // map media URLs (same as getPropertyById)
+        propertyObj.media = (propertyObj.media || []).map((item) => ({
+            ...item,
+            url: getPropertyMediaUrl(item.fileName, item.type),
+        }));
+
+        const firstImage = propertyObj.media.find((item) => item.type === 'image');
+        propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
 
         propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => ({
             furnishingId: {
