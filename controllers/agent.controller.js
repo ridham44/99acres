@@ -74,10 +74,10 @@ exports.createOrUpdateMyAgent = async (req, res) => {
       });
     }
 
-    if (!["broker", "dealer"].includes(user.role)) {
+    if (!["broker", "channel_partner"].includes(user.role)) {
       return res.status(status.Forbidden).json({
         success: false,
-        message: "Only broker and dealer users can register as agents",
+        message: "Only broker and channel_partner users can register as agents",
       });
     }
 

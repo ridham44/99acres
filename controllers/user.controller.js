@@ -1,6 +1,16 @@
 const User = require('../models/user.model');
 const Shortlist = require('../models/shortlist.model');
 const PropertyVisit = require('../models/propertyVisit.model');
+const Property = require('../models/property.model');
+const PropertyDocument = require('../models/propertyDocument.model');
+const Agent = require('../models/agent.model');
+const OTP = require('../models/otp.model');
+const Review = require('../models/review.model');
+const Requirement = require('../models/requirement.model');
+const SupportTicket = require('../models/supportTicket.model');
+const UserStatus = require('../models/userStatus.model');
+const UserSubscription = require('../models/userSubscription.model');
+const LogLogin = require('../models/logLogin');
 const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
 const { getUserProfileImageUrl, getUserDocumentUrl } = require('../utils/imagekitUrl');
@@ -105,6 +115,96 @@ exports.updateProfile = async (req, res) => {
             success: true,
             message: 'Profile updated',
             data: formatUserProfile(user),
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+exports.deleteProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Verify user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+
+        // Cascading delete all user-related data
+        await Promise.all([
+            // Delete shortlists
+            Shortlist.updateMany({ userId }, { deletedAt: new Date() }),
+            
+            // Delete property visits
+            PropertyVisit.deleteMany({ userId }),
+            
+            // Delete OTPs
+            OTP.deleteMany({ userId }),
+            
+            // Delete reviews
+            Review.updateMany({ userId }, { deletedAt: new Date() }),
+            
+            // Delete requirements
+            Requirement.updateMany({ userId }, { deletedAt: new Date() }),
+            
+            // Delete support tickets
+            SupportTicket.updateMany({ userId }, { deletedAt: new Date() }),
+            
+            // Delete user status
+            UserStatus.deleteMany({ userId }),
+            
+            // Delete user subscriptions
+            UserSubscription.deleteMany({ userId }),
+            
+            // Delete login logs
+            LogLogin.deleteMany({ userId }),
+            
+            // Delete agent profile
+            Agent.updateMany({ userId }, { deletedAt: new Date() }),
+        ]);
+
+        // Find all properties owned or managed by this user
+        const userProperties = await Property.find({
+            $or: [{ ownerId: userId }, { dealerId: userId }],
+            deletedAt: null,
+        });
+
+        // Delete property documents for user's properties
+        if (userProperties.length > 0) {
+            const propertyIds = userProperties.map(p => p._id);
+            await PropertyDocument.updateMany(
+                { propertyId: { $in: propertyIds } },
+                { deletedAt: new Date() },
+            );
+        }
+
+        // Soft delete all user's properties
+        await Property.updateMany(
+            { $or: [{ ownerId: userId }, { dealerId: userId }] },
+            { deletedAt: new Date(), updatedAt: new Date() },
+        );
+
+        // Soft delete the user account
+        const deletedUser = await User.findByIdAndUpdate(
+            userId,
+            { deletedAt: new Date() },
+            { new: true },
+        );
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'User account and all associated data deleted successfully',
+            data: {
+                userId: deletedUser._id,
+                deletedAt: deletedUser.deletedAt,
+            },
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

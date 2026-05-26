@@ -66,7 +66,7 @@ exports.createProperty = async (req, res) => {
 
         if (userRole === 'user' || userRole === 'builder') {
             ownerId = userId;
-        } else if (userRole === 'broker' || userRole === 'dealer') {
+        } else if (userRole === 'broker' || userRole === 'channel_partner') {
             ownerId = req.body.ownerId || userId;
         } else {
             ownerId = userId;
@@ -300,7 +300,7 @@ exports.getProperties = async (req, res) => {
             const posters = Array.isArray(postedBy) ? postedBy : String(postedBy).split(',').map(p => p.trim());
             const roles = [];
             if (posters.includes('Owner')) roles.push('user');
-            if (posters.includes('Agent')) roles.push('broker', 'dealer');
+            if (posters.includes('Agent')) roles.push('broker', 'channel_partner');
             if (posters.includes('Builder')) roles.push('builder');
 
             if (roles.length > 0) {
@@ -492,6 +492,9 @@ exports.getPropertyById = async (req, res) => {
         }
 
         const propertyObj = property.toObject();
+
+        // add `postedBy` field similar to list response (dealerId || ownerId)
+        propertyObj.postedBy = propertyObj.dealerId || propertyObj.ownerId || null;
 
         // ✅ map media using helper
         propertyObj.media = (propertyObj.media || []).map((item) => ({
