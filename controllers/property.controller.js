@@ -8,6 +8,9 @@ const { recordPropertyVisit } = require('./userHome.controller');
 
 const formatPropertyCard = (item) => {
     const firstImage = (item.media || []).find((mediaItem) => mediaItem.type === 'image');
+    const coverImage = firstImage
+        ? getPropertyMediaUrl(firstImage.fileName, firstImage.type)
+        : item.coverImage || null;
 
     return {
         _id: item._id,
@@ -29,7 +32,7 @@ const formatPropertyCard = (item) => {
         city: item.city,
         state: item.state,
         status: item.status,
-        coverImage: firstImage ? getPropertyMediaUrl(firstImage.fileName, firstImage.type) : null,
+        coverImage,
         postedBy: item.dealerId || item.ownerId || null,
         createdAt: item.createdAt,
     };
@@ -332,7 +335,7 @@ exports.getProperties = async (req, res) => {
         const [properties, total] = await Promise.all([
             Property.find(filter)
                 .select(
-                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds ownership flooring waterSource otherKeyFacilities',
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds ownership flooring waterSource otherKeyFacilities',
                 )
                 .populate('ownerId', 'name role')
                 .populate('dealerId', 'name role')
@@ -435,7 +438,7 @@ exports.myProperty = async (req, res) => {
         const [properties, total] = await Promise.all([
             Property.find(filter)
                 .select(
-                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media bhk bedrooms bathrooms area facing createdAt',
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt',
                 )
                 .populate('ownerId', 'name role')
                 .populate('dealerId', 'name role')
@@ -498,6 +501,9 @@ exports.getPropertyById = async (req, res) => {
             ...item,
             url: getPropertyMediaUrl(item.fileName, item.type),
         }));
+
+        const firstImage = propertyObj.media.find((item) => item.type === 'image');
+        propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
 
         propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => ({
             furnishingId: {

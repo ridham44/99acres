@@ -257,6 +257,11 @@ const propertySchema = new mongoose.Schema(
             },
         ],
 
+        coverImage: {
+            type: String,
+            default: null,
+        },
+
         ownership: {
             type: String,
             trim: true,

@@ -5,7 +5,7 @@ const status = require('../utils/statusCodes');
 const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
 
 const propertyCardFields =
-    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media bhk bedrooms bathrooms area facing createdAt';
+    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt';
 
 const formatPropertyCard = (property, extra = {}) => {
     if (!property) {
@@ -14,6 +14,9 @@ const formatPropertyCard = (property, extra = {}) => {
 
     const item = typeof property.toObject === 'function' ? property.toObject() : property;
     const firstImage = (item.media || []).find((mediaItem) => mediaItem.type === 'image');
+    const coverImage = firstImage
+        ? getPropertyMediaUrl(firstImage.fileName, firstImage.type)
+        : item.coverImage || null;
 
     return {
         _id: item._id,
@@ -35,7 +38,7 @@ const formatPropertyCard = (property, extra = {}) => {
         city: item.city,
         state: item.state,
         status: item.status,
-        coverImage: firstImage ? getPropertyMediaUrl(firstImage.fileName, firstImage.type) : null,
+        coverImage,
         postedBy: item.dealerId || item.ownerId || null,
         createdAt: item.createdAt,
         ...extra,
