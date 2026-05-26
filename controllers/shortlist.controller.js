@@ -5,18 +5,33 @@ const status = require('../utils/statusCodes');
 const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
 
 /**
+ * Converts a raw property Mongoose object and maps its media to full CDN URLs.
+ */
+const formatPropertyWithMedia = (prop) => {
+    const obj = prop.toObject ? prop.toObject() : { ...prop };
+
+    obj.media = (obj.media || []).map((m) => ({
+        ...m,
+        url: getPropertyMediaUrl(m.fileName, m.type),
+    }));
+
+    const firstImage = obj.media.find((m) => m.type === 'image');
+    obj.coverImage = firstImage?.url || obj.coverImage || null;
+
+    return obj;
+};
+
+/**
  * Converts a populated Shortlist document into a plain object
  * with full media URLs resolved for the nested property.
  */
 const formatShortlistItem = (item) => {
     const doc = item.toObject ? item.toObject() : { ...item };
 
-    if (doc.propertyId && Array.isArray(doc.propertyId.media)) {
-        doc.propertyId.media = doc.propertyId.media.map((m) => ({
-            ...m,
-            url: getPropertyMediaUrl(m.fileName, m.type),
-        }));
+    if (doc.propertyId) {
+        doc.propertyId = formatPropertyWithMedia(doc.propertyId);
     }
+
     return doc;
 };
 
@@ -103,21 +118,20 @@ exports.getMyShortlists = async (req, res) => {
             .sort({ shortListedAt: -1 });
 
         let pagination = null;
+        const totalShortlists = await Shortlist.countDocuments(filter);
 
         if (page && limit) {
             const pageNumber = Number(page);
             const limitNumber = Number(limit);
             const skip = (pageNumber - 1) * limitNumber;
 
-            const total = await Shortlist.countDocuments(filter);
-
             query = query.skip(skip).limit(limitNumber);
 
             pagination = {
-                total,
+                total: totalShortlists,
                 page: pageNumber,
                 limit: limitNumber,
-                totalPages: Math.ceil(total / limitNumber),
+                totalPages: Math.ceil(totalShortlists / limitNumber),
             };
         }
 
@@ -130,6 +144,7 @@ exports.getMyShortlists = async (req, res) => {
         return res.status(status.OK).json({
             success: true,
             message: 'Shortlisted properties fetched successfully',
+            totalShortlists,
             data: formattedShortlists,
             pagination,
         });

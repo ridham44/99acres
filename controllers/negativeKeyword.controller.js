@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const NegativeKeyword = require('../models/negativeKeyword.model');
 const status = require('../utils/statusCodes');
 
+
 exports.createNegativeKeyword = async (req, res) => {
     try {
         const { name } = req.body;
@@ -36,6 +37,7 @@ exports.createNegativeKeyword = async (req, res) => {
         });
     }
 };
+
 
 exports.getAllNegativeKeywords = async (req, res) => {
     try {
@@ -86,6 +88,7 @@ exports.getAllNegativeKeywords = async (req, res) => {
     }
 };
 
+
 exports.getNegativeKeywordById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -121,6 +124,7 @@ exports.getNegativeKeywordById = async (req, res) => {
         });
     }
 };
+
 
 exports.updateNegativeKeyword = async (req, res) => {
     try {
@@ -177,6 +181,7 @@ exports.updateNegativeKeyword = async (req, res) => {
     }
 };
 
+
 exports.deleteNegativeKeyword = async (req, res) => {
     try {
         const { id } = req.params;
@@ -221,6 +226,7 @@ exports.deleteNegativeKeyword = async (req, res) => {
         });
     }
 };
+
 
 exports.getNegativeKeywordList = async (req, res) => {
     try {
