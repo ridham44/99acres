@@ -195,20 +195,20 @@ exports.getReceivedInquiries = async (req, res) => {
             .sort({ createdAt: -1 });
 
         let pagination = null;
+        const totalInquiries = await Inquiry.countDocuments(filter);
 
         if (page && limit) {
             const pageNumber = Number(page);
             const limitNumber = Number(limit);
             const skip = (pageNumber - 1) * limitNumber;
-            const total = await Inquiry.countDocuments(filter);
 
             query = query.skip(skip).limit(limitNumber);
 
             pagination = {
-                total,
+                total: totalInquiries,
                 page: pageNumber,
                 limit: limitNumber,
-                totalPages: Math.ceil(total / limitNumber),
+                totalPages: Math.ceil(totalInquiries / limitNumber),
             };
         }
 
@@ -237,6 +237,7 @@ exports.getReceivedInquiries = async (req, res) => {
         return res.status(status.OK).json({
             success: true,
             message: 'Received inquiries fetched successfully',
+            totalInquiries,
             data,
             pagination,
         });
@@ -280,20 +281,20 @@ exports.getMyInquiries = async (req, res) => {
             .sort({ createdAt: -1 });
 
         let pagination = null;
+        const totalInquiries = await Inquiry.countDocuments(filter);
 
         if (page && limit) {
             const pageNumber = Number(page);
             const limitNumber = Number(limit);
             const skip = (pageNumber - 1) * limitNumber;
-            const total = await Inquiry.countDocuments(filter);
 
             query = query.skip(skip).limit(limitNumber);
 
             pagination = {
-                total,
+                total: totalInquiries,
                 page: pageNumber,
                 limit: limitNumber,
-                totalPages: Math.ceil(total / limitNumber),
+                totalPages: Math.ceil(totalInquiries / limitNumber),
             };
         }
 
@@ -320,6 +321,7 @@ exports.getMyInquiries = async (req, res) => {
         return res.status(status.OK).json({
             success: true,
             message: 'Your inquiries fetched successfully',
+            totalInquiries,
             data,
             pagination,
         });

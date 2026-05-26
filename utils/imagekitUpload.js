@@ -20,6 +20,7 @@ exports.uploadToImagekit = async (file, folder = 'properties') => {
             thumbnailUrl: response.thumbnailUrl || null,
             fileType: response.fileType || '',
         };
+        
     } finally {
         if (file.path) {
             fs.promises.unlink(file.path).catch(() => {});

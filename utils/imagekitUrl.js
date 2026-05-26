@@ -21,9 +21,9 @@ const getPropertyMediaUrl = (fileName, type) => {
     if (type === 'video') {
         return `${baseUrl}/properties/videos/${fileName}`;
     }
-
     return null;
 };
+
 const getPropertyDocumentUrl = (fileName) => {
     if (!fileName) return null;
     return `${getBaseUrl()}/properties/documents/${fileName}`;

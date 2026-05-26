@@ -2224,7 +2224,6 @@ limit = 10
 
 ```
 
----
 
 ### 3. Check Inquiry Status
 
@@ -2247,7 +2246,6 @@ Headers: auth required.
 }
 ```
 
----
 
 ### 4. My Contacts (User — Inquiries I Submitted)
 
