@@ -1010,6 +1010,15 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
 }
 ```
 
+  Notes:
+  - The single-property response now includes a `postedBy` field (same semantics as the list `postedBy`): it contains the `dealerId` if present, otherwise the `ownerId`.
+
+  Quick verification (replace placeholders):
+  ```bash
+  curl -H "Authorization: Bearer <TOKEN>" \
+    "{{baseUrl}}/properties/<propertyId>"
+  ```
+
 ---
 
 ### Update Property
@@ -1107,6 +1116,20 @@ if (json.data && json.data._id) {
 Headers: auth required.
 
 Optional filters: `propertyId`, `documentType`, `status`, `page`, `limit`.
+
+Notes:
+- This endpoint is restricted to documents belonging to properties owned or managed by the requesting user. If you query with `propertyId`, the API will verify that the logged-in user is the `ownerId` or `dealerId` of that property (admins bypass this check). If the user does not own/manage the property, a `403 Forbidden` is returned.
+
+Quick verification (replace placeholders):
+```bash
+# Get documents for a specific property (will verify ownership)
+curl -H "Authorization: Bearer <TOKEN>" \
+  "{{baseUrl}}/property-documents?propertyId=<propertyId>&page=1&limit=10"
+
+# Get documents for properties owned/managed by the logged-in user
+curl -H "Authorization: Bearer <TOKEN>" \
+  "{{baseUrl}}/property-documents?page=1&limit=10"
+```
 
 ### Get Property Document By ID
 
