@@ -20,6 +20,16 @@ router.post(
 
 router.get('/', auth, controller.getProperties);
 router.get('/my-property', auth, controller.myProperty);
+router.get('/user/:userId', auth, validation.validateUserId, controller.getPropertiesByUser);
+
+// ── Static-segment routes MUST come before /:id ──────────────────────────────
+router.get('/popular', auth, controller.getPopularProperties);
+router.get('/count', auth, controller.getPropertyCount);
+
+// ── Property-specific routes ──────────────────────────────────────────────────
+router.get('/:id/similar', auth, validation.validatePropertyId, controller.getSimilarProperties);
+router.get('/:id/price-trends', auth, validation.validatePropertyId, controller.getPropertyPriceTrends);
+
 router.get('/:id', auth, validation.validatePropertyId, controller.getPropertyById);
 router.put(
     '/:id',

@@ -337,10 +337,15 @@ const propertySchema = new mongoose.Schema(
             }
         ],
 
-        legalCertificates: {
-            lastUpdated: String,
-            certificates: [{ name: String, isValid: Boolean }]
-        },
+        legalCertificates: [
+            {
+                name: String,
+                isAvailable: { type: Boolean, default: false },
+                documentUrl: String,
+                previewImageUrl: String,
+                lastUpdated: String,
+            }
+        ],
 
         propWorthInsights: {
             currentLocality: String,
@@ -350,7 +355,7 @@ const propertySchema = new mongoose.Schema(
         },
 
         aiSummary: String,
-        
+
         reviewTopics: [String],
 
         preLeasedDetails: {
@@ -404,6 +409,60 @@ const propertySchema = new mongoose.Schema(
                 avatarUrl: String
             }
         ],
+
+        // --- New Fields for Flutter Detail Pages ---
+
+        specifications: [String],
+
+        whyConsider: [String],
+
+        preels: [
+            {
+                imageUrl: String,
+                title: String,
+                location: String,
+                views: { type: Number, default: 0 },
+                videoUrl: String,
+            }
+        ],
+
+        expertReviews: [
+            {
+                videoThumbnail: String,
+                videoUrl: String,
+                reviewerName: String,
+                channelName: String,
+                subscribers: { type: Number, default: 0 },
+                views: { type: Number, default: 0 },
+            }
+        ],
+
+        projectInfo: {
+            priceRange: {
+                min: Number,
+                max: Number,
+            },
+            totalUnits: Number,
+        },
+
+        localityInfo: {
+            name: String,
+            city: String,
+            pincode: String,
+            rating: Number,
+            reviewCount: Number,
+        },
+
+        developerInfo: {
+            name: String,
+            yearsExperience: Number,
+            address: String,
+        },
+
+        viewStats: {
+            viewCount: { type: Number, default: 0 },
+            daysPeriod: { type: Number, default: 30 },
+        },
     },
     {
         timestamps: false,

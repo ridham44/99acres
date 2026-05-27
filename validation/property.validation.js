@@ -596,8 +596,26 @@ const validatePropertyId = (req, res, next) => {
     }
 };
 
+const validateUserId = (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        if (!isValidObjectId(userId)) {
+            return sendError(res, 'Invalid user id');
+        }
+
+        next();
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 module.exports = {
     validateCreateProperty,
     validateUpdateProperty,
     validatePropertyId,
+    validateUserId,
 };

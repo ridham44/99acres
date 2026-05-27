@@ -3,7 +3,7 @@ const User = require('../models/user.model');
 const Amenity = require('../models/amenity.model');
 const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
-const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
+const { getPropertyMediaUrl, getUserProfileImageUrl } = require('../utils/imagekitUrl');
 const { recordPropertyVisit } = require('./userHome.controller');
 
 const formatPropertyCard = (item) => {
@@ -33,7 +33,13 @@ const formatPropertyCard = (item) => {
         state: item.state,
         status: item.status,
         coverImage,
-        postedBy: item.dealerId || item.ownerId || null,
+        postedBy: (item.dealerId || item.ownerId)
+            ? {
+                  ...(item.dealerId?._doc || item.dealerId || item.ownerId?._doc || item.ownerId),
+                  profileImageUrl: getUserProfileImageUrl((item.dealerId || item.ownerId).profileImage),
+                  url: getUserProfileImageUrl((item.dealerId || item.ownerId).profileImage),
+              }
+            : null,
         createdAt: item.createdAt,
     };
 };
@@ -80,7 +86,9 @@ exports.createProperty = async (req, res) => {
             'nearbyLandmarks', 'locationCoordinates', 'keyHighlights', 'floorPlans',
             'legalCertificates', 'propWorthInsights', 'reviewTopics', 'preLeasedDetails',
             'approvedIndustryTypes', 'keySpecifications', 'projectDetails', 'aboutProject',
-            'aboutLocality', 'aboutDeveloper', 'topAgents', 'amenityIds', 'furnishings', 'nearbyPlaces'
+            'aboutLocality', 'aboutDeveloper', 'topAgents', 'amenityIds', 'furnishings', 'nearbyPlaces',
+            'specifications', 'whyConsider', 'preels', 'expertReviews',
+            'projectInfo', 'localityInfo', 'developerInfo', 'viewStats'
         ];
 
         jsonFields.forEach(field => {
@@ -344,8 +352,8 @@ exports.getProperties = async (req, res) => {
                 .select(
                     '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds ownership flooring waterSource otherKeyFacilities',
                 )
-                .populate('ownerId', 'name role')
-                .populate('dealerId', 'name role')
+                .populate('ownerId', 'name role profileImage')
+                .populate('dealerId', 'name role profileImage')
                 .sort(sort)
                 .skip(skip)
                 .limit(currentLimit),
@@ -447,8 +455,8 @@ exports.myProperty = async (req, res) => {
                 .select(
                     '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt',
                 )
-                .populate('ownerId', 'name role')
-                .populate('dealerId', 'name role')
+                .populate('ownerId', 'name role profileImage')
+                .populate('dealerId', 'name role profileImage')
                 .sort(sort)
                 .skip(skip)
                 .limit(currentLimit),
@@ -474,6 +482,75 @@ exports.myProperty = async (req, res) => {
     }
 };
 
+exports.getPropertiesByUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const {
+            page,
+            limit,
+            listingType,
+            propertyCategory,
+            propertyType,
+            sortBy,
+        } = req.query;
+
+        const filter = {
+            deletedAt: null,
+            $or: [{ ownerId: userId }, { dealerId: userId }],
+        };
+
+        if (listingType) filter.listingType = listingType;
+        if (propertyCategory) filter.propertyCategory = propertyCategory;
+        if (propertyType) filter.propertyType = propertyType;
+
+        let sort = { createdAt: -1 };
+
+        if (sortBy === 'price_asc') {
+            sort = { price: 1 };
+        } else if (sortBy === 'price_desc') {
+            sort = { price: -1 };
+        } else if (sortBy === 'oldest') {
+            sort = { createdAt: 1 };
+        } else if (sortBy === 'newest') {
+            sort = { createdAt: -1 };
+        }
+
+        const currentPage = Number(page) || 1;
+        const currentLimit = Number(limit) || 10;
+        const skip = (currentPage - 1) * currentLimit;
+
+        const [properties, total] = await Promise.all([
+            Property.find(filter)
+                .select(
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt',
+                )
+                .populate('ownerId', 'name role profileImage')
+                .populate('dealerId', 'name role profileImage')
+                .sort(sort)
+                .skip(skip)
+                .limit(currentLimit),
+            Property.countDocuments(filter),
+        ]);
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'User properties fetched successfully',
+            data: properties.map(formatPropertyCard),
+            pagination: {
+                total,
+                page: currentPage,
+                limit: currentLimit,
+                totalPages: Math.ceil(total / currentLimit),
+            },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 exports.getPropertyById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -482,8 +559,8 @@ exports.getPropertyById = async (req, res) => {
             _id: id,
             deletedAt: null,
         })
-            .populate('ownerId', 'name email phone role')
-            .populate('dealerId', 'name email phone role')
+            .populate('ownerId', 'name email phone role profileImage')
+            .populate('dealerId', 'name email phone role profileImage')
             .populate('amenityIds', 'amenityName')
             .populate('furnishings.furnishingId', 'furnitureName')
             .populate('nearbyPlaces.nearbyId', 'placeName placeType city locality');
@@ -504,7 +581,16 @@ exports.getPropertyById = async (req, res) => {
         const propertyObj = property.toObject();
 
         // add `postedBy` field similar to list response (dealerId || ownerId)
-        propertyObj.postedBy = propertyObj.dealerId || propertyObj.ownerId || null;
+        const postedByData = propertyObj.dealerId || propertyObj.ownerId || null;
+        if (postedByData) {
+            propertyObj.postedBy = {
+                ...postedByData,
+                profileImageUrl: getUserProfileImageUrl(postedByData.profileImage),
+                url: getUserProfileImageUrl(postedByData.profileImage),
+            };
+        } else {
+            propertyObj.postedBy = null;
+        }
 
         // ✅ map media using helper
         propertyObj.media = (propertyObj.media || []).map((item) => ({
@@ -564,7 +650,9 @@ exports.updateProperty = async (req, res) => {
             'nearbyLandmarks', 'locationCoordinates', 'keyHighlights', 'floorPlans',
             'legalCertificates', 'propWorthInsights', 'reviewTopics', 'preLeasedDetails',
             'approvedIndustryTypes', 'keySpecifications', 'projectDetails', 'aboutProject',
-            'aboutLocality', 'aboutDeveloper', 'topAgents', 'amenityIds', 'furnishings', 'nearbyPlaces'
+            'aboutLocality', 'aboutDeveloper', 'topAgents', 'amenityIds', 'furnishings', 'nearbyPlaces',
+            'specifications', 'whyConsider', 'preels', 'expertReviews',
+            'projectInfo', 'localityInfo', 'developerInfo', 'viewStats'
         ];
 
         jsonFields.forEach(field => {
@@ -615,13 +703,25 @@ exports.updateProperty = async (req, res) => {
             },
             { new: true },
         )
-            .populate('ownerId', 'name email phone role')
-            .populate('dealerId', 'name email phone role')
+            .populate('ownerId', 'name email phone role profileImage')
+            .populate('dealerId', 'name email phone role profileImage')
             .populate('amenityIds', 'amenityName')
             .populate('furnishings.furnishingId', 'furnitureName')
             .populate('nearbyPlaces.nearbyId', 'placeName placeType city locality');
 
         const propertyObj = property.toObject();
+
+        // add `postedBy` field
+        const postedByData = propertyObj.dealerId || propertyObj.ownerId || null;
+        if (postedByData) {
+            propertyObj.postedBy = {
+                ...postedByData,
+                profileImageUrl: getUserProfileImageUrl(postedByData.profileImage),
+                url: getUserProfileImageUrl(postedByData.profileImage),
+            };
+        } else {
+            propertyObj.postedBy = null;
+        }
 
         // map media URLs (same as getPropertyById)
         propertyObj.media = (propertyObj.media || []).map((item) => ({
@@ -691,5 +791,171 @@ exports.deleteProperty = async (req, res) => {
             success: false,
             message: error.message,
         });
+    }
+};
+
+// ─── GET /api/properties/:id/similar ─────────────────────────────────────────
+exports.getSimilarProperties = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { limit = 10 } = req.query;
+
+        const source = await Property.findOne({ _id: id, deletedAt: null })
+            .select('propertyCategory propertyType city bhk bedrooms price');
+
+        if (!source) {
+            return res.status(status.NotFound).json({ success: false, message: 'Property not found' });
+        }
+
+        const filter = {
+            _id: { $ne: id },
+            deletedAt: null,
+            status: 'Active',
+            propertyCategory: source.propertyCategory,
+            city: source.city,
+        };
+
+        if (source.propertyType) filter.propertyType = source.propertyType;
+
+        const props = await Property.find(filter)
+            .select('_id title propertyName propertyType propertyCategory listingType price area bhk bedrooms status propertyAge locality city coverImage media')
+            .limit(Number(limit));
+
+        const data = props.map((p) => {
+            const firstImage = (p.media || []).find((m) => m.type === 'image');
+            return {
+                propertyId: p._id,
+                title: p.title || p.propertyName,
+                location: [p.locality, p.city].filter(Boolean).join(', '),
+                price: p.price,
+                pricePerSqft: p.area > 0 ? Math.round(p.price / p.area) : null,
+                bhk: p.bhk || p.bedrooms,
+                propertyType: p.propertyType,
+                status: p.status,
+                propertyAge: p.propertyAge || null,
+                coverImage: firstImage ? getPropertyMediaUrl(firstImage.fileName, 'image') : p.coverImage || null,
+            };
+        });
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Similar properties fetched successfully',
+            data,
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({ success: false, message: error.message });
+    }
+};
+
+// ─── GET /api/properties/:id/price-trends ───────────────────────────────────
+exports.getPropertyPriceTrends = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const property = await Property.findOne({ _id: id, deletedAt: null })
+            .select('propertyName propWorthInsights locality');
+
+        if (!property) {
+            return res.status(status.NotFound).json({ success: false, message: 'Property not found' });
+        }
+
+        const insights = property.propWorthInsights || {};
+
+        // Build trend arrays with generated date labels
+        const buildTrend = (values = [], timeframe = '1Y') => {
+            if (!values.length) return [];
+            const now = new Date();
+            return values.map((pricePerSqft, i) => {
+                const d = new Date(now);
+                d.setMonth(d.getMonth() - (values.length - 1 - i) * (timeframe === '3M' ? 1 : timeframe === '6M' ? 1 : 2));
+                return {
+                    date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+                    pricePerSqft,
+                };
+            });
+        };
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Price trends fetched successfully',
+            data: {
+                localityName: insights.currentLocality || property.locality,
+                projectName: property.propertyName,
+                timeframe: insights.timeframe || '1Y',
+                projectPriceTrend: buildTrend(insights.projectTrend, insights.timeframe),
+                localityPriceTrend: buildTrend(insights.localityTrend, insights.timeframe),
+            },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({ success: false, message: error.message });
+    }
+};
+
+// ─── GET /api/properties/popular?city=...&limit=30 ──────────────────────────
+exports.getPopularProperties = async (req, res) => {
+    try {
+        const { city, limit = 30, listingType, propertyCategory } = req.query;
+
+        const filter = { deletedAt: null, status: 'Active' };
+        if (city) filter.city = { $regex: city, $options: 'i' };
+        if (listingType) filter.listingType = listingType;
+        if (propertyCategory) filter.propertyCategory = propertyCategory;
+
+        const [properties, total] = await Promise.all([
+            Property.find(filter)
+                .select('_id title propertyName bhk bedrooms price possession propertyType propertyCategory city locality coverImage media createdAt')
+                .sort({ createdAt: -1 })
+                .limit(Number(limit)),
+            Property.countDocuments(filter),
+        ]);
+
+        const data = properties.map((p) => {
+            const firstImage = (p.media || []).find((m) => m.type === 'image');
+            return {
+                propertyId: p._id,
+                title: p.title || p.propertyName,
+                location: [p.locality, p.city].filter(Boolean).join(', '),
+                price: p.price,
+                config: [p.bhk || p.bedrooms ? `${p.bhk || p.bedrooms} BHK` : null, p.propertyType].filter(Boolean).join(' '),
+                possessionYear: p.possession || null,
+                coverImage: firstImage ? getPropertyMediaUrl(firstImage.fileName, 'image') : p.coverImage || null,
+            };
+        });
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Popular properties fetched successfully',
+            data: {
+                totalCount: total,
+                city: city || null,
+                properties: data,
+            },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({ success: false, message: error.message });
+    }
+};
+
+// ─── GET /api/properties/count?city=...&listingType=... ─────────────────────
+exports.getPropertyCount = async (req, res) => {
+    try {
+        const { city, listingType, propertyCategory, status: propStatus } = req.query;
+
+        const filter = { deletedAt: null };
+        if (city) filter.city = { $regex: city, $options: 'i' };
+        if (listingType) filter.listingType = listingType;
+        if (propertyCategory) filter.propertyCategory = propertyCategory;
+        if (propStatus) filter.status = propStatus;
+        else filter.status = 'Active';
+
+        const count = await Property.countDocuments(filter);
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Property count fetched successfully',
+            data: { count, city: city || null },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({ success: false, message: error.message });
     }
 };
