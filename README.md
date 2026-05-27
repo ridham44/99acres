@@ -1984,6 +1984,7 @@ Toggles the status of a requirement between `Active` and `Inactive`. This replac
 }
 ```
 
+
 ## Privacy Policy APIs
 
 ### Get Active Privacy Policy (Public — User Side)
@@ -2079,6 +2080,7 @@ Note: Setting `isActive: true` on this record will auto-deactivate all other pol
 Soft deletes the policy and sets `isActive: false`.
 
 ---
+
 
 ## Terms & Conditions APIs
 
