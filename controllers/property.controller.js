@@ -36,7 +36,8 @@ const formatPropertyCard = (item) => {
         postedBy: (item.dealerId || item.ownerId)
             ? {
                   ...(item.dealerId?._doc || item.dealerId || item.ownerId?._doc || item.ownerId),
-                  photo: getUserProfileImageUrl((item.dealerId || item.ownerId).profileImage),
+                  profileImageUrl: getUserProfileImageUrl((item.dealerId || item.ownerId).profileImage),
+                  url: getUserProfileImageUrl((item.dealerId || item.ownerId).profileImage),
               }
             : null,
         createdAt: item.createdAt,
@@ -479,6 +480,75 @@ exports.myProperty = async (req, res) => {
     }
 };
 
+exports.getPropertiesByUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const {
+            page,
+            limit,
+            listingType,
+            propertyCategory,
+            propertyType,
+            sortBy,
+        } = req.query;
+
+        const filter = {
+            deletedAt: null,
+            $or: [{ ownerId: userId }, { dealerId: userId }],
+        };
+
+        if (listingType) filter.listingType = listingType;
+        if (propertyCategory) filter.propertyCategory = propertyCategory;
+        if (propertyType) filter.propertyType = propertyType;
+
+        let sort = { createdAt: -1 };
+
+        if (sortBy === 'price_asc') {
+            sort = { price: 1 };
+        } else if (sortBy === 'price_desc') {
+            sort = { price: -1 };
+        } else if (sortBy === 'oldest') {
+            sort = { createdAt: 1 };
+        } else if (sortBy === 'newest') {
+            sort = { createdAt: -1 };
+        }
+
+        const currentPage = Number(page) || 1;
+        const currentLimit = Number(limit) || 10;
+        const skip = (currentPage - 1) * currentLimit;
+
+        const [properties, total] = await Promise.all([
+            Property.find(filter)
+                .select(
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt',
+                )
+                .populate('ownerId', 'name role profileImage')
+                .populate('dealerId', 'name role profileImage')
+                .sort(sort)
+                .skip(skip)
+                .limit(currentLimit),
+            Property.countDocuments(filter),
+        ]);
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'User properties fetched successfully',
+            data: properties.map(formatPropertyCard),
+            pagination: {
+                total,
+                page: currentPage,
+                limit: currentLimit,
+                totalPages: Math.ceil(total / currentLimit),
+            },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 exports.getPropertyById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -513,7 +583,8 @@ exports.getPropertyById = async (req, res) => {
         if (postedByData) {
             propertyObj.postedBy = {
                 ...postedByData,
-                photo: getUserProfileImageUrl(postedByData.profileImage),
+                profileImageUrl: getUserProfileImageUrl(postedByData.profileImage),
+                url: getUserProfileImageUrl(postedByData.profileImage),
             };
         } else {
             propertyObj.postedBy = null;
@@ -641,7 +712,8 @@ exports.updateProperty = async (req, res) => {
         if (postedByData) {
             propertyObj.postedBy = {
                 ...postedByData,
-                photo: getUserProfileImageUrl(postedByData.profileImage),
+                profileImageUrl: getUserProfileImageUrl(postedByData.profileImage),
+                url: getUserProfileImageUrl(postedByData.profileImage),
             };
         } else {
             propertyObj.postedBy = null;

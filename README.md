@@ -905,6 +905,22 @@ limit
 
 `sortBy` values: `price_asc`, `price_desc`, `oldest`, `newest`.
 
+### Get Properties By User ID
+
+Returns all properties associated with a specific user (where they are either the owner or the dealer).
+
+`GET {{baseUrl}}/properties/user/:userId?page=1&limit=10&listingType=Sale&status=Active`
+
+**Headers:** auth required.
+
+**Path Parameter:**
+* `userId`: The ID of the user whose properties you want to retrieve.
+
+**Optional Filters:**
+`page`, `limit`, `listingType`, `propertyCategory`, `propertyType`, `sortBy`.
+
+`sortBy` values: `price_asc`, `price_desc`, `oldest`, `newest`.
+
 ### Get Property By ID
 
 Returns full property details with populated owner/dealer/amenities/media URLs. This endpoint includes all technical audit fields for residential and commercial views.
@@ -1005,14 +1021,22 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
     },
     "media": [
       { "type": "image", "url": "https://ik.imagekit.io/..." }
-    ]
+    ],
+    "postedBy": {
+      "_id": "6742fb0b28e23588df8e9766",
+      "name": "John Doe",
+      "role": "broker",
+      "profileImage": "profile_123.jpg",
+      "profileImageUrl": "https://ik.imagekit.io/.../profile_123.jpg",
+      "url": "https://ik.imagekit.io/.../profile_123.jpg"
+    }
   }
 }
 ```
 
   Notes:
-  - The single-property response now includes a `postedBy` field (same semantics as the list `postedBy`): it contains the `dealerId` if present, otherwise the `ownerId`.
-
+  - The single-property response now includes a `postedBy` field (same semantics as the list `postedBy`): it contains the `dealerId` if present, otherwise the `ownerId`. 
+  - `postedBy` includes `profileImageUrl` and `url` for the user's photo.
   Quick verification (replace placeholders):
   ```bash
   curl -H "Authorization: Bearer <TOKEN>" \

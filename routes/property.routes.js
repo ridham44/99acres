@@ -20,6 +20,7 @@ router.post(
 
 router.get('/', auth, controller.getProperties);
 router.get('/my-property', auth, controller.myProperty);
+router.get('/user/:userId', auth, validation.validateUserId, controller.getPropertiesByUser);
 router.get('/:id', auth, validation.validatePropertyId, controller.getPropertyById);
 router.put(
     '/:id',
