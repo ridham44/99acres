@@ -50,7 +50,7 @@ exports.validateRegister = async (req, res, next) => {
             });
         }
 
-        if (['broker', 'channel_partner', 'builder'].includes(role)) {
+        if (['broker', 'channel_partner'].includes(role)) {
             if (!agencyName) {
                 return res.status(status.BadRequest).json({
                     success: false,
