@@ -1045,7 +1045,188 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
 
 ---
 
+### New Fields in Create / Update Property
+
+The following new fields are accepted in the `POST /api/properties` and `PUT /api/properties/:id` body (send as JSON strings in `form-data` or directly in a JSON body):
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `specifications` | `Array<String>` | Bullet points about construction & build quality. |
+| `whyConsider` | `Array<String>` | Selling points / USPs of the property. |
+| `preels` | `Array<Object>` | Short video reel highlights. See schema below. |
+| `expertReviews` | `Array<Object>` | Market expert review cards. See schema below. |
+| `legalCertificates` | `Array<Object>` | **Restructured** — now a per-certificate array. See schema below. |
+| `projectInfo` | `Object` | Price range and total units for the project. |
+| `localityInfo` | `Object` | Locality metadata: name, city, pincode, rating, reviewCount. |
+| `developerInfo` | `Object` | Developer name, experience, address. |
+| `viewStats` | `Object` | View count and period (auto-tracked or manually set). |
+
+**`preels` item schema:**
+```json
+{ "imageUrl": "https://...", "title": "Project Name", "location": "Locality", "views": 150, "videoUrl": "https://..." }
+```
+
+**`expertReviews` item schema:**
+```json
+{ "videoThumbnail": "https://...", "videoUrl": "https://...", "reviewerName": "Expert", "channelName": "Channel", "subscribers": 124, "views": 5010 }
+```
+
+**`legalCertificates` item schema** (replaces the old `{lastUpdated, certificates[]}` format):
+```json
+{ "name": "Commencement Certificate", "isAvailable": true, "documentUrl": "https://...", "previewImageUrl": "https://...", "lastUpdated": "2025-09-09" }
+```
+
+**`projectInfo` schema:**
+```json
+{ "priceRange": { "min": 3750000, "max": 10500000 }, "totalUnits": 183 }
+```
+
+**`localityInfo` schema:**
+```json
+{ "name": "Memnagar", "city": "Ahmedabad", "pincode": "380052", "rating": 4.0, "reviewCount": 20 }
+```
+
+**`developerInfo` schema:**
+```json
+{ "name": "Yash Group", "yearsExperience": 34, "address": "Parshwanath Business Park..." }
+```
+
+**`viewStats` schema:**
+```json
+{ "viewCount": 67, "daysPeriod": 73 }
+```
+
+---
+
+### Get Similar Properties
+
+Returns properties similar to a given property (same city, category, and type).
+
+`GET {{baseUrl}}/properties/{{propertyId}}/similar?limit=10`
+
+**Headers:** auth required.
+
+**Query:** `limit` (optional, default 10).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "propertyId": "abc123",
+      "title": "3 BHK Apartment in Satellite",
+      "location": "Satellite, Ahmedabad",
+      "price": 8500000,
+      "pricePerSqft": 5862,
+      "bhk": 3,
+      "propertyType": "Apartment",
+      "status": "Active",
+      "propertyAge": "2 years",
+      "coverImage": "https://ik.imagekit.io/..."
+    }
+  ]
+}
+```
+
+---
+
+### Get Property Price Trends
+
+Returns the PropWorth chart data (project + locality price trends) stored against a property.
+
+`GET {{baseUrl}}/properties/{{propertyId}}/price-trends`
+
+**Headers:** auth required.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "localityName": "Gota",
+    "projectName": "Unique Luxuria",
+    "timeframe": "1Y",
+    "projectPriceTrend": [
+      { "date": "2024-01", "pricePerSqft": 5600 },
+      { "date": "2024-06", "pricePerSqft": 6200 },
+      { "date": "2025-01", "pricePerSqft": 7200 }
+    ],
+    "localityPriceTrend": [
+      { "date": "2024-01", "pricePerSqft": 5200 },
+      { "date": "2025-01", "pricePerSqft": 6800 }
+    ]
+  }
+}
+```
+
+> Trend data is sourced from `propWorthInsights.projectTrend` / `localityTrend` stored on the property and mapped to date labels automatically.
+
+---
+
+### Get Popular Properties
+
+Returns the most recently active properties — used for the "Popular Projects" stack on detail pages.
+
+`GET {{baseUrl}}/properties/popular?city=Ahmedabad&limit=30&listingType=Sale&propertyCategory=Residential`
+
+**Headers:** auth required.
+
+**Query Parameters:**
+
+| Key | Type | Description |
+| :--- | :--- | :--- |
+| `city` | `String` | Filter by city (case-insensitive). |
+| `limit` | `Number` | Max results (default 30). |
+| `listingType` | `String` | `Sale` or `Rent`. |
+| `propertyCategory` | `String` | `Residential`, `Commercial`, or `PG`. |
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalCount": 56,
+    "city": "Ahmedabad",
+    "properties": [
+      {
+        "propertyId": "...",
+        "title": "Atithi Highline",
+        "location": "Gota, Ahmedabad",
+        "price": 15900000,
+        "config": "3 BHK Apartment",
+        "possessionYear": "Dec 2026",
+        "coverImage": "https://ik.imagekit.io/..."
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Get Property Count
+
+Returns the count of active properties matching the given filters — used for the "2867 New Projects in Ahmedabad" banner.
+
+`GET {{baseUrl}}/properties/count?city=Ahmedabad&listingType=Sale`
+
+**Headers:** auth required.
+
+**Query Parameters:** `city`, `listingType`, `propertyCategory`, `status` (optional — defaults to `Active`).
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": { "count": 2867, "city": "Ahmedabad" }
+}
+```
+
+---
+
 ### Update Property
+
 
 Updates property fields and optionally appends new images/videos.
 
