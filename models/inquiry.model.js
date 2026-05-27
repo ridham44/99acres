@@ -56,6 +56,7 @@ const inquirySchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
+        
     },
     { timestamps: false },
 );

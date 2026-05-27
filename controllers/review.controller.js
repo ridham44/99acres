@@ -129,6 +129,7 @@ exports.createReview = async (req, res) => {
         });
     }
 };
+
 exports.getAllReviews = async (req, res) => {
     try {
         const { propertyId, page, limit } = req.query;
@@ -449,3 +450,4 @@ exports.getPropertyReviewSummary = async (req, res) => {
         });
     }
 };
+

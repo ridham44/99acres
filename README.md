@@ -910,14 +910,16 @@ limit
 Returns all properties associated with a specific user (where they are either the owner or the dealer).
 
 `GET {{baseUrl}}/properties/user/:userId?page=1&limit=10&listingType=Sale&status=Active`
-
+  
 **Headers:** auth required.
 
 **Path Parameter:**
 * `userId`: The ID of the user whose properties you want to retrieve.
 
 **Optional Filters:**
-`page`, `limit`, `listingType`, `propertyCategory`, `propertyType`, `sortBy`.
+`page`, `limit`, `status`, `listingType`, `propertyCategory`, `propertyType`, `sortBy`.
+
+`status` values: `Active`, `Inactive`, `Draft`, `Sold`, `Rented`.
 
 `sortBy` values: `price_asc`, `price_desc`, `oldest`, `newest`.
 
@@ -1060,6 +1062,8 @@ The following new fields are accepted in the `POST /api/properties` and `PUT /ap
 | `localityInfo` | `Object` | Locality metadata: name, city, pincode, rating, reviewCount. |
 | `developerInfo` | `Object` | Developer name, experience, address. |
 | `viewStats` | `Object` | View count and period (auto-tracked or manually set). |
+| `availableUnits` | `Array<Object>` | **Builder-Only** — Unit configurations/pricing for large projects. |
+| `developer` | `Object` | **Builder-Only** — Rich developer/builder profile details. |
 
 **`preels` item schema:**
 ```json
@@ -1095,6 +1099,40 @@ The following new fields are accepted in the `POST /api/properties` and `PUT /ap
 ```json
 { "viewCount": 67, "daysPeriod": 73 }
 ```
+
+**`availableUnits` item schema (Builder/Admin Only):**
+```json
+{
+  "bhk": "2 BHK Apartment",
+  "bookingType": "New Bookings",
+  "brokerage": "Zero Brokerage",
+  "sizeRange": "617 - 629 sqft (57 - 58 sqm)",
+  "areaType": "Carpet Area",
+  "price": "₹58.5 Lac onwards",
+  "priceSqft": "₹4,200 /sqft",
+  "optionsCount": 3,
+  "updatedText": "Updated 2 mo. ago",
+  "paymentPlan": "Construction-linked Plan",
+  "paymentPlanSubtitle": "Payment Plans & banks"
+}
+```
+
+**`developer` schema (Builder/Admin Only):**
+```json
+{
+  "name": "Vivaan Group",
+  "logo": "https://...",
+  "experience": "13",
+  "totalProjects": "8",
+  "cities": "1",
+  "description": "Vivaan Group is committed to...",
+  "deliveredCount": "3",
+  "recentlyDeliveredCount": "3",
+  "ongoingCount": "5"
+}
+```
+
+> **Note:** The `availableUnits` and `developer` fields are strictly filtered at the API level. They are only accepted during creation/update and visible in responses if the authenticated user has the role `builder` or `admin`.
 
 ---
 
@@ -2429,7 +2467,6 @@ limit = 10
 
 ```
 
-
 ### 3. Check Inquiry Status
 
 Check if the current user has already submitted an active inquiry for a specific property.
@@ -2466,6 +2503,7 @@ Optional query params:
 page  = 1
 limit = 10
 ```
+
 
 **Success Response `200 OK`:**
 
