@@ -3,7 +3,7 @@ const User = require('../models/user.model');
 const Amenity = require('../models/amenity.model');
 const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
-const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
+const { getPropertyMediaUrl, getUserProfileImageUrl } = require('../utils/imagekitUrl');
 const { recordPropertyVisit } = require('./userHome.controller');
 
 const formatPropertyCard = (item) => {
@@ -33,7 +33,12 @@ const formatPropertyCard = (item) => {
         state: item.state,
         status: item.status,
         coverImage,
-        postedBy: item.dealerId || item.ownerId || null,
+        postedBy: (item.dealerId || item.ownerId)
+            ? {
+                  ...(item.dealerId?._doc || item.dealerId || item.ownerId?._doc || item.ownerId),
+                  photo: getUserProfileImageUrl((item.dealerId || item.ownerId).profileImage),
+              }
+            : null,
         createdAt: item.createdAt,
     };
 };
@@ -344,8 +349,8 @@ exports.getProperties = async (req, res) => {
                 .select(
                     '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds ownership flooring waterSource otherKeyFacilities',
                 )
-                .populate('ownerId', 'name role')
-                .populate('dealerId', 'name role')
+                .populate('ownerId', 'name role profileImage')
+                .populate('dealerId', 'name role profileImage')
                 .sort(sort)
                 .skip(skip)
                 .limit(currentLimit),
@@ -447,8 +452,8 @@ exports.myProperty = async (req, res) => {
                 .select(
                     '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt',
                 )
-                .populate('ownerId', 'name role')
-                .populate('dealerId', 'name role')
+                .populate('ownerId', 'name role profileImage')
+                .populate('dealerId', 'name role profileImage')
                 .sort(sort)
                 .skip(skip)
                 .limit(currentLimit),
@@ -482,8 +487,8 @@ exports.getPropertyById = async (req, res) => {
             _id: id,
             deletedAt: null,
         })
-            .populate('ownerId', 'name email phone role')
-            .populate('dealerId', 'name email phone role')
+            .populate('ownerId', 'name email phone role profileImage')
+            .populate('dealerId', 'name email phone role profileImage')
             .populate('amenityIds', 'amenityName')
             .populate('furnishings.furnishingId', 'furnitureName')
             .populate('nearbyPlaces.nearbyId', 'placeName placeType city locality');
@@ -504,7 +509,15 @@ exports.getPropertyById = async (req, res) => {
         const propertyObj = property.toObject();
 
         // add `postedBy` field similar to list response (dealerId || ownerId)
-        propertyObj.postedBy = propertyObj.dealerId || propertyObj.ownerId || null;
+        const postedByData = propertyObj.dealerId || propertyObj.ownerId || null;
+        if (postedByData) {
+            propertyObj.postedBy = {
+                ...postedByData,
+                photo: getUserProfileImageUrl(postedByData.profileImage),
+            };
+        } else {
+            propertyObj.postedBy = null;
+        }
 
         // ✅ map media using helper
         propertyObj.media = (propertyObj.media || []).map((item) => ({
@@ -615,13 +628,24 @@ exports.updateProperty = async (req, res) => {
             },
             { new: true },
         )
-            .populate('ownerId', 'name email phone role')
-            .populate('dealerId', 'name email phone role')
+            .populate('ownerId', 'name email phone role profileImage')
+            .populate('dealerId', 'name email phone role profileImage')
             .populate('amenityIds', 'amenityName')
             .populate('furnishings.furnishingId', 'furnitureName')
             .populate('nearbyPlaces.nearbyId', 'placeName placeType city locality');
 
         const propertyObj = property.toObject();
+
+        // add `postedBy` field
+        const postedByData = propertyObj.dealerId || propertyObj.ownerId || null;
+        if (postedByData) {
+            propertyObj.postedBy = {
+                ...postedByData,
+                photo: getUserProfileImageUrl(postedByData.profileImage),
+            };
+        } else {
+            propertyObj.postedBy = null;
+        }
 
         // map media URLs (same as getPropertyById)
         propertyObj.media = (propertyObj.media || []).map((item) => ({
