@@ -265,3 +265,4 @@ exports.deletePrivacyPolicy = async (req, res) => {
         });
     }
 };
+

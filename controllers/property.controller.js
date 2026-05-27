@@ -88,8 +88,15 @@ exports.createProperty = async (req, res) => {
             'approvedIndustryTypes', 'keySpecifications', 'projectDetails', 'aboutProject',
             'aboutLocality', 'aboutDeveloper', 'topAgents', 'amenityIds', 'furnishings', 'nearbyPlaces',
             'specifications', 'whyConsider', 'preels', 'expertReviews',
-            'projectInfo', 'localityInfo', 'developerInfo', 'viewStats'
+            'projectInfo', 'localityInfo', 'developerInfo', 'viewStats',
+            'availableUnits', 'developer'
         ];
+
+        // Only builders and admins can set availableUnits and developer fields
+        if (req.user.role !== 'builder' && req.user.role !== 'admin') {
+            delete req.body.availableUnits;
+            delete req.body.developer;
+        }
 
         jsonFields.forEach(field => {
             if (req.body[field] && typeof req.body[field] === 'string') {
@@ -502,6 +509,7 @@ exports.getPropertiesByUser = async (req, res) => {
         if (listingType) filter.listingType = listingType;
         if (propertyCategory) filter.propertyCategory = propertyCategory;
         if (propertyType) filter.propertyType = propertyType;
+        if (req.query.status) filter.status = req.query.status;
 
         let sort = { createdAt: -1 };
 
@@ -616,6 +624,12 @@ exports.getPropertyById = async (req, res) => {
             },
         }));
 
+        // Role-based filtering for sensitive builder fields
+        if (req.user.role !== 'builder' && req.user.role !== 'admin') {
+            delete propertyObj.availableUnits;
+            delete propertyObj.developer;
+        }
+
         return res.status(status.OK).json({
             success: true,
             message: 'Property fetched successfully',
@@ -652,8 +666,15 @@ exports.updateProperty = async (req, res) => {
             'approvedIndustryTypes', 'keySpecifications', 'projectDetails', 'aboutProject',
             'aboutLocality', 'aboutDeveloper', 'topAgents', 'amenityIds', 'furnishings', 'nearbyPlaces',
             'specifications', 'whyConsider', 'preels', 'expertReviews',
-            'projectInfo', 'localityInfo', 'developerInfo', 'viewStats'
+            'projectInfo', 'localityInfo', 'developerInfo', 'viewStats',
+            'availableUnits', 'developer'
         ];
+
+        // Only builders and admins can set availableUnits and developer fields
+        if (req.user.role !== 'builder' && req.user.role !== 'admin') {
+            delete req.body.availableUnits;
+            delete req.body.developer;
+        }
 
         jsonFields.forEach(field => {
             if (req.body[field] && typeof req.body[field] === 'string') {

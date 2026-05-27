@@ -281,6 +281,7 @@ exports.deletePropertyDocument = async (req, res) => {
         });
     }
 };
+
 // Admin/Authorized status update
 exports.updateDocumentStatus = async (req, res) => {
     try {
