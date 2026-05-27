@@ -509,6 +509,66 @@ Returns a list of agents who are experts in the specified location.
 **Query Parameters:**
 * `page`, `limit` (optional)
 
+## Builder APIs
+
+All builder endpoints handle company information for users with the `builder` role.
+
+### Register / Update Builder Profile
+
+Creates or updates the builder profile for the logged-in user.
+
+`POST {{baseUrl}}/builders/me`
+
+**Headers:** auth required.
+
+**Body:** `json`
+
+```json
+{
+  "companyDetails": {
+    "companyName": "Siddhi Developers",
+    "groupName": "Siddhi Group of Companies",
+    "yearEstablished": 2012,
+    "about": "Siddhi Developers is one of the leading real estate brands in Gujarat, known for quality construction and timely delivery.",
+    "website": "https://siddhidevelopers.com",
+    "socialLinks": {
+      "facebook": "https://facebook.com/siddhidevelopers",
+      "instagram": "https://instagram.com/siddhidevelopers",
+      "linkedin": "https://linkedin.com/company/siddhidevelopers"
+    }
+  }
+}
+```
+
+### Get My Builder Profile
+
+`GET {{baseUrl}}/builders/me`
+
+**Headers:** auth required.
+
+### Get All Builders
+
+Public list of builders.
+
+`GET {{baseUrl}}/builders?page=1&limit=10&search=Siddhi`
+
+**Query Parameters:**
+* `page`: Page number (default: 1)
+* `limit`: Items per page (default: 10)
+* `search`: Search by company name
+
+### Get Builder By ID
+
+`GET {{baseUrl}}/builders/:id`
+
+### Delete My Builder Profile
+
+Soft deletes the builder profile for the logged-in user.
+
+`DELETE {{baseUrl}}/builders/me`
+
+**Headers:** auth required.
+
 ## Master Data APIs
 
 These resources are used to build dropdowns/filters for property forms.

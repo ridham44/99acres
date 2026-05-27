@@ -450,4 +450,3 @@ exports.getPropertyReviewSummary = async (req, res) => {
         });
     }
 };
-

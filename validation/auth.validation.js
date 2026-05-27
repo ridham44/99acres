@@ -4,6 +4,7 @@ const nameRegex = /^[A-Za-z\s]+$/;
 const phoneRegex = /^[0-9]{10}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+
 const User = require('../models/user.model');
 exports.validateRegister = async (req, res, next) => {
     try {

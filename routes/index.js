@@ -24,5 +24,6 @@ router.use("/terms-conditions", require("./termsCondition.route"));
 router.use("/support", require("./support.route"));
 router.use("/expert-in-areas", require("./expertInArea.route"));
 router.use("/inquiries", require("./inquiry.route"));
+router.use("/builders", require("./builder.route"));
 
 module.exports = router;

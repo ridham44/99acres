@@ -468,30 +468,30 @@ const propertySchema = new mongoose.Schema(
 
         availableUnits: [
             {
-                bhk:                 String,   // e.g. "2 BHK Apartment"
-                bookingType:         String,   // e.g. "New Bookings" | "Resale"
-                brokerage:           String,   // e.g. "Zero Brokerage"
-                sizeRange:           String,   // e.g. "617 - 629 sqft (57 - 58 sqm)"
-                areaType:            String,   // e.g. "Carpet Area"
-                price:               String,   // e.g. "₹58.5 Lac onwards"
-                priceSqft:           String,   // e.g. "₹4,200 /sqft"
+                bhk:                 String,
+                bookingType:         String, 
+                brokerage:           String,  
+                sizeRange:           String,  
+                areaType:            String,  
+                price:               String,  
+                priceSqft:           String,  
                 optionsCount:        { type: Number, default: 0 },
-                updatedText:         String,   // e.g. "Updated 2 mo. ago"
-                paymentPlan:         String,   // e.g. "Construction-linked Plan"
-                paymentPlanSubtitle: String,   // e.g. "Payment Plans & banks"
+                updatedText:         String,  
+                paymentPlan:         String,  
+                paymentPlanSubtitle: String,  
             }
         ],
 
         developer: {
-            name:                  String,   // e.g. "Vivaan Group"
-            logo:                  String,   // ImageKit fileName or full URL
-            experience:            String,   // e.g. "13"
-            totalProjects:         String,   // e.g. "8"
-            cities:                String,   // e.g. "1"
-            description:           String,   // About the builder
-            deliveredCount:        String,   // e.g. "3"
-            recentlyDeliveredCount: String,  // e.g. "3"
-            ongoingCount:          String,   // e.g. "5"
+            name:                  String,   
+            logo:                  String,   
+            experience:            String,   
+            totalProjects:         String,   
+            cities:                String,   
+            description:           String,   
+            deliveredCount:        String,   
+            recentlyDeliveredCount: String,  
+            ongoingCount:          String,   
         },
     },
     {

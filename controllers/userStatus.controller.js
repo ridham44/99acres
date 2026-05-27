@@ -74,6 +74,7 @@ exports.getMyUserStatus = async (req, res) => {
     }
 };
 
+
 exports.getUserStatusByUserId = async (req, res) => {
     try {
         const { userId } = req.params;

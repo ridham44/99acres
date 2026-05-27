@@ -16,6 +16,7 @@ const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
 const { getUserProfileImageUrl, getUserDocumentUrl } = require('../utils/imagekitUrl');
 
+
 const normalizeDocuments = (documents) => {
     if (!documents) {
         return [];

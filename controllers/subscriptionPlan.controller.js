@@ -3,6 +3,7 @@ const status = require('../utils/statusCodes');
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+
 const buildPlanFilter = (query) => {
     const filter = { deletedAt: null };
 
