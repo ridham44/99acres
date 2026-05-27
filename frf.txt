@@ -1,0 +1,1111 @@
+{http://localhost:5000/api/user-home
+
+    "success": true,
+
+    "message": "User home fetched successfully",
+
+    "data": {
+
+        "recentlyVisited": [
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c778",
+
+                "title": "Modern Villa in Syracuse",
+
+                "propertyName": "W 7th Street Residency",
+
+                "propertyType": "Apartment",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 821117,
+
+                "priceUnit": "total",
+
+                "bedrooms": 1,
+
+                "bathrooms": 1,
+
+                "area": 2560,
+
+                "facing": "South",
+
+                "address": "31633 Stephen Centers Suite 996",
+
+                "locality": "Downtown",
+
+                "city_area": "Downtown",
+
+                "city": "Syracuse",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.800Z",
+
+                "visitCount": 1,
+
+                "lastVisitedAt": "2026-05-21T09:35:34.245Z"
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c79c",
+
+                "title": "Modern Villa in Albany",
+
+                "propertyName": "Lyda Field Residency",
+
+                "propertyType": "Villa",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 219073,
+
+                "priceUnit": "total",
+
+                "bedrooms": 3,
+
+                "bathrooms": 1,
+
+                "area": 3093,
+
+                "facing": "East",
+
+                "address": "8352 Kuhic Trafficway Apt. 424",
+
+                "locality": "Downtown",
+
+                "city_area": "Downtown",
+
+                "city": "Albany",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.802Z",
+
+                "visitCount": 1,
+
+                "lastVisitedAt": "2026-05-21T09:35:24.436Z"
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7af",
+
+                "title": "Affordable Studio in Yonkers",
+
+                "propertyName": "Christiansen Dale Residency",
+
+                "propertyType": "Penthouse",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Rent",
+
+                "price": 4245,
+
+                "priceUnit": "monthly",
+
+                "bedrooms": 3,
+
+                "bathrooms": 2,
+
+                "area": 3205,
+
+                "facing": "South",
+
+                "address": "85296 The Laurels Apt. 577",
+
+                "locality": "Lincoln Park",
+
+                "city_area": "Lincoln Park",
+
+                "city": "Yonkers",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.804Z",
+
+                "visitCount": 1,
+
+                "lastVisitedAt": "2026-05-21T09:35:08.019Z"
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7c7",
+
+                "title": "Premium Penthouse in Yonkers",
+
+                "propertyName": "Stark-Rowe Green Residency",
+
+                "propertyType": "Penthouse",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Rent",
+
+                "price": 8979,
+
+                "priceUnit": "monthly",
+
+                "bedrooms": 3,
+
+                "bathrooms": 3,
+
+                "area": 2913,
+
+                "facing": "North",
+
+                "address": "13363 Reginald Creek Suite 615",
+
+                "locality": "Lincoln Park",
+
+                "city_area": "Lincoln Park",
+
+                "city": "Yonkers",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.806Z",
+
+                "visitCount": 1,
+
+                "lastVisitedAt": "2026-05-21T09:34:55.998Z"
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7d1",
+
+                "title": "Modern Villa in Yonkers",
+
+                "propertyName": "Kihn Dale Residency",
+
+                "propertyType": "Studio Apartment",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Rent",
+
+                "price": 11464,
+
+                "priceUnit": "monthly",
+
+                "bedrooms": 2,
+
+                "bathrooms": 1,
+
+                "area": 3542,
+
+                "facing": "South",
+
+                "address": "330 S Division Street Suite 508",
+
+                "locality": "Lincoln Park",
+
+                "city_area": "Lincoln Park",
+
+                "city": "Yonkers",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.807Z",
+
+                "visitCount": 1,
+
+                "lastVisitedAt": "2026-05-21T09:34:46.952Z"
+
+            }
+
+        ],
+
+        "newLaunchProperties": [
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7f7",
+
+                "title": "Modern Villa in Yonkers",
+
+                "propertyName": "Quinn Pine Residency",
+
+                "propertyType": "Studio Apartment",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 980913,
+
+                "priceUnit": "total",
+
+                "bedrooms": 3,
+
+                "bathrooms": 3,
+
+                "area": 1217,
+
+                "facing": "West",
+
+                "address": "5530 Kuhic Fork Apt. 296",
+
+                "locality": "Lincoln Park",
+
+                "city_area": "Lincoln Park",
+
+                "city": "Yonkers",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.809Z"
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7ee",
+
+                "title": "Luxury Apartment in Rochester",
+
+                "propertyName": "Nico Cliffs Residency",
+
+                "propertyType": "Independent House",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 1845142,
+
+                "priceUnit": "total",
+
+                "bedrooms": 2,
+
+                "bathrooms": 3,
+
+                "area": 4457,
+
+                "facing": "West",
+
+                "address": "552 N Railroad Street Suite 796",
+
+                "locality": "Corn Hill",
+
+                "city_area": "Corn Hill",
+
+                "city": "Rochester",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.808Z"
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7e8",
+
+                "title": "Affordable Studio in Albany",
+
+                "propertyName": "Franey Mount Residency",
+
+                "propertyType": "Penthouse",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 1035260,
+
+                "priceUnit": "total",
+
+                "bedrooms": 1,
+
+                "bathrooms": 3,
+
+                "area": 739,
+
+                "facing": "East",
+
+                "address": "34913 O'Reilly Mall Suite 629",
+
+                "locality": "WhiteHall",
+
+                "city_area": "WhiteHall",
+
+                "city": "Albany",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.808Z"
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7d9",
+
+                "title": "Modern Villa in Albany",
+
+                "propertyName": "Luther Lane Residency",
+
+                "propertyType": "Studio Apartment",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 497496,
+
+                "priceUnit": "total",
+
+                "bedrooms": 4,
+
+                "bathrooms": 2,
+
+                "area": 1581,
+
+                "facing": "East",
+
+                "address": "982 Barton Plains Apt. 829",
+
+                "locality": "Downtown",
+
+                "city_area": "Downtown",
+
+                "city": "Albany",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.807Z"
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7d1",
+
+                "title": "Modern Villa in Yonkers",
+
+                "propertyName": "Kihn Dale Residency",
+
+                "propertyType": "Studio Apartment",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Rent",
+
+                "price": 11464,
+
+                "priceUnit": "monthly",
+
+                "bedrooms": 2,
+
+                "bathrooms": 1,
+
+                "area": 3542,
+
+                "facing": "South",
+
+                "address": "330 S Division Street Suite 508",
+
+                "locality": "Lincoln Park",
+
+                "city_area": "Lincoln Park",
+
+                "city": "Yonkers",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.807Z"
+
+            }
+
+        ],
+
+        "sponsoredProperties": [
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7f7",
+
+                "title": "Modern Villa in Yonkers",
+
+                "propertyName": "Quinn Pine Residency",
+
+                "propertyType": "Studio Apartment",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 980913,
+
+                "priceUnit": "total",
+
+                "bedrooms": 3,
+
+                "bathrooms": 3,
+
+                "area": 1217,
+
+                "facing": "West",
+
+                "address": "5530 Kuhic Fork Apt. 296",
+
+                "locality": "Lincoln Park",
+
+                "city_area": "Lincoln Park",
+
+                "city": "Yonkers",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.809Z",
+
+                "isSponsored": true
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7ee",
+
+                "title": "Luxury Apartment in Rochester",
+
+                "propertyName": "Nico Cliffs Residency",
+
+                "propertyType": "Independent House",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 1845142,
+
+                "priceUnit": "total",
+
+                "bedrooms": 2,
+
+                "bathrooms": 3,
+
+                "area": 4457,
+
+                "facing": "West",
+
+                "address": "552 N Railroad Street Suite 796",
+
+                "locality": "Corn Hill",
+
+                "city_area": "Corn Hill",
+
+                "city": "Rochester",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.808Z",
+
+                "isSponsored": true
+
+            },
+
+            {
+
+                "_id": "6a0ec78f5e28e44cc788c7e8",
+
+                "title": "Affordable Studio in Albany",
+
+                "propertyName": "Franey Mount Residency",
+
+                "propertyType": "Penthouse",
+
+                "propertyCategory": "Residential",
+
+                "listingType": "Sale",
+
+                "price": 1035260,
+
+                "priceUnit": "total",
+
+                "bedrooms": 1,
+
+                "bathrooms": 3,
+
+                "area": 739,
+
+                "facing": "East",
+
+                "address": "34913 O'Reilly Mall Suite 629",
+
+                "locality": "WhiteHall",
+
+                "city_area": "WhiteHall",
+
+                "city": "Albany",
+
+                "state": "New York",
+
+                "status": "Active",
+
+                "coverImage": null,
+
+                "postedBy": null,
+
+                "createdAt": "2026-05-21T08:51:27.808Z",
+
+                "isSponsored": true
+
+            }
+
+        ],
+
+        "topAreas": [
+
+            {
+
+                "city": "Albany",
+
+                "city_area": "Downtown",
+
+                "locality": "Downtown",
+
+                "areaName": "Downtown",
+
+                "totalVisits": 5,
+
+                "propertyCount": 4,
+
+                "topProperties": [
+
+                    {
+
+                        "_id": "6a0ec78f5e28e44cc788c79c",
+
+                        "title": "Modern Villa in Albany",
+
+                        "propertyName": "Lyda Field Residency",
+
+                        "propertyType": "Villa",
+
+                        "propertyCategory": "Residential",
+
+                        "listingType": "Sale",
+
+                        "price": 219073,
+
+                        "priceUnit": "total",
+
+                        "bedrooms": 3,
+
+                        "bathrooms": 1,
+
+                        "area": 3093,
+
+                        "facing": "East",
+
+                        "address": "8352 Kuhic Trafficway Apt. 424",
+
+                        "locality": "Downtown",
+
+                        "city_area": "Downtown",
+
+                        "city": "Albany",
+
+                        "state": "New York",
+
+                        "status": "Active",
+
+                        "coverImage": null,
+
+                        "postedBy": "69d37dbc093119cf0bc7dfb8",
+
+                        "createdAt": "2026-05-21T08:51:27.802Z",
+
+                        "visitCount": 2,
+
+                        "lastVisitedAt": "2026-05-21T09:35:24.436Z"
+
+                    },
+
+                    {
+
+                        "_id": "6a0ec78f5e28e44cc788c796",
+
+                        "title": "Modern Villa in Albany",
+
+                        "propertyName": "Erick Circles Residency",
+
+                        "propertyType": "Penthouse",
+
+                        "propertyCategory": "Residential",
+
+                        "listingType": "Rent",
+
+                        "price": 11904,
+
+                        "priceUnit": "monthly",
+
+                        "bedrooms": 2,
+
+                        "bathrooms": 2,
+
+                        "area": 4506,
+
+                        "facing": "South",
+
+                        "address": "31878 Josephine Freeway Apt. 417",
+
+                        "locality": "Downtown",
+
+                        "city_area": "Downtown",
+
+                        "city": "Albany",
+
+                        "state": "New York",
+
+                        "status": "Active",
+
+                        "coverImage": null,
+
+                        "postedBy": "69d37dbc093119cf0bc7dfb8",
+
+                        "createdAt": "2026-05-21T08:51:27.802Z",
+
+                        "visitCount": 1,
+
+                        "lastVisitedAt": "2026-05-21T09:33:25.878Z"
+
+                    },
+
+                    {
+
+                        "_id": "6a0ec78f5e28e44cc788c7a2",
+
+                        "title": "Modern Villa in Albany",
+
+                        "propertyName": "Morris Parkway Residency",
+
+                        "propertyType": "Studio Apartment",
+
+                        "propertyCategory": "Residential",
+
+                        "listingType": "Rent",
+
+                        "price": 3305,
+
+                        "priceUnit": "monthly",
+
+                        "bedrooms": 3,
+
+                        "bathrooms": 1,
+
+                        "area": 4992,
+
+                        "facing": "West",
+
+                        "address": "287 Lempi Spurs Suite 461",
+
+                        "locality": "Downtown",
+
+                        "city_area": "Downtown",
+
+                        "city": "Albany",
+
+                        "state": "New York",
+
+                        "status": "Active",
+
+                        "coverImage": null,
+
+                        "postedBy": "69d37dbc093119cf0bc7dfb8",
+
+                        "createdAt": "2026-05-21T08:51:27.803Z",
+
+                        "visitCount": 1,
+
+                        "lastVisitedAt": "2026-05-21T09:33:17.469Z"
+
+                    }
+
+                ]
+
+            },
+
+            {
+
+                "city": "Yonkers",
+
+                "city_area": "Lincoln Park",
+
+                "locality": "Lincoln Park",
+
+                "areaName": "Lincoln Park",
+
+                "totalVisits": 5,
+
+                "propertyCount": 4,
+
+                "topProperties": [
+
+                    {
+
+                        "_id": "6a0ec78f5e28e44cc788c7d1",
+
+                        "title": "Modern Villa in Yonkers",
+
+                        "propertyName": "Kihn Dale Residency",
+
+                        "propertyType": "Studio Apartment",
+
+                        "propertyCategory": "Residential",
+
+                        "listingType": "Rent",
+
+                        "price": 11464,
+
+                        "priceUnit": "monthly",
+
+                        "bedrooms": 2,
+
+                        "bathrooms": 1,
+
+                        "area": 3542,
+
+                        "facing": "South",
+
+                        "address": "330 S Division Street Suite 508",
+
+                        "locality": "Lincoln Park",
+
+                        "city_area": "Lincoln Park",
+
+                        "city": "Yonkers",
+
+                        "state": "New York",
+
+                        "status": "Active",
+
+                        "coverImage": null,
+
+                        "postedBy": "69d37dbc093119cf0bc7dfb8",
+
+                        "createdAt": "2026-05-21T08:51:27.807Z",
+
+                        "visitCount": 2,
+
+                        "lastVisitedAt": "2026-05-21T09:34:46.952Z"
+
+                    },
+
+                    {
+
+                        "_id": "6a0ec78f5e28e44cc788c7af",
+
+                        "title": "Affordable Studio in Yonkers",
+
+                        "propertyName": "Christiansen Dale Residency",
+
+                        "propertyType": "Penthouse",
+
+                        "propertyCategory": "Residential",
+
+                        "listingType": "Rent",
+
+                        "price": 4245,
+
+                        "priceUnit": "monthly",
+
+                        "bedrooms": 3,
+
+                        "bathrooms": 2,
+
+                        "area": 3205,
+
+                        "facing": "South",
+
+                        "address": "85296 The Laurels Apt. 577",
+
+                        "locality": "Lincoln Park",
+
+                        "city_area": "Lincoln Park",
+
+                        "city": "Yonkers",
+
+                        "state": "New York",
+
+                        "status": "Active",
+
+                        "coverImage": null,
+
+                        "postedBy": "69d37dbc093119cf0bc7dfb8",
+
+                        "createdAt": "2026-05-21T08:51:27.804Z",
+
+                        "visitCount": 1,
+
+                        "lastVisitedAt": "2026-05-21T09:35:08.019Z"
+
+                    },
+
+                    {
+
+                        "_id": "6a0ec78f5e28e44cc788c7c7",
+
+                        "title": "Premium Penthouse in Yonkers",
+
+                        "propertyName": "Stark-Rowe Green Residency",
+
+                        "propertyType": "Penthouse",
+
+                        "propertyCategory": "Residential",
+
+                        "listingType": "Rent",
+
+                        "price": 8979,
+
+                        "priceUnit": "monthly",
+
+                        "bedrooms": 3,
+
+                        "bathrooms": 3,
+
+                        "area": 2913,
+
+                        "facing": "North",
+
+                        "address": "13363 Reginald Creek Suite 615",
+
+                        "locality": "Lincoln Park",
+
+                        "city_area": "Lincoln Park",
+
+                        "city": "Yonkers",
+
+                        "state": "New York",
+
+                        "status": "Active",
+
+                        "coverImage": null,
+
+                        "postedBy": "69d37dbc093119cf0bc7dfb8",
+
+                        "createdAt": "2026-05-21T08:51:27.806Z",
+
+                        "visitCount": 1,
+
+                        "lastVisitedAt": "2026-05-21T09:34:55.998Z"
+
+                    }
+
+                ]
+
+            },
+
+            {
+
+                "city": "Syracuse",
+
+                "city_area": "Downtown",
+
+                "locality": "Downtown",
+
+                "areaName": "Downtown",
+
+                "totalVisits": 3,
+
+                "propertyCount": 2,
+
+                "topProperties": [
+
+                    {
+
+                        "_id": "6a0ec78f5e28e44cc788c778",
+
+                        "title": "Modern Villa in Syracuse",
+
+                        "propertyName": "W 7th Street Residency",
+
+                        "propertyType": "Apartment",
+
+                        "propertyCategory": "Residential",
+
+                        "listingType": "Sale",
+
+                        "price": 821117,
+
+                        "priceUnit": "total",
+
+                        "bedrooms": 1,
+
+                        "bathrooms": 1,
+
+                        "area": 2560,
+
+                        "facing": "South",
+
+                        "address": "31633 Stephen Centers Suite 996",
+
+                        "locality": "Downtown",
+
+                        "city_area": "Downtown",
+
+                        "city": "Syracuse",
+
+                        "state": "New York",
+
+                        "status": "Active",
+
+                        "coverImage": null,
+
+                        "postedBy": "69d37dbc093119cf0bc7dfb8",
+
+                        "createdAt": "2026-05-21T08:51:27.800Z",
+
+                        "visitCount": 2,
+
+                        "lastVisitedAt": "2026-05-21T09:35:34.245Z"
+
+                    },
+
+                    {
+
+                        "_id": "6a0ec78f5e28e44cc788c752",
+
+                        "title": "Modern Villa in Syracuse",
+
+                        "propertyName": "Margarett Knolls Residency",
+
+                        "propertyType": "Villa",
+
+                        "propertyCategory": "Residential",
+
+                        "listingType": "Sale",
+
+                        "price": 227289,
+
+                        "priceUnit": "total",
+
+                        "bedrooms": 4,
+
+                        "bathrooms": 3,
+
+                        "area": 1243,
+
+                        "facing": "East",
+
+                        "address": "759 Larch Close Suite 286",
+
+                        "locality": "Downtown",
+
+                        "city_area": "Downtown",
+
+                        "city": "Syracuse",
+
+                        "state": "New York",
+
+                        "status": "Active",
+
+                        "coverImage": null,
+
+                        "postedBy": "69d37dbc093119cf0bc7dfb8",
+
+                        "createdAt": "2026-05-21T08:51:27.794Z",
+
+                        "visitCount": 1,
+
+                        "lastVisitedAt": "2026-05-21T09:33:54.587Z"
+
+                    }
+
+                ]
+
+            }
+
+        ]
+
+    }
+
+}

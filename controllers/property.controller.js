@@ -557,7 +557,7 @@ exports.updateProperty = async (req, res) => {
                 success: false,
                 message: 'Property not found',
             });
-        }
+        } 
 
         // --- Parse Technical Audit Fields (if they come as JSON strings from form-data) ---
         const jsonFields = [
