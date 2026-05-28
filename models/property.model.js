@@ -86,6 +86,11 @@ const propertySchema = new mongoose.Schema(
             default: 'total',
         },
 
+        priceOnRequest: {
+            type: Boolean,
+            default: false,
+        },
+
         area: {
             type: Number,
             required: true,

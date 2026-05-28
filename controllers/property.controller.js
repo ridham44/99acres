@@ -21,6 +21,7 @@ const formatPropertyCard = (item) => {
         listingType: item.listingType,
         price: item.price,
         priceUnit: item.priceUnit,
+        priceOnRequest: item.priceOnRequest ?? false,
         bhk: item.bhk,
         bedrooms: item.bedrooms,
         bathrooms: item.bathrooms,
@@ -357,7 +358,7 @@ exports.getProperties = async (req, res) => {
         const [properties, total] = await Promise.all([
             Property.find(filter)
                 .select(
-                    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds ownership flooring waterSource otherKeyFacilities',
+                    '_id title propertyName propertyType propertyCategory listingType price priceUnit priceOnRequest address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds ownership flooring waterSource otherKeyFacilities',
                 )
                 .populate('ownerId', 'name role profileImage')
                 .populate('dealerId', 'name role profileImage')
