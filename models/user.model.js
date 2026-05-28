@@ -73,23 +73,21 @@ const userSchema = new mongoose.Schema(
 );
 
 // Cascading delete middleware - handles both direct deletions and through API
-userSchema.pre("findByIdAndDelete", async function (next) {
+userSchema.pre("findByIdAndDelete", async function () {
   const userId = this.getQuery()._id;
   if (userId) {
     await handleUserDeletion(userId);
   }
-  next();
 });
 
-userSchema.pre("deleteOne", async function (next) {
+userSchema.pre("deleteOne", async function () {
   const userId = this.getQuery()._id;
   if (userId) {
     await handleUserDeletion(userId);
   }
-  next();
 });
 
-userSchema.pre("deleteMany", async function (next) {
+userSchema.pre("deleteMany", async function () {
   const userIds = await mongoose
     .model("User")
     .find(this.getQuery())
@@ -97,7 +95,6 @@ userSchema.pre("deleteMany", async function (next) {
   for (const user of userIds) {
     await handleUserDeletion(user._id);
   }
-  next();
 });
 
 async function handleUserDeletion(userId) {

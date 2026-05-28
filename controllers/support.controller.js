@@ -230,3 +230,103 @@ exports.deleteFAQ = async (req, res) => {
       .json({ success: false, message: error.message });
   }
 };
+
+exports.getAllSupportTicketsAdmin = async (req, res) => {
+  try {
+    const { status: ticketStatus, search, page, limit } = req.query;
+    const filter = {};
+
+    if (ticketStatus) filter.status = ticketStatus;
+    if (search) {
+      filter.$or = [
+        { ticketId: { $regex: search, $options: 'i' } },
+        { subject: { $regex: search, $options: 'i' } },
+        { message: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 20;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [total, tickets] = await Promise.all([
+      SupportTicket.countDocuments(filter),
+      SupportTicket.find(filter)
+        .populate('userId', 'name phone email role')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber),
+    ]);
+
+    return res.status(status.OK).json({
+      success: true,
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      data: tickets,
+    });
+  } catch (error) {
+    return res
+      .status(status.InternalServerError)
+      .json({ success: false, message: error.message });
+  }
+};
+
+exports.getSupportTicketByIdAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ticket = await SupportTicket.findById(id).populate(
+      'userId',
+      'name phone email role',
+    );
+    if (!ticket)
+      return res
+        .status(status.NotFound)
+        .json({ success: false, message: 'Support ticket not found' });
+
+    return res.status(status.OK).json({ success: true, data: ticket });
+  } catch (error) {
+    return res
+      .status(status.InternalServerError)
+      .json({ success: false, message: error.message });
+  }
+};
+
+exports.updateSupportTicketAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedTicket = await SupportTicket.findByIdAndUpdate(id, req.body, {
+      new: true,
+    }).populate('userId', 'name phone email role');
+
+    if (!updatedTicket)
+      return res
+        .status(status.NotFound)
+        .json({ success: false, message: 'Support ticket not found' });
+
+    return res.status(status.OK).json({ success: true, data: updatedTicket });
+  } catch (error) {
+    return res
+      .status(status.InternalServerError)
+      .json({ success: false, message: error.message });
+  }
+};
+
+exports.deleteSupportTicketAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedTicket = await SupportTicket.findByIdAndDelete(id);
+    if (!deletedTicket)
+      return res
+        .status(status.NotFound)
+        .json({ success: false, message: 'Support ticket not found' });
+
+    return res
+      .status(status.OK)
+      .json({ success: true, message: 'Support ticket deleted successfully' });
+  } catch (error) {
+    return res
+      .status(status.InternalServerError)
+      .json({ success: false, message: error.message });
+  }
+};

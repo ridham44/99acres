@@ -39,4 +39,9 @@ router.post("/admin/faqs", protect, admin, supportController.createFAQ);
 router.patch("/admin/faqs/:id", protect, admin, supportController.updateFAQ);
 router.delete("/admin/faqs/:id", protect, admin, supportController.deleteFAQ);
 
+router.get("/admin/tickets", protect, admin, supportController.getAllSupportTicketsAdmin);
+router.get("/admin/tickets/:id", protect, admin, supportController.getSupportTicketByIdAdmin);
+router.patch("/admin/tickets/:id", protect, admin, supportController.updateSupportTicketAdmin);
+router.delete("/admin/tickets/:id", protect, admin, supportController.deleteSupportTicketAdmin);
+
 module.exports = router;

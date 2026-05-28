@@ -126,6 +126,7 @@ exports.verifyRegisterOtp = async (req, res) => {
             email: user.email,
             role: user.role,
             isVerified: user.isVerified,
+            isAdmin: user.role === 'admin',
             deviceId,
         });
 
@@ -134,7 +135,7 @@ exports.verifyRegisterOtp = async (req, res) => {
 
         await LogLogin.create({
             userId: user._id,
-            isAdmin: false,
+            isAdmin: user.role === 'admin',
             ipAddress: realIp,
             browserDetail: req.headers['user-agent'] || null,
             isLogin: true,
@@ -215,6 +216,7 @@ exports.verifyLoginOtp = async (req, res) => {
             email: user.email,
             role: user.role,
             isVerified: user.isVerified,
+            isAdmin: user.role === 'admin',
             deviceId,
         });
 
@@ -223,7 +225,7 @@ exports.verifyLoginOtp = async (req, res) => {
 
         await LogLogin.create({
             userId: user._id,
-            isAdmin: false,
+            isAdmin: user.role === 'admin',
             ipAddress: realIp,
             browserDetail: req.headers['user-agent'] || null,
             isLogin: true,
@@ -416,6 +418,110 @@ exports.getAllUsers = async (req, res) => {
             success: false,
             message: 'Failed to fetch users',
             error: error.message,
+        });
+    }
+};
+
+exports.adminLogin = async (req, res) => {
+    try {
+        const { phone } = req.body;
+
+        const user = await User.findOne({ phone, deletedAt: null });
+
+        if (!user) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Admin user not found',
+            });
+        }
+
+        if (user.role !== 'admin') {
+            return res.status(status.Forbidden).json({
+                success: false,
+                message: 'Access denied: Admin role required',
+            });
+        }
+
+        const otp = await service.createOtp(user._id, 'login');
+
+        console.log('Admin OTP:', otp);
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'OTP sent for admin login',
+            otp: otp,
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+exports.verifyAdminLoginOtp = async (req, res) => {
+    try {
+        const { phone, otp, deviceId, deviceType } = req.body;
+
+        const user = await User.findOne({ phone, deletedAt: null });
+
+        if (!user) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Admin user not found',
+            });
+        }
+
+        if (user.role !== 'admin') {
+            return res.status(status.Forbidden).json({
+                success: false,
+                message: 'Access denied: Admin role required',
+            });
+        }
+
+        const result = await service.verifyOtp(user._id, otp, 'login');
+
+        if (!result.success) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: result.message,
+            });
+        }
+
+        const token = generateToken({
+            id: user._id,
+            phone: user.phone,
+            email: user.email,
+            role: user.role,
+            isVerified: user.isVerified,
+            isAdmin: true,
+            deviceId,
+        });
+
+        const forwardedFor = req.headers['x-forwarded-for'];
+        const realIp = forwardedFor ? forwardedFor.split(',')[0].trim() : req.socket?.remoteAddress || req.ip;
+
+        await LogLogin.create({
+            userId: user._id,
+            isAdmin: true,
+            ipAddress: realIp,
+            browserDetail: req.headers['user-agent'] || null,
+            isLogin: true,
+            deviceType: deviceType || 'web',
+            deviceId: deviceId || null,
+            token,
+        });
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Admin login successful',
+            token,
+            data: formatUserResponse(user),
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
         });
     }
 };

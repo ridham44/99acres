@@ -362,9 +362,124 @@ Returns login session logs.
 
 `GET {{baseUrl}}/auth/log-login?page=1&limit=10&isLogin=true&deviceType=web&search=Chrome`
 
-Headers: auth required.
+Headers: auth required. Admin access only.
 
 Optional query params: `page`, `limit`, `isAdmin`, `isLogin`, `userId`, `deviceType`, `search`.
+
+### Admin Login
+
+Sends login OTP for an existing user with the `admin` role. If the user does not exist or does not have the admin role, returns an error.
+
+`POST {{baseUrl}}/auth/admin/login`
+
+Body:
+
+```json
+{
+  "phone": "9876543210"
+}
+```
+
+### Verify Admin Login OTP
+
+Verifies admin login OTP and returns JWT token with admin privileges.
+
+`POST {{baseUrl}}/auth/admin/verify-login-otp`
+
+Body:
+
+```json
+{
+  "phone": "9876543210",
+  "otp": "123456",
+  "deviceId": "{{deviceId}}",
+  "deviceType": "web"
+}
+```
+
+Postman test script:
+
+```js
+const json = pm.response.json();
+if (json.token) {
+  pm.environment.set("token", json.token);
+  pm.environment.set("userId", json.data.id);
+}
+```
+
+## Admin APIs
+
+These routes are for admin users only. All admin APIs require:
+
+```txt
+Authorization: Bearer {{token}}
+```
+
+and a logged-in user with the `admin` role.
+
+### Get All Users
+
+Returns every user in the system.
+
+`GET {{baseUrl}}/auth/getAllUsers`
+
+Headers: auth required, admin only.
+
+### Login Logs
+
+Returns login session logs. Admins can filter and paginate.
+
+`GET {{baseUrl}}/auth/log-login?page=1&limit=10&isLogin=true&deviceType=web&search=Chrome`
+
+Headers: auth required, admin only.
+
+Optional query params: `page`, `limit`, `isAdmin`, `isLogin`, `userId`, `deviceType`, `search`.
+
+### Support FAQ Admin CRUD
+
+Admin routes for managing FAQ content.
+
+- `GET {{baseUrl}}/support/admin/faqs`
+- `POST {{baseUrl}}/support/admin/faqs`
+- `PATCH {{baseUrl}}/support/admin/faqs/:id`
+- `DELETE {{baseUrl}}/support/admin/faqs/:id`
+
+### Support Ticket Admin Management
+
+Admin routes for managing support tickets.
+
+- `GET {{baseUrl}}/support/admin/tickets`
+- `GET {{baseUrl}}/support/admin/tickets/:id`
+- `PATCH {{baseUrl}}/support/admin/tickets/:id`
+- `DELETE {{baseUrl}}/support/admin/tickets/:id`
+
+### Privacy Policy Admin CRUD
+
+- `POST {{baseUrl}}/privacy-policy/admin`
+- `GET {{baseUrl}}/privacy-policy/admin`
+- `GET {{baseUrl}}/privacy-policy/admin/:id`
+- `PUT {{baseUrl}}/privacy-policy/admin/:id`
+- `DELETE {{baseUrl}}/privacy-policy/admin/:id`
+
+### Terms & Conditions Admin CRUD
+
+- `POST {{baseUrl}}/terms-conditions/admin`
+- `GET {{baseUrl}}/terms-conditions/admin`
+- `GET {{baseUrl}}/terms-conditions/admin/:id`
+- `PUT {{baseUrl}}/terms-conditions/admin/:id`
+- `DELETE {{baseUrl}}/terms-conditions/admin/:id`
+
+### Subscription Plan Admin CRUD
+
+- `POST {{baseUrl}}/subscription-plans`
+- `GET {{baseUrl}}/subscription-plans`
+- `GET {{baseUrl}}/subscription-plans/:id`
+- `PUT {{baseUrl}}/subscription-plans/:id`
+- `DELETE {{baseUrl}}/subscription-plans/:id`
+
+> Notes:
+> - Admin API paths under `privacy-policy`, `terms-conditions`, and `subscription-plans` already enforce admin access.
+> - Other useful admin-capable APIs include `GET {{baseUrl}}/properties`, `GET {{baseUrl}}/requirements/all`, and `GET {{baseUrl}}/builders`.
 
 ## User APIs
 
@@ -2635,4 +2750,341 @@ limit = 10
 | `createdAt` | Date | Submission timestamp |
 | `updatedAt` | Date | Last update timestamp |
 | `deletedAt` | Date | Soft delete marker (null = active) |
+
+---
+
+## Admin APIs
+
+All admin routes require a valid JWT token representing a user with the `admin` role.
+
+### 1. Get All Users (Admin View)
+Returns a list of all registered users on the platform excluding admin users.
+
+`GET {{baseUrl}}/admin/users`
+
+Headers: Auth required. Admin access only.
+
+Optional query params:
+```txt
+page   = 1
+limit  = 10
+search = Rahul (searches by name, phone, or email)
+role   = broker (user, broker, channel_partner, builder)
+```
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Users fetched successfully",
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1,
+  "data": [
+    {
+      "_id": "664f000000000000000000c1",
+      "name": "Amit Broker",
+      "role": "broker",
+      "agencyName": "Prime Realty",
+      "phone": "9123456789",
+      "email": "amit@example.com",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "documents": [],
+      "isVerified": true,
+      "profileImageUrl": null,
+      "documentUrls": []
+    }
+  ]
+}
+```
+
+---
+
+### 2. Get User Detail (Admin View)
+Returns full details of a specific user, along with a list of properties they own or deal, and a count of those properties grouped by status.
+
+`GET {{baseUrl}}/admin/users/{{userId}}`
+
+Headers: Auth required. Admin access only.
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "User detail fetched successfully",
+  "data": {
+    "user": {
+      "_id": "664f000000000000000000c1",
+      "name": "Amit Broker",
+      "role": "broker",
+      "agencyName": "Prime Realty",
+      "phone": "9123456789",
+      "email": "amit@example.com",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "profileImageUrl": null,
+      "documentUrls": []
+    },
+    "propertySummary": {
+      "total": 1,
+      "byStatus": {
+        "Active": 1
+      }
+    },
+    "properties": [
+      {
+        "_id": "664f000000000000000000b1",
+        "title": "3 BHK Apartment in Satellite",
+        "propertyName": "Green Valley Apartment",
+        "propertyType": "Apartment",
+        "propertyCategory": "Residential",
+        "listingType": "Sale",
+        "price": 7500000,
+        "priceUnit": "total",
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "status": "Active",
+        "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg",
+        "media": [
+          {
+            "fileName": "property-img-1.jpg",
+            "type": "image",
+            "url": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 3. Get All Properties (Admin View)
+Returns all properties across all users on the platform.
+
+`GET {{baseUrl}}/admin/properties`
+
+Headers: Auth required. Admin access only.
+
+Optional query params:
+```txt
+page             = 1
+limit            = 10
+search           = Satellite (searches by title, city, or locality)
+status           = Active
+listingType      = Sale
+propertyCategory = Residential
+```
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Properties fetched successfully",
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1,
+  "data": [
+    {
+      "_id": "664f000000000000000000b1",
+      "title": "3 BHK Apartment in Satellite",
+      "propertyName": "Green Valley Apartment",
+      "propertyCategory": "Residential",
+      "propertyType": "Apartment",
+      "listingType": "Sale",
+      "city": "Ahmedabad",
+      "locality": "Satellite",
+      "price": 7500000,
+      "priceUnit": "total",
+      "status": "Active",
+      "ownerId": {
+        "_id": "664f000000000000000000d1",
+        "name": "Rahul Sharma",
+        "phone": "9876543210",
+        "role": "user"
+      },
+      "dealerId": null,
+      "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg"
+    }
+  ]
+}
+```
+
+---
+
+### 4. Get Requirements (Admin View)
+Returns a list of all active requirements in the platform, populated with basic user details, along with a count of active properties matching each requirement.
+
+`GET {{baseUrl}}/admin/requirements`
+
+Headers: Auth required. Admin access only.
+
+Optional query params:
+```txt
+page            = 1
+limit           = 10
+search          = Satellite (searches by location list)
+status          = Active
+transactionType = Buy
+```
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Requirements fetched successfully",
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1,
+  "data": [
+    {
+      "_id": "664f000000000000000000e1",
+      "userId": {
+        "_id": "664f000000000000000000d1",
+        "name": "Rahul Sharma",
+        "phone": "9876543210",
+        "role": "user",
+        "city": "Ahmedabad",
+        "state": "Gujarat"
+      },
+      "transactionType": "Buy",
+      "locations": ["Satellite"],
+      "propertyTypes": ["Apartment"],
+      "minBudget": 5000000,
+      "maxBudget": 8000000,
+      "minArea": 1000,
+      "maxArea": 1800,
+      "status": "Active",
+      "matchedPropertyCount": 5
+    }
+  ]
+}
+```
+
+---
+
+### 5. Get Requirement Detail (Admin View)
+Returns full details of a specific requirement, along with up to 5 loosely-matched properties.
+
+`GET {{baseUrl}}/admin/requirements/{{requirementId}}`
+
+Headers: Auth required. Admin access only.
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Requirement fetched successfully",
+  "data": {
+    "requirement": {
+      "_id": "664f000000000000000000e1",
+      "userId": {
+        "_id": "664f000000000000000000d1",
+        "name": "Rahul Sharma",
+        "phone": "9876543210",
+        "role": "user",
+        "city": "Ahmedabad",
+        "state": "Gujarat"
+      },
+      "transactionType": "Buy",
+      "locations": ["Satellite"],
+      "propertyTypes": ["Apartment"],
+      "minBudget": 5000000,
+      "maxBudget": 8000000,
+      "minArea": 1000,
+      "maxArea": 1800,
+      "status": "Active"
+    },
+    "matchedProperties": [
+      {
+        "_id": "664f000000000000000000b1",
+        "title": "3 BHK Apartment in Satellite",
+        "propertyName": "Green Valley Apartment",
+        "propertyType": "Apartment",
+        "propertyCategory": "Residential",
+        "listingType": "Sale",
+        "price": 7500000,
+        "priceUnit": "total",
+        "city": "Ahmedabad",
+        "locality": "Satellite",
+        "status": "Active",
+        "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 6. Get All Inquiries (Admin View)
+Returns a list of all inquiries across the platform with user and property details.
+
+`GET {{baseUrl}}/admin/inquiries`
+
+Headers: Auth required. Admin access only.
+
+Optional query params:
+```txt
+page    = 1
+limit   = 10
+search  = Rahul (searches by inquirer username or phone)
+status  = true (true for open, false for closed)
+isAgent = Yes (Yes or No)
+```
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Inquiries fetched successfully",
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1,
+  "data": [
+    {
+      "_id": "664f000000000000000000a1",
+      "userId": {
+        "_id": "664f000000000000000000d1",
+        "name": "Rahul Sharma",
+        "phone": "9876543210",
+        "role": "user"
+      },
+      "property_id": {
+        "_id": "664f000000000000000000b1",
+        "title": "3 BHK Apartment in Satellite",
+        "propertyName": "Green Valley Apartment",
+        "propertyType": "Apartment",
+        "propertyCategory": "Residential",
+        "listingType": "Sale",
+        "price": 7500000,
+        "priceUnit": "total",
+        "city": "Ahmedabad",
+        "locality": "Satellite",
+        "status": "Active",
+        "ownerId": {
+          "_id": "664f000000000000000000d1",
+          "name": "Rahul Sharma",
+          "phone": "9876543210",
+          "role": "user"
+        },
+        "dealerId": null,
+        "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg"
+      },
+      "username": "Rahul Sharma",
+      "phoneNumber": "9876543210",
+      "isAgent": "No",
+      "status": true,
+      "createdAt": "2026-05-26T10:00:00.000Z"
+    }
+  ]
+}
+```
+
 
