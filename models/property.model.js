@@ -244,6 +244,7 @@ const propertySchema = new mongoose.Schema(
                 },
             },
         ],
+        
         media: [
             {
                 fileName: {

@@ -5,7 +5,7 @@ const status = require('../utils/statusCodes');
 const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
 
 const propertyCardFields =
-    '_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt';
+    '_id title propertyName propertyType propertyCategory listingType price priceUnit priceOnRequest address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt';
 
 const formatPropertyCard = (property, extra = {}) => {
     if (!property) {
