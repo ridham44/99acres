@@ -485,6 +485,8 @@ const propertySchema = new mongoose.Schema(
                 updatedText:         String,  
                 paymentPlan:         String,  
                 paymentPlanSubtitle: String,  
+                isCharge:             { type: Boolean, default: false },
+                extraPrice:           { type: Number, default: null },
             }
         ],
 

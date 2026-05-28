@@ -147,6 +147,26 @@ exports.createProperty = async (req, res) => {
       }
     });
 
+    // Normalize availableUnits values: accept `IsCharge` or `isCharge`, coerce extraPrice
+    if (req.body.availableUnits && Array.isArray(req.body.availableUnits)) {
+      req.body.availableUnits = req.body.availableUnits.map((u) => {
+        const raw = u || {};
+        const isCharge =
+          raw.isCharge === true ||
+          raw.isCharge === 'true' ||
+          raw.IsCharge === true ||
+          raw.IsCharge === 'true'
+            ? true
+            : false;
+        const extraPrice = isCharge ? (raw.extraPrice ? Number(raw.extraPrice) : 0) : null;
+        return {
+          ...raw,
+          isCharge,
+          extraPrice,
+        };
+      });
+    }
+
     const property = await Property.create({
       ...req.body,
       ownerId,
@@ -784,6 +804,26 @@ exports.updateProperty = async (req, res) => {
         }
       }
     });
+
+    // Normalize availableUnits values on update as well
+    if (req.body.availableUnits && Array.isArray(req.body.availableUnits)) {
+      req.body.availableUnits = req.body.availableUnits.map((u) => {
+        const raw = u || {};
+        const isCharge =
+          raw.isCharge === true ||
+          raw.isCharge === 'true' ||
+          raw.IsCharge === true ||
+          raw.IsCharge === 'true'
+            ? true
+            : false;
+        const extraPrice = isCharge ? (raw.extraPrice ? Number(raw.extraPrice) : 0) : null;
+        return {
+          ...raw,
+          isCharge,
+          extraPrice,
+        };
+      });
+    }
 
     const imageFiles = req.files?.images || [];
     const videoFiles = req.files?.videos || [];
