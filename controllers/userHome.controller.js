@@ -26,6 +26,7 @@ const formatPropertyCard = (property, extra = {}) => {
         propertyCategory: item.propertyCategory,
         listingType: item.listingType,
         price: item.price,
+        priceOnRequest: item.priceOnRequest ?? false,
         priceUnit: item.priceUnit,
         bhk: item.bhk,
         bedrooms: item.bedrooms,

@@ -9,6 +9,7 @@ const {
 } = require("../utils/imagekitUrl");
 const { recordPropertyVisit } = require("./userHome.controller");
 
+
 const formatPropertyCard = (item) => {
   const firstImage = (item.media || []).find(
     (mediaItem) => mediaItem.type === "image",
@@ -59,6 +60,7 @@ const formatPropertyCard = (item) => {
     developer: item.developer || null,
   };
 };
+
 
 exports.createProperty = async (req, res) => {
   try {
@@ -171,6 +173,7 @@ exports.createProperty = async (req, res) => {
     });
   }
 };
+
 
 exports.getProperties = async (req, res) => {
   try {
@@ -447,13 +450,7 @@ exports.getProperties = async (req, res) => {
     const data = properties.map(formatPropertyCard);
 
     // Strip builder-only fields for non-builder / non-admin roles
-    const isBuilderOrAdmin = req.user?.role === "builder" || req.user?.role === "admin";
-    if (!isBuilderOrAdmin) {
-      data.forEach((p) => {
-        delete p.availableUnits;
-        delete p.developer;
-      });
-    }
+      // `availableUnits` and `developer` are visible to all roles in list responses
 
     return res.status(status.OK).json({
       success: true,
@@ -473,6 +470,7 @@ exports.getProperties = async (req, res) => {
     });
   }
 };
+
 
 exports.myProperty = async (req, res) => {
   try {
@@ -575,6 +573,7 @@ exports.myProperty = async (req, res) => {
   }
 };
 
+
 exports.getPropertiesByUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -638,6 +637,7 @@ exports.getPropertiesByUser = async (req, res) => {
     });
   }
 };
+
 
 exports.getPropertyById = async (req, res) => {
   try {
@@ -705,10 +705,7 @@ exports.getPropertyById = async (req, res) => {
     }));
 
     // Role-based filtering for sensitive builder fields
-    if (req.user.role !== "builder" && req.user.role !== "admin") {
-      delete propertyObj.availableUnits;
-      delete propertyObj.developer;
-    }
+      // `availableUnits` and `developer` are visible to all roles in detail responses
 
     return res.status(status.OK).json({
       success: true,
@@ -722,6 +719,7 @@ exports.getPropertyById = async (req, res) => {
     });
   }
 };
+
 
 exports.updateProperty = async (req, res) => {
   try {
@@ -884,6 +882,7 @@ exports.updateProperty = async (req, res) => {
   }
 };
 
+
 exports.deleteProperty = async (req, res) => {
   try {
     const { id } = req.params;
@@ -915,6 +914,7 @@ exports.deleteProperty = async (req, res) => {
     });
   }
 };
+
 
 // ─── GET /api/properties/:id/similar ─────────────────────────────────────────
 exports.getSimilarProperties = async (req, res) => {
@@ -978,6 +978,7 @@ exports.getSimilarProperties = async (req, res) => {
   }
 };
 
+
 // ─── GET /api/properties/:id/price-trends ───────────────────────────────────
 exports.getPropertyPriceTrends = async (req, res) => {
   try {
@@ -1038,6 +1039,7 @@ exports.getPropertyPriceTrends = async (req, res) => {
   }
 };
 
+
 // ─── GET /api/properties/popular?city=...&limit=30 ──────────────────────────
 exports.getPopularProperties = async (req, res) => {
   try {
@@ -1093,6 +1095,7 @@ exports.getPopularProperties = async (req, res) => {
       .json({ success: false, message: error.message });
   }
 };
+
 
 // ─── GET /api/properties/count?city=...&listingType=... ─────────────────────
 exports.getPropertyCount = async (req, res) => {
