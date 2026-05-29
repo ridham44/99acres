@@ -624,15 +624,22 @@ exports.updateAdminDocumentStatus = async (req, res) => {
             });
         }
 
-        // Notify property owner/dealer
+        // Notify property owner and dealer
         if (document.propertyId) {
             const property = document.propertyId;
-            const ownerId = property.ownerId || property.dealerId;
-            if (ownerId) {
-                const { createAndSendNotification } = require('../utils/socket');
+            const { createAndSendNotification } = require('../utils/socket');
+            
+            const recipients = [];
+            if (property.ownerId) recipients.push(property.ownerId.toString());
+            if (property.dealerId) recipients.push(property.dealerId.toString());
+            
+            // Get unique user IDs to avoid double-notification if ownerId === dealerId
+            const uniqueRecipients = [...new Set(recipients)];
+
+            for (const recipientId of uniqueRecipients) {
                 await createAndSendNotification({
                     senderId: req.user.id,
-                    recipientId: ownerId,
+                    recipientId: recipientId,
                     recipientType: 'user',
                     title: `Property Document Status: ${newStatus}`,
                     message: `Your document "${document.title}" for property "${property.title || property.propertyName}" has been ${newStatus.toLowerCase()}.`,

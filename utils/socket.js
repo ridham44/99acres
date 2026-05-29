@@ -7,38 +7,50 @@ const User = require('../models/user.model');
 const Notification = require('../models/notification.model');
 
 let io;
-const userSockets = new Map(); // Map of userId string -> Set of socketIds (to support multiple tabs/devices)
+
+// Map of userId (string) → Set of socketIds (supports multiple tabs/devices)
+const userSockets = new Map();
 
 const initSocket = (server) => {
     io = new Server(server, {
         cors: {
-            origin: '*', // Set to specific origins in production
+            origin: '*',
             methods: ['GET', 'POST'],
+            credentials: true,
         },
     });
 
-    // Socket.io JWT and Session Verification Middleware
+    // ─── JWT Authentication Middleware ────────────────────────────────────────
     io.use(async (socket, next) => {
         try {
-            let token = socket.handshake.auth?.token || socket.handshake.query?.token;
+            let token =
+                socket.handshake.auth?.token ||
+                socket.handshake.headers?.authorization ||
+                socket.handshake.query?.token;
+
             if (!token) {
                 return next(new Error('Authentication error: No token provided'));
             }
 
-            // Robustly strip "Bearer " or "bearer " if present (extremely common in frontend socket clients)
-            if (token.startsWith('Bearer ')) {
-                token = token.slice(7).trim();
-            } else if (token.startsWith('bearer ')) {
-                token = token.slice(7).trim();
+            // Strip "Bearer " prefix (case-insensitive) if present
+            if (/^bearer\s+/i.test(token)) {
+                token = token.replace(/^bearer\s+/i, '').trim();
             }
 
-            // Verify the JWT token
-            const decoded = jwt.verify(token, jwtConfig.accessTokenSecret);
+            // Verify JWT
+            let decoded;
+            try {
+                decoded = jwt.verify(token, jwtConfig.accessTokenSecret);
+            } catch (jwtErr) {
+                console.error('[Socket] JWT verify failed:', jwtErr.message);
+                return next(new Error('Authentication error: Invalid or expired token'));
+            }
+
             if (!decoded.id) {
                 return next(new Error('Authentication error: Invalid token payload'));
             }
 
-            // Cross-reference with active sessions in LogLogin
+            // Cross-reference with active session in LogLogin
             const logLogin = await LogLogin.findOne({
                 userId: new mongoose.Types.ObjectId(decoded.id),
                 token,
@@ -46,16 +58,17 @@ const initSocket = (server) => {
             });
 
             if (!logLogin) {
+                console.warn(`[Socket] No active session found for userId=${decoded.id}`);
                 return next(new Error('Authentication error: Session expired or invalid'));
             }
 
-            // Verify the user exists in database and retrieve role
+            // Fetch full user record for role info
             const user = await User.findById(decoded.id).select('name role email');
             if (!user) {
                 return next(new Error('Authentication error: User not found'));
             }
 
-            // Attach user details to socket context
+            // Attach user info to socket context
             socket.user = {
                 id: user._id.toString(),
                 name: user.name,
@@ -65,34 +78,79 @@ const initSocket = (server) => {
 
             next();
         } catch (error) {
-            return next(new Error('Authentication error: Invalid or expired token'));
+            console.error('[Socket] Auth middleware error:', error.message);
+            return next(new Error('Authentication error: ' + error.message));
         }
     });
 
-    // Connection handler
+    // ─── Connection Handler ───────────────────────────────────────────────────
     io.on('connection', (socket) => {
         const userId = socket.user.id;
         const role = socket.user.role;
+        const roomPrefixed = `user_${userId}`;
+        const roomRaw = userId;
 
-        // Register socket to user socket map
+        // Track socket in userSockets map
         if (!userSockets.has(userId)) {
             userSockets.set(userId, new Set());
         }
         userSockets.get(userId).add(socket.id);
 
-        // Join user-specific notification room
-        socket.join(`user_${userId}`);
+        // Join personal notification rooms (both prefixed and raw)
+        socket.join(roomPrefixed);
+        socket.join(roomRaw);
 
-        // Join admin-specific notification room if user is an admin
+        // Admins additionally join the shared admins room
         if (role === 'admin') {
             socket.join('admins');
         }
 
-        console.log(`Socket connected: ${socket.id} | User: ${userId} | Role: ${role}`);
+        console.log(
+            `[Socket] ✅ Connected  | socketId=${socket.id} | userId=${userId} | role=${role} | rooms=[${roomPrefixed}, ${roomRaw}]`
+        );
 
-        socket.on('disconnect', () => {
-            console.log(`Socket disconnected: ${socket.id} | User: ${userId}`);
-            
+        // Handle custom join/register/setup events emitted manually by frontend/Flutter client
+        const handleClientRoomRegistration = (data) => {
+            let targetId = null;
+            if (typeof data === 'string') {
+                targetId = data.trim();
+            } else if (data && typeof data === 'object') {
+                targetId = (data.userId || data.id || data.room || '').toString().trim();
+            }
+
+            if (targetId && targetId.length > 5) {
+                const clientRoomPrefixed = `user_${targetId}`;
+                const clientRoomRaw = targetId;
+
+                socket.join(clientRoomPrefixed);
+                socket.join(clientRoomRaw);
+
+                console.log(
+                    `[Socket] 🔄 Client custom registration event | socketId=${socket.id} | userId=${userId} | rooms=[${clientRoomPrefixed}, ${clientRoomRaw}]`
+                );
+            }
+        };
+
+        // Listen for all common room subscription events sent by various client-side controllers
+        socket.on('join', handleClientRoomRegistration);
+        socket.on('register', handleClientRoomRegistration);
+        socket.on('setup', handleClientRoomRegistration);
+        socket.on('joinRoom', handleClientRoomRegistration);
+        socket.on('login', handleClientRoomRegistration);
+
+        // Send a welcome/ping event so the client can confirm connectivity
+        socket.emit('connected', {
+            message: 'Socket connected successfully',
+            userId,
+            role,
+            rooms: [roomPrefixed, roomRaw],
+        });
+
+        socket.on('disconnect', (reason) => {
+            console.log(
+                `[Socket] ❌ Disconnected | socketId=${socket.id} | userId=${userId} | reason=${reason}`
+            );
+
             const sockets = userSockets.get(userId);
             if (sockets) {
                 sockets.delete(socket.id);
@@ -101,10 +159,17 @@ const initSocket = (server) => {
                 }
             }
         });
+
+        // Heartbeat — client can ping, server pongs back
+        socket.on('ping', () => {
+            socket.emit('pong', { timestamp: Date.now() });
+        });
     });
 
     return io;
 };
+
+// ─── Getters ──────────────────────────────────────────────────────────────────
 
 const getIO = () => {
     if (!io) {
@@ -113,48 +178,86 @@ const getIO = () => {
     return io;
 };
 
-// Core Helper: Real-time emitter to a specific user room
-const sendToUser = (userId, event, data) => {
-    if (io) {
-        io.to(`user_${userId}`).emit(event, data);
-    }
-};
-
-// Core Helper: Real-time emitter to all admin room subscribers
-const sendToAdmins = (event, data) => {
-    if (io) {
-        io.to('admins').emit(event, data);
-    }
-};
-
-// Core Helper: Broadcast event to all connected sockets
-const broadcast = (event, data) => {
-    if (io) {
-        io.emit(event, data);
-    }
-};
-
-// Core Helper: Send event to multiple user rooms in real-time
-const sendToUsers = (userIds, event, data) => {
-    if (io && Array.isArray(userIds)) {
-        userIds.forEach((userId) => {
-            io.to(`user_${userId}`).emit(event, data);
-        });
-    }
+/**
+ * Returns true if at least one socket for the given userId is currently online.
+ */
+const isUserOnline = (userId) => {
+    return userSockets.has(userId.toString()) && userSockets.get(userId.toString()).size > 0;
 };
 
 /**
- * Unified helper to persist a notification in MongoDB AND dispatch it in real-time.
- * 
- * @param {Object} params
- * @param {String} [params.senderId] - ID of the user triggering the notification (null for system)
- * @param {String} [params.recipientId] - Target user ID (null for broadcast / all admins)
- * @param {String} [params.recipientType] - 'user', 'admin', or 'all'
- * @param {String} params.title - Notification title
- * @param {String} params.message - Notification detail/message
- * @param {String} [params.type] - Category ('inquiry', 'property_approval', 'subscription', 'support_ticket', 'general')
- * @param {String} [params.relatedId] - Reference to associated Mongoose document ID
- * @param {String} [params.relatedModel] - Model name string (e.g. 'Property', 'Inquiry')
+ * Returns all currently connected user IDs.
+ */
+const getOnlineUserIds = () => {
+    return [...userSockets.keys()];
+};
+
+/**
+ * Emit an event to a specific user's personal room.
+ */
+const sendToUser = (userId, event, data) => {
+    if (!io) {
+        console.warn('[Socket] sendToUser called before io is initialized');
+        return;
+    }
+
+    const userIdStr = userId.toString();
+    const roomPrefixed = `user_${userIdStr}`;
+    const roomRaw = userIdStr;
+    const online = isUserOnline(userIdStr);
+
+    console.log(
+        `[Socket] sendToUser → rooms=[${roomPrefixed}, ${roomRaw}] | event=${event} | userOnline=${online}`
+    );
+
+    // Emit to both formats to support both Flutter controller patterns
+    io.to(roomPrefixed).emit(event, data);
+    io.to(roomRaw).emit(event, data);
+};
+
+/**
+ * Emit an event to all sockets in the admins room.
+ */
+const sendToAdmins = (event, data) => {
+    if (!io) return;
+    console.log(`[Socket] sendToAdmins → event=${event}`);
+    io.to('admins').emit(event, data);
+};
+
+/**
+ * Broadcast an event to ALL connected sockets (no room filter).
+ */
+const broadcast = (event, data) => {
+    if (!io) return;
+    console.log(`[Socket] broadcast → event=${event}`);
+    io.emit(event, data);
+};
+
+/**
+ * Emit an event to multiple user rooms in bulk.
+ */
+const sendToUsers = (userIds, event, data) => {
+    if (!io || !Array.isArray(userIds)) return;
+    userIds.forEach((userId) => {
+        sendToUser(userId, event, data);
+    });
+};
+
+// ─── Unified Notification Helper ──────────────────────────────────────────────
+
+/**
+ * Persist a notification to MongoDB AND dispatch it via Socket.io in real-time.
+ *
+ * @param {Object}  params
+ * @param {String}  [params.senderId]       - ID of the triggering user (null = system)
+ * @param {String}  [params.recipientId]    - Target user ID (null for broadcast / all admins)
+ * @param {String}  [params.recipientType]  - 'user' | 'admin' | 'all'
+ * @param {String}  params.title            - Short notification title
+ * @param {String}  params.message          - Full notification body
+ * @param {String}  [params.type]           - 'inquiry' | 'property_approval' | 'subscription' | 'support_ticket' | 'general'
+ * @param {String}  [params.relatedId]      - ObjectId of related document
+ * @param {String}  [params.relatedModel]   - Model name (e.g. 'PropertyDocument')
+ * @returns {Promise<Notification>}
  */
 const createAndSendNotification = async ({
     senderId = null,
@@ -167,7 +270,7 @@ const createAndSendNotification = async ({
     relatedModel = null,
 }) => {
     try {
-        // 1. Create and save notification document in Mongoose DB
+        // 1. Persist to MongoDB
         const notification = await Notification.create({
             senderId,
             recipientId,
@@ -179,32 +282,39 @@ const createAndSendNotification = async ({
             relatedModel,
         });
 
-        const notificationData = {
-            id: notification._id,
-            senderId,
-            recipientId,
+        const payload = {
+            id: notification._id.toString(),
+            senderId: senderId ? senderId.toString() : null,
+            recipientId: recipientId ? recipientId.toString() : null,
             recipientType,
             title,
             message,
             type,
-            relatedId,
+            relatedId: relatedId ? relatedId.toString() : null,
             relatedModel,
             isRead: false,
             createdAt: notification.createdAt,
         };
 
-        // 2. Dispatch real-time Socket.io event based on target/recipient
+        console.log(
+            `[Socket] createAndSendNotification | recipientType=${recipientType} | recipientId=${recipientId} | type=${type}`
+        );
+
+        // 2. Real-time dispatch
         if (recipientType === 'admin') {
-            sendToAdmins('notification', notificationData);
+            sendToAdmins('notification', payload);
         } else if (recipientType === 'all') {
-            broadcast('notification', notificationData);
+            broadcast('notification', payload);
         } else if (recipientId) {
-            sendToUser(recipientId.toString(), 'notification', notificationData);
+            // Target a specific user room
+            sendToUser(recipientId.toString(), 'notification', payload);
+        } else {
+            console.warn('[Socket] createAndSendNotification: recipientType=user but no recipientId provided');
         }
 
         return notification;
     } catch (error) {
-        console.error('Error creating/sending notification:', error);
+        console.error('[Socket] Error in createAndSendNotification:', error);
         throw error;
     }
 };
@@ -216,5 +326,7 @@ module.exports = {
     sendToAdmins,
     broadcast,
     sendToUsers,
+    isUserOnline,
+    getOnlineUserIds,
     createAndSendNotification,
 };
