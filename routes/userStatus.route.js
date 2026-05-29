@@ -8,3 +8,4 @@ router.get('/my', auth, controller.getMyUserStatus);
 router.get('/:userId', controller.getUserStatusByUserId);
 
 module.exports = router;
+

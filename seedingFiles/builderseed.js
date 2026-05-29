@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const Property = require('./models/property.model');
+const Property = require('../models/property.model');
 
 const MONGO_URI =
     process.env.MONGO_URI ||
