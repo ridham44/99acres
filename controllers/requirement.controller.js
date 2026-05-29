@@ -4,6 +4,7 @@ const status = require('../utils/statusCodes');
 const mongoose = require('mongoose');
 const User = require('../models/user.model');
 const Notification = require('../models/notification.model');
+const ExpertInArea = require('../models/expertInArea.model');
 const { sendToUsers } = require('../utils/socket');
 
 // Create Requirement
@@ -16,44 +17,92 @@ exports.createRequirement = async (req, res) => {
             createdAt: new Date(),
         });
 
-        // Broadcast to all brokers, builders, channel partners, and admins (except current user)
-        const targetUsers = await User.find({
+        // ─── Role-based notification matching ────────────────────────────────────
+        // • Brokers   → city AND area must both match
+        // • channel_partner / builder → city match only
+        // • admin     → always notified
+        // ─────────────────────────────────────────────────────────────────────────
+
+        const requirementCities = Array.isArray(requirement.locations) && requirement.locations.length > 0
+            ? requirement.locations.map(l => l.toLowerCase().trim())
+            : [];
+        const requirementArea = requirement.area ? requirement.area.toLowerCase().trim() : null;
+
+        // Fetch all candidate professional users (exclude self)
+        const candidateUsers = await User.find({
             role: { $in: ['broker', 'builder', 'admin', 'channel_partner'] },
             _id: { $ne: new mongoose.Types.ObjectId(userId) },
             deletedAt: null,
-        }).select('_id');
+        }).select('_id role city');
 
-        if (targetUsers.length > 0) {
+        // Helper: case-insensitive city match
+        const cityMatches = (userCity) => {
+            if (!userCity || requirementCities.length === 0) return false;
+            const uc = userCity.toLowerCase().trim();
+            return requirementCities.some(rc => rc === uc || uc.includes(rc) || rc.includes(uc));
+        };
+
+        // Collect broker IDs that need area validation
+        const brokerIds = candidateUsers
+            .filter(u => u.role === 'broker' && cityMatches(u.city))
+            .map(u => u._id);
+
+        // Fetch ExpertInArea records for matched brokers (active, non-deleted)
+        let qualifiedBrokerIds = new Set();
+        if (brokerIds.length > 0) {
+            if (requirementArea) {
+                // Broker must have an ExpertInArea record matching the requirement area
+                const expertRecords = await ExpertInArea.find({
+                    userId: { $in: brokerIds },
+                    deletedAt: null,
+                    areaName: { $regex: requirementArea, $options: 'i' },
+                });
+                expertRecords.forEach(r => qualifiedBrokerIds.add(r.userId.toString()));
+            } else {
+                // No area specified in requirement → city match alone qualifies brokers
+                brokerIds.forEach(id => qualifiedBrokerIds.add(id.toString()));
+            }
+        }
+
+        // Build final recipient list
+        const qualifiedUserIds = candidateUsers
+            .filter(u => {
+                if (u.role === 'admin') return true;                          // Always notify admins
+                if (u.role === 'broker') return qualifiedBrokerIds.has(u._id.toString()); // city + area
+                // channel_partner / builder → city match only
+                return cityMatches(u.city);
+            })
+            .map(u => u._id.toString());
+
+        if (qualifiedUserIds.length > 0) {
             const userName = req.user.name || 'A user';
-            
+
             // Format dynamic location and area string
             const areaStr = requirement.area ? ` (${requirement.area.trim()})` : '';
-            const locationStr = (Array.isArray(requirement.locations) && requirement.locations.length > 0
+            const locationStr = (requirementCities.length > 0
                 ? requirement.locations.join(', ')
                 : 'N/A') + areaStr;
 
-            const notificationDataArray = targetUsers.map((user) => ({
-                senderId: userId,
-                recipientId: user._id,
-                recipientType: 'user',
+            const notificationPayload = {
                 title: 'New Property Requirement Submitted',
                 message: `${userName} submitted a new property requirement for: ${locationStr}.`,
                 type: 'general',
                 relatedId: requirement._id,
                 relatedModel: 'Requirement',
-            }));
+            };
 
-            // Batch insert for performance
+            // Batch insert notifications
+            const notificationDataArray = qualifiedUserIds.map(recipientId => ({
+                senderId: userId,
+                recipientId,
+                recipientType: 'user',
+                ...notificationPayload,
+            }));
             await Notification.insertMany(notificationDataArray);
 
-            // Push real-time event to all targeted users
-            const targetUserIds = targetUsers.map((u) => u._id.toString());
-            sendToUsers(targetUserIds, 'notification', {
-                title: 'New Property Requirement Submitted',
-                message: `${userName} submitted a new property requirement for: ${locationStr}.`,
-                type: 'general',
-                relatedId: requirement._id,
-                relatedModel: 'Requirement',
+            // Push real-time socket event
+            sendToUsers(qualifiedUserIds, 'notification', {
+                ...notificationPayload,
                 createdAt: new Date(),
             });
         }

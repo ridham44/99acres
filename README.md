@@ -3360,3 +3360,60 @@ When a user submits a new inquiry on a property, the backend dynamically capture
   }
 }
 ```
+
+---
+
+### Professional Matching Requirement Notification Flow
+
+When a user submits a new property **requirement** (via `POST /api/requirements`), the backend applies a role-based matching algorithm to decide which registered professionals receive a real-time notification. Notifications are **not** broadcast globally — only qualified recipients who serve the relevant area receive them.
+
+#### Matching Rules
+
+| Role | Matching Condition |
+|:---|:---|
+| `broker` | User's `city` matches one of the requirement's `locations` **AND** the user has an active `ExpertInArea` record whose `areaName` matches the requirement's `area` |
+| `channel_partner` | User's `city` matches one of the requirement's `locations` (city match only) |
+| `builder` | User's `city` matches one of the requirement's `locations` (city match only) |
+| `admin` | Always notified (regardless of location) |
+
+> **Note:** If the requirement has **no `area`** set, brokers are qualified by **city match alone** (same rule as channel_partner/builder).
+
+#### Flow Steps
+
+1. Requirement is created and saved to the database.
+2. The backend normalizes `requirement.locations` (array of cities) and `requirement.area`.
+3. All professional users (roles: `broker`, `channel_partner`, `builder`, `admin`) excluding the submitter are fetched with their `city` field.
+4. **Broker filtering (2-step)**:
+   - Step 1: Filter brokers whose `city` matches any of the requirement's locations.
+   - Step 2: Query `ExpertInArea` for those broker IDs — only keep brokers with at least one active `areaName` matching `requirement.area` (case-insensitive regex).
+5. **Channel partner / Builder filtering**: Filter by `city` match only.
+6. **Admins**: Always included.
+7. `Notification` documents are batch-inserted for all qualified recipients.
+8. A real-time socket event (`notification`) is emitted via `sendToUsers()` to all qualified recipient IDs.
+
+#### Requirement Model Fields (relevant to matching)
+
+```json
+{
+  "locations": ["Ahmedabad", "Surat"],
+  "area": "Satellite"
+}
+```
+
+- `locations` → array of cities the buyer is looking in.
+- `area` → specific sub-area/locality within those cities.
+
+#### Example Scenarios
+
+**Scenario A**: Requirement submitted for `locations: ["Ahmedabad"]`, `area: "Satellite"`
+- Broker in Ahmedabad with ExpertInArea `"Satellite"` → ✅ Notified
+- Broker in Ahmedabad with ExpertInArea `"Prahlad Nagar"` → ❌ Not notified (area mismatch)
+- Broker in Surat → ❌ Not notified (city mismatch)
+- Channel partner in Ahmedabad → ✅ Notified (city match only)
+- Builder in Ahmedabad → ✅ Notified (city match only)
+- Admin → ✅ Always notified
+
+**Scenario B**: Requirement submitted for `locations: ["Ahmedabad"]`, no `area`
+- Broker in Ahmedabad (any expert area) → ✅ Notified (no area filter applied)
+- Channel partner in Ahmedabad → ✅ Notified
+- All other cities → ❌ Not notified
