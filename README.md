@@ -1196,7 +1196,26 @@ furnished: No, Semi, Yes
 availableFor: Family, Bachelors, Anyone, Boys, Girls
 status: Draft, Active, Inactive, Sold, Rented
 distanceUnit: m, km
+isLaunch: Launched, Pre-Launch
+launchDateOption: today, yesterday
 ```
+
+#### Builder & Channel Partner Launch Flow
+
+When a user with the `builder` or `channel_partner` role creates or updates a property, the `isLaunch` status validation is enforced:
+
+> [!IMPORTANT]
+> **Launched Status Flow:**
+> - Set `isLaunch` = `"Launched"`
+> - Pass `launchDateOption` = `"today"` or `"yesterday"` (required)
+> - The backend automatically calculates and records the real-time `launchDate` (based on the chosen option).
+> - `preLaunchMonth` and `preLaunchYear` are cleared (`null`).
+
+> [!IMPORTANT]
+> **Pre-Launch Status Flow:**
+> - Set `isLaunch` = `"Pre-Launch"`
+> - Pass `preLaunchMonth` (string, e.g. `"June"`) and `preLaunchYear` (number, e.g. `2026`) (both required)
+> - `launchDate` and `launchDateOption` are cleared (`null`).
 
 Postman test script:
 

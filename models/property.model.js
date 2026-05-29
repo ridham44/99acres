@@ -313,6 +313,33 @@ const propertySchema = new mongoose.Schema(
             default: 'Draft',
         },
 
+        isLaunch: {
+            type: String,
+            enum: ['Launched', 'Pre-Launch'],
+            default: null,
+        },
+
+        launchDateOption: {
+            type: String,
+            enum: ['today', 'yesterday'],
+            default: null,
+        },
+
+        launchDate: {
+            type: Date,
+            default: null,
+        },
+
+        preLaunchMonth: {
+            type: String,
+            default: null,
+        },
+
+        preLaunchYear: {
+            type: Number,
+            default: null,
+        },
+
         createdAt: {
             type: Date,
             default: Date.now,

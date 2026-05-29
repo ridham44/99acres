@@ -121,6 +121,48 @@ exports.createProperty = async (req, res) => {
       ownerId = userId;
     }
 
+    // --- Validation for isLaunch (only for builder or channel_partner) ---
+    if (userRole === "builder" || userRole === "channel_partner") {
+      const { isLaunch, launchDateOption, preLaunchMonth, preLaunchYear } = req.body;
+
+      if (isLaunch) {
+        if (!["Launched", "Pre-Launch"].includes(isLaunch)) {
+          return res.status(status.BadRequest).json({
+            success: false,
+            message: "isLaunch must be either 'Launched' or 'Pre-Launch'",
+          });
+        }
+
+        if (isLaunch === "Launched") {
+          if (!launchDateOption || !["today", "yesterday"].includes(launchDateOption)) {
+            return res.status(status.BadRequest).json({
+              success: false,
+              message: "For Launched status, launchDateOption is required and must be 'today' or 'yesterday'",
+            });
+          }
+
+          let date;
+          if (launchDateOption === "today") {
+            date = new Date();
+          } else {
+            date = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          }
+          req.body.launchDate = date;
+          req.body.preLaunchMonth = null;
+          req.body.preLaunchYear = null;
+        } else if (isLaunch === "Pre-Launch") {
+          if (!preLaunchMonth || !preLaunchYear) {
+            return res.status(status.BadRequest).json({
+              success: false,
+              message: "For Pre-Launch status, preLaunchMonth and preLaunchYear are required",
+            });
+          }
+          req.body.launchDate = null;
+          req.body.launchDateOption = null;
+        }
+      }
+    }
+
     // --- Parse Technical Audit Fields (if they come as JSON strings from form-data) ---
     const jsonFields = [
       "nearbyLandmarks",
@@ -913,6 +955,49 @@ exports.updateProperty = async (req, res) => {
     if (req.user.role !== "builder" && req.user.role !== "admin") {
       delete req.body.availableUnits;
       delete req.body.developer;
+    }
+
+    // --- Validation for isLaunch (only for builder or channel_partner) ---
+    const userRole = req.user.role;
+    if (userRole === "builder" || userRole === "channel_partner") {
+      const { isLaunch, launchDateOption, preLaunchMonth, preLaunchYear } = req.body;
+
+      if (isLaunch) {
+        if (!["Launched", "Pre-Launch"].includes(isLaunch)) {
+          return res.status(status.BadRequest).json({
+            success: false,
+            message: "isLaunch must be either 'Launched' or 'Pre-Launch'",
+          });
+        }
+
+        if (isLaunch === "Launched") {
+          if (!launchDateOption || !["today", "yesterday"].includes(launchDateOption)) {
+            return res.status(status.BadRequest).json({
+              success: false,
+              message: "For Launched status, launchDateOption is required and must be 'today' or 'yesterday'",
+            });
+          }
+
+          let date;
+          if (launchDateOption === "today") {
+            date = new Date();
+          } else {
+            date = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          }
+          req.body.launchDate = date;
+          req.body.preLaunchMonth = null;
+          req.body.preLaunchYear = null;
+        } else if (isLaunch === "Pre-Launch") {
+          if (!preLaunchMonth || !preLaunchYear) {
+            return res.status(status.BadRequest).json({
+              success: false,
+              message: "For Pre-Launch status, preLaunchMonth and preLaunchYear are required",
+            });
+          }
+          req.body.launchDate = null;
+          req.body.launchDateOption = null;
+        }
+      }
     }
 
     jsonFields.forEach((field) => {
