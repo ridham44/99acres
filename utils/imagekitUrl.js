@@ -29,6 +29,11 @@ const getPropertyDocumentUrl = (fileName) => {
     return `${getBaseUrl()}/properties/documents/${fileName}`;
 };
 
+const getPropertyBrochureUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/properties/brochures/${fileName}`;
+};
+
 const getUserProfileImageUrl = (fileName) => {
     if (!fileName) return null;
     return `${getBaseUrl()}/users/profile-images/${fileName}`;
@@ -44,11 +49,18 @@ const getAgentCompanyImageUrl = (fileName) => {
     return `${getBaseUrl()}/agents/company-images/${fileName}`;
 };
 
+const getBankIconUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/banks/icons/${fileName}`;
+};
+
 module.exports = {
     getImagekitFileUrl: exports.getImagekitFileUrl,
     getPropertyMediaUrl,
     getPropertyDocumentUrl,
+    getPropertyBrochureUrl,
     getUserProfileImageUrl,
     getUserDocumentUrl,
     getAgentCompanyImageUrl,
+    getBankIconUrl,
 };

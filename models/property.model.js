@@ -268,6 +268,21 @@ const propertySchema = new mongoose.Schema(
             default: null,
         },
 
+        // Brochure PDFs — uploaded to ImageKit under properties/brochures/
+        brochure: [
+            {
+                fileName: {
+                    type: String,
+                    required: true,
+                    trim: true,
+                },
+                uploadedAt: {
+                    type: Date,
+                    default: Date.now,
+                },
+            },
+        ],
+
         ownership: {
             type: String,
             trim: true,

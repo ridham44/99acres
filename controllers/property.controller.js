@@ -1,12 +1,16 @@
 const Property = require("../models/property.model");
 const User = require("../models/user.model");
 const Amenity = require("../models/amenity.model");
+const Bank = require("../models/bank.model");
 const status = require("../utils/statusCodes");
 const { uploadToImagekit } = require("../utils/imagekitUpload");
 const {
   getPropertyMediaUrl,
   getUserProfileImageUrl,
+  getPropertyBrochureUrl,
+  getBankIconUrl,
 } = require("../utils/imagekitUrl");
+
 const { recordPropertyVisit } = require("./userHome.controller");
 
 
@@ -66,6 +70,7 @@ exports.createProperty = async (req, res) => {
   try {
     const imageFiles = req.files?.images || [];
     const videoFiles = req.files?.videos || [];
+    const brochureFiles = req.files?.brochure || [];
 
     const media = [];
 
@@ -84,6 +89,16 @@ exports.createProperty = async (req, res) => {
       media.push({
         type: "video",
         fileName: uploaded.fileName,
+      });
+    }
+
+    // Upload brochure PDFs to ImageKit
+    const brochure = [];
+    for (const file of brochureFiles) {
+      const uploaded = await uploadToImagekit(file, "properties/brochures");
+      brochure.push({
+        fileName: uploaded.fileName,
+        uploadedAt: new Date(),
       });
     }
 
@@ -171,6 +186,7 @@ exports.createProperty = async (req, res) => {
       ...req.body,
       ownerId,
       media,
+      brochure,
       createdAt: new Date(),
     });
 
@@ -179,6 +195,11 @@ exports.createProperty = async (req, res) => {
     propertyObj.media = (propertyObj.media || []).map((item) => ({
       ...item,
       url: getPropertyMediaUrl(item.fileName, item.type),
+    }));
+
+    propertyObj.brochure = (propertyObj.brochure || []).map((item) => ({
+      ...item,
+      url: getPropertyBrochureUrl(item.fileName),
     }));
 
     return res.status(status.CREATED).json({
@@ -481,10 +502,20 @@ exports.getProperties = async (req, res) => {
     // Strip builder-only fields for non-builder / non-admin roles
       // `availableUnits` and `developer` are visible to all roles in list responses
 
+    const activeBanks = await Bank.find({ deletedAt: null }).sort({ createdAt: -1 });
+    const formattedBanks = activeBanks.map((bank) => {
+      const bankObj = bank.toObject();
+      return {
+        ...bankObj,
+        bankIconUrl: bankObj.bankIcon ? getBankIconUrl(bankObj.bankIcon) : null,
+      };
+    });
+
     return res.status(status.OK).json({
       success: true,
       message: "Properties fetched successfully",
       data,
+      banks: formattedBanks,
       pagination: {
         total,
         page: currentPage,
@@ -733,6 +764,12 @@ exports.getPropertyById = async (req, res) => {
       url: getPropertyMediaUrl(item.fileName, item.type),
     }));
 
+    // map brochure URLs
+    propertyObj.brochure = (propertyObj.brochure || []).map((item) => ({
+      ...item,
+      url: getPropertyBrochureUrl(item.fileName),
+    }));
+
     const firstImage = propertyObj.media.find((item) => item.type === "image");
     propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
 
@@ -753,6 +790,15 @@ exports.getPropertyById = async (req, res) => {
 
     // Role-based filtering for sensitive builder fields
       // `availableUnits` and `developer` are visible to all roles in detail responses
+
+    const activeBanks = await Bank.find({ deletedAt: null }).sort({ createdAt: -1 });
+    propertyObj.banks = activeBanks.map((bank) => {
+      const bankObj = bank.toObject();
+      return {
+        ...bankObj,
+        bankIconUrl: bankObj.bankIcon ? getBankIconUrl(bankObj.bankIcon) : null,
+      };
+    });
 
     return res.status(status.OK).json({
       success: true,
@@ -854,6 +900,7 @@ exports.updateProperty = async (req, res) => {
 
     const imageFiles = req.files?.images || [];
     const videoFiles = req.files?.videos || [];
+    const brochureFiles = req.files?.brochure || [];
 
     let media = existingProperty.media || [];
 
@@ -881,11 +928,22 @@ exports.updateProperty = async (req, res) => {
       });
     }
 
+    // Append new brochure PDFs (existing ones are kept)
+    let brochure = existingProperty.brochure || [];
+    for (const file of brochureFiles) {
+      const uploaded = await uploadToImagekit(file, "properties/brochures");
+      brochure.push({
+        fileName: uploaded.fileName,
+        uploadedAt: new Date(),
+      });
+    }
+
     const property = await Property.findOneAndUpdate(
       { _id: id, deletedAt: null },
       {
         ...req.body,
         media,
+        brochure,
         updatedAt: new Date(),
       },
       { new: true },
@@ -914,6 +972,12 @@ exports.updateProperty = async (req, res) => {
     propertyObj.media = (propertyObj.media || []).map((item) => ({
       ...item,
       url: getPropertyMediaUrl(item.fileName, item.type),
+    }));
+
+    // map brochure URLs
+    propertyObj.brochure = (propertyObj.brochure || []).map((item) => ({
+      ...item,
+      url: getPropertyBrochureUrl(item.fileName),
     }));
 
     const firstImage = propertyObj.media.find((item) => item.type === "image");
@@ -1205,3 +1269,90 @@ exports.getPropertyCount = async (req, res) => {
       .json({ success: false, message: error.message });
   }
 };
+
+// ─── POST /api/properties/:id/brochure (Upload brochure PDF, owner/dealer unique) ───
+exports.uploadPropertyBrochure = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res.status(status.BadRequest).json({
+        success: false,
+        message: "No brochure file uploaded",
+      });
+    }
+
+    // Validate file size (max 5 MB)
+    const maxBrochureSize = 5 * 1024 * 1024;
+    if (req.file.size > maxBrochureSize) {
+      return res.status(status.BadRequest).json({
+        success: false,
+        message: "Brochure PDF must be 5 MB or less",
+      });
+    }
+
+    const property = await Property.findOne({
+      _id: id,
+      deletedAt: null,
+    });
+
+    if (!property) {
+      return res.status(status.NotFound).json({
+        success: false,
+        message: "Property not found",
+      });
+    }
+
+    // Authorization Check: Must be the owner, dealer, or admin
+    const isOwner = property.ownerId && property.ownerId.toString() === req.user.id;
+    const isDealer = property.dealerId && property.dealerId.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isDealer && !isAdmin) {
+      return res.status(status.Forbidden).json({
+        success: false,
+        message: "Forbidden: You are not authorized to upload a brochure to this property",
+      });
+    }
+
+    // Enforce max count limit (e.g. max 3 brochures per property as documented)
+    const existingBrochures = property.brochure || [];
+    if (existingBrochures.length >= 3) {
+      return res.status(status.BadRequest).json({
+        success: false,
+        message: "Limit reached: A property can have at most 3 brochures",
+      });
+    }
+
+    // Upload to ImageKit
+    const uploaded = await uploadToImagekit(req.file, "properties/brochures");
+
+    // Add to property
+    const newBrochureEntry = {
+      fileName: uploaded.fileName,
+      uploadedAt: new Date(),
+    };
+
+    property.brochure = [...existingBrochures, newBrochureEntry];
+    await property.save();
+
+    // Map URL for response
+    const responseBrochure = {
+      ...newBrochureEntry,
+      url: getPropertyBrochureUrl(newBrochureEntry.fileName),
+    };
+
+    return res.status(status.OK).json({
+      success: true,
+      message: "Brochure uploaded successfully",
+      data: responseBrochure,
+    });
+  } catch (error) {
+    console.log("UPLOAD PROPERTY BROCHURE ERROR:", error);
+    return res.status(status.InternalServerError).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+

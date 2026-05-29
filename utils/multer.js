@@ -18,18 +18,25 @@ const storage = multer.diskStorage({
 
 const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const allowedVideoTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo'];
+const allowedPdfType = 'application/pdf';
 const maxImageSize = 5 * 1024 * 1024;
 const maxVideoSize = 50 * 1024 * 1024;
+const maxBrochureSize = 5 * 1024 * 1024; // 5 MB per PDF
 
 const fileFilter = (req, file, cb) => {
     const isImageField = file.fieldname === 'images';
     const isVideoField = file.fieldname === 'videos';
+    const isBrochureField = file.fieldname === 'brochure';
 
     if (isImageField && allowedImageTypes.includes(file.mimetype)) {
         return cb(null, true);
     }
 
     if (isVideoField && allowedVideoTypes.includes(file.mimetype)) {
+        return cb(null, true);
+    }
+
+    if (isBrochureField && file.mimetype === allowedPdfType) {
         return cb(null, true);
     }
 
@@ -57,6 +64,7 @@ const deleteUploadedFiles = (files = {}) => {
 const validatePropertyUploadLimits = (req, res, next) => {
     const imageFiles = req.files?.images || [];
     const videoFiles = req.files?.videos || [];
+    const brochureFiles = req.files?.brochure || [];
 
     if (videoFiles.length > 1) {
         deleteUploadedFiles(req.files);
@@ -83,6 +91,16 @@ const validatePropertyUploadLimits = (req, res, next) => {
         return res.status(400).json({
             success: false,
             message: 'Video must be 50 MB or less',
+        });
+    }
+
+    const largeBrochure = brochureFiles.find((file) => file.size > maxBrochureSize);
+
+    if (largeBrochure) {
+        deleteUploadedFiles(req.files);
+        return res.status(400).json({
+            success: false,
+            message: 'Each brochure PDF must be 5 MB or less',
         });
     }
 

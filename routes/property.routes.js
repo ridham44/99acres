@@ -12,6 +12,7 @@ router.post(
     upload.fields([
         { name: 'images', maxCount: 5 },
         { name: 'videos', maxCount: 1 },
+        { name: 'brochure', maxCount: 3 },
     ]),
     validatePropertyUploadLimits,
     validation.validateCreateProperty,
@@ -37,11 +38,19 @@ router.put(
     upload.fields([
         { name: 'images', maxCount: 5 },
         { name: 'videos', maxCount: 1 },
+        { name: 'brochure', maxCount: 3 },
     ]),
     validatePropertyUploadLimits,
     validation.validateUpdateProperty,
     controller.updateProperty,
 );
 router.delete('/:id', auth, validation.validatePropertyId, controller.deleteProperty);
+router.post(
+    '/:id/brochure',
+    auth,
+    validation.validatePropertyId,
+    upload.single('brochure'),
+    controller.uploadPropertyBrochure
+);
 
 module.exports = router;

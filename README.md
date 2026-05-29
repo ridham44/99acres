@@ -1173,12 +1173,16 @@ File fields:
 ```txt
 images = select image file, max 5
 videos = select one video file, max 1
+brochure = select PDF file, max 3 files
 ```
 
 Allowed image types: `jpg`, `jpeg`, `png`, `webp`.
 Allowed video types: `mp4`, `mpeg`, `mov`, `avi`.
+Allowed brochure type: `pdf` only.
 Max image size: 5 MB per file.
 Max video size: 50 MB.
+Max brochure size: **5 MB per PDF file**. Up to **3 PDFs** per property.
+Brochure PDFs are uploaded to ImageKit under `properties/brochures/` and each entry in the `brochure` array gets a `url` field in the response.
 Videos are temporarily stored on disk and streamed to ImageKit so large uploads are not kept in server memory.
 
 Allowed enums:
@@ -1644,9 +1648,10 @@ furnishings = [{"furnishingId":"{{furnitureId}}","quantity":1}]
 nearbyPlaces = [{"nearbyId":"{{nearbyPlaceId}}","distance":1,"distanceUnit":"km"}]
 images = select new image file
 videos = select new video file
+brochure = select PDF file
 ```
 
-Note: uploaded images are appended to existing images. Uploaded video replaces the existing video because only one video is allowed per property.
+Note: uploaded images are appended to existing images. Uploaded video replaces the existing video because only one video is allowed per property. Uploaded brochures are **appended** to existing brochures (up to 3 total). Only `pdf` files are accepted for the `brochure` field; max 5 MB per file.
 
 ### Delete Property
 
@@ -1655,6 +1660,34 @@ Soft deletes a property.
 `DELETE {{baseUrl}}/properties/{{propertyId}}`
 
 Headers: auth required.
+
+### Upload Property Brochure (Standalone, Owner/Dealer Unique)
+
+Uploads a standalone brochure PDF for a property. Only the authorized owner/dealer of the property (or admin) can upload brochures.
+
+`POST {{baseUrl}}/properties/{{propertyId}}/brochure`
+
+Headers:
+- `Authorization: Bearer <ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data):
+- `brochure` (file, required): select PDF file (max 5 MB).
+
+Note: Each property can have at most 3 brochures. Uploaded brochures are appended.
+
+Response Example (`200 OK`):
+```json
+{
+  "success": true,
+  "message": "Brochure uploaded successfully",
+  "data": {
+    "fileName": "1716982462000-brochure.pdf",
+    "uploadedAt": "2026-05-29T12:00:00.000Z",
+    "url": "https://ik.imagekit.io/aj6cyp5nm/properties/brochures/1716982462000-brochure.pdf"
+  }
+}
+```
 
 ## Property Document APIs
 
@@ -3687,3 +3720,113 @@ When a user submits a new property **requirement** (via `POST /api/requirements`
 - Broker in Ahmedabad (any expert area) → ✅ Notified (no area filter applied)
 - Channel partner in Ahmedabad → ✅ Notified
 - All other cities → ❌ Not notified
+
+---
+
+## Bank APIs
+
+CRUD endpoints to manage banks. Creating, updating, and deleting bank records require admin authentication.
+
+### Create Bank (Admin Only)
+
+`POST {{baseUrl}}/banks`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data):
+- `bankName` (string, required): Name of the bank.
+- `interest` (number, required): Interest rate percentage (e.g. 8.5).
+- `about` (string, optional): Short description about the bank.
+- `bankIcon` (file, optional): Bank logo/icon image (`jpg`, `jpeg`, `png`, `webp` max 5 MB).
+
+Response Example (`201 Created`):
+```json
+{
+  "success": true,
+  "message": "Bank created successfully",
+  "data": {
+    "_id": "6a214d0f62bbf5a9e320d301",
+    "bankName": "HDFC Bank",
+    "interest": 8.5,
+    "about": "Premier housing loan provider.",
+    "bankIcon": "1716982462000-hdfc.png",
+    "bankIconUrl": "https://ik.imagekit.io/aj6cyp5nm/banks/icons/1716982462000-hdfc.png",
+    "createdAt": "2026-05-29T12:00:00.000Z",
+    "updatedAt": "2026-05-29T12:00:00.000Z",
+    "deletedAt": null
+  }
+}
+```
+
+### Get All Banks
+
+Fetches a list of all active banks.
+
+`GET {{baseUrl}}/banks`
+
+Optional query params:
+- `search` (string): Filter banks by name.
+- `page` (number): Page number for pagination.
+- `limit` (number): Number of banks per page.
+
+Response Example (`200 OK`):
+```json
+{
+  "success": true,
+  "message": "Banks fetched successfully",
+  "data": [
+    {
+      "_id": "6a214d0f62bbf5a9e320d301",
+      "bankName": "HDFC Bank",
+      "interest": 8.5,
+      "about": "Premier housing loan provider.",
+      "bankIcon": "1716982462000-hdfc.png",
+      "bankIconUrl": "https://ik.imagekit.io/aj6cyp5nm/banks/icons/1716982462000-hdfc.png",
+      "createdAt": "2026-05-29T12:00:00.000Z",
+      "updatedAt": "2026-05-29T12:00:00.000Z",
+      "deletedAt": null
+    }
+  ],
+  "meta": {
+    "totalBanks": 1
+  }
+}
+```
+
+### Get Bank By ID
+
+`GET {{baseUrl}}/banks/:id`
+
+### Update Bank (Admin Only)
+
+`PUT {{baseUrl}}/banks/:id`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data) - any optional fields:
+- `bankName` (string)
+- `interest` (number)
+- `about` (string)
+- `bankIcon` (file)
+
+### Delete Bank (Admin Only)
+
+Soft deletes a bank.
+
+`DELETE {{baseUrl}}/banks/:id`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+
+---
+
+## Property Integration with Banks
+
+All active banks and their interest rates are automatically returned when querying property information:
+1. **Property List GET API (`GET /properties`)**: Returns a `banks` array at the top level of the JSON response.
+2. **Property Detail GET API (`GET /properties/:id`)**: Returns a `banks` array directly nested inside the property's `data` object.
+
