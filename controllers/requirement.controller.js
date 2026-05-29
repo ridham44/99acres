@@ -25,9 +25,12 @@ exports.createRequirement = async (req, res) => {
 
         if (targetUsers.length > 0) {
             const userName = req.user.name || 'A user';
-            const locationStr = Array.isArray(requirement.locations) && requirement.locations.length > 0
+            
+            // Format dynamic location and area string
+            const areaStr = requirement.area ? ` (${requirement.area.trim()})` : '';
+            const locationStr = (Array.isArray(requirement.locations) && requirement.locations.length > 0
                 ? requirement.locations.join(', ')
-                : 'N/A';
+                : 'N/A') + areaStr;
 
             const notificationDataArray = targetUsers.map((user) => ({
                 senderId: userId,
@@ -121,7 +124,7 @@ exports.getRequirementById = async (req, res) => {
 // Get All Requirements (For Agents/Lead Discovery)
 exports.getAllRequirements = async (req, res) => {
     try {
-        const { transactionType, city, minBudget, maxBudget, status: reqStatus = 'Active', page = 1, limit = 10 } = req.query;
+        const { transactionType, city, area, minBudget, maxBudget, status: reqStatus = 'Active', page = 1, limit = 10 } = req.query;
 
         const filter = { deletedAt: null };
         if (reqStatus !== 'All') {
@@ -129,7 +132,8 @@ exports.getAllRequirements = async (req, res) => {
         }
 
         if (transactionType) filter.transactionType = transactionType;
-        if (city) filter.locations = { $in: [new RegExp(city, 'i')] };
+        if (city) filter.locations = { $in: [new RegExp(city.trim(), 'i')] };
+        if (area) filter.area = { $regex: area.trim(), $options: 'i' };
         if (minBudget || maxBudget) {
             filter.minBudget = { $lte: Number(maxBudget || Infinity) };
             filter.maxBudget = { $gte: Number(minBudget || 0) };
@@ -185,6 +189,21 @@ exports.getMatchedPropertiesForRequirement = async (req, res) => {
             ];
         }
 
+        // 1b. Locality/City Area (Specific Requirement Area)
+        if (requirement.area && requirement.area.trim()) {
+            const areaRegex = new RegExp(requirement.area.trim(), 'i');
+            if (query.$or) {
+                // If locations already exists, we match the area inside city_area or locality as well
+                query.$or.push({ locality: areaRegex });
+                query.$or.push({ city_area: areaRegex });
+            } else {
+                query.$or = [
+                    { locality: areaRegex },
+                    { city_area: areaRegex }
+                ];
+            }
+        }
+
         // 2. Property Types
         if (requirement.propertyTypes && requirement.propertyTypes.length > 0) {
             query.propertyType = { $in: requirement.propertyTypes };
@@ -222,6 +241,14 @@ exports.getMatchedPropertiesForRequirement = async (req, res) => {
                     (property.locality && property.locality.toLowerCase().includes(l.toLowerCase()))
                 );
                 if (locMatch) matches++;
+            }
+
+            if (requirement.area && requirement.area.trim()) {
+                totalCriteria++;
+                const areaLower = requirement.area.trim().toLowerCase();
+                const areaMatch = (property.locality && property.locality.toLowerCase().includes(areaLower)) ||
+                                  (property.city_area && property.city_area.toLowerCase().includes(areaLower));
+                if (areaMatch) matches++;
             }
 
             if (requirement.propertyTypes && requirement.propertyTypes.length > 0) {

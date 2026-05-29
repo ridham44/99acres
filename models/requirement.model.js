@@ -23,6 +23,12 @@ const requirementSchema = new mongoose.Schema(
             },
         ],
 
+        area: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+
         propertyTypes: [
             {
                 type: String,
