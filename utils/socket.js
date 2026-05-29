@@ -20,9 +20,16 @@ const initSocket = (server) => {
     // Socket.io JWT and Session Verification Middleware
     io.use(async (socket, next) => {
         try {
-            const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+            let token = socket.handshake.auth?.token || socket.handshake.query?.token;
             if (!token) {
                 return next(new Error('Authentication error: No token provided'));
+            }
+
+            // Robustly strip "Bearer " or "bearer " if present (extremely common in frontend socket clients)
+            if (token.startsWith('Bearer ')) {
+                token = token.slice(7).trim();
+            } else if (token.startsWith('bearer ')) {
+                token = token.slice(7).trim();
             }
 
             // Verify the JWT token

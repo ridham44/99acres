@@ -24,4 +24,10 @@ router.get('/requirements/:id',    auth, admin, controller.getRequirementById);
 // GET /api/admin/inquiries               — inquiries list
 router.get('/inquiries',           auth, admin, controller.getInquiries);
 
+// GET /api/admin/property-docs           — list all property documents
+router.get('/property-docs',       auth, admin, controller.getAdminPropertyDocuments);
+
+// PATCH /api/admin/property-docs/:id/status — update status
+router.patch('/property-docs/:id/status', auth, admin, controller.updateAdminDocumentStatus);
+
 module.exports = router;

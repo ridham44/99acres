@@ -4,8 +4,9 @@ const User        = require('../models/user.model');
 const Property    = require('../models/property.model');
 const Requirement = require('../models/requirement.model');
 const Inquiry     = require('../models/inquiry.model');
+const PropertyDocument = require('../models/propertyDocument.model');
 const status      = require('../utils/statusCodes');
-const { getUserProfileImageUrl, getUserDocumentUrl, getPropertyMediaUrl } = require('../utils/imagekitUrl');
+const { getUserProfileImageUrl, getUserDocumentUrl, getPropertyMediaUrl, getPropertyDocumentUrl } = require('../utils/imagekitUrl');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -497,3 +498,161 @@ exports.getInquiries = async (req, res) => {
         return res.status(status.InternalServerError).json({ success: false, message: err.message });
     }
 };
+
+// =============================================================================
+// 7.  GET /api/admin/property-docs
+//     All property documents submitted by users
+//     Query: page, limit, search, status, documentType
+// =============================================================================
+exports.getAdminPropertyDocuments = async (req, res) => {
+    try {
+        const { page, limit, search, status: docStatus, documentType } = req.query;
+
+        const filter = { deletedAt: null };
+
+        if (docStatus && docStatus !== 'all') {
+            filter.status = docStatus;
+        }
+
+        if (documentType && documentType !== 'all') {
+            filter.documentType = documentType;
+        }
+
+        // Deep Search Resolving
+        if (search) {
+            // Find properties matching the search query
+            const matchedProps = await Property.find({
+                deletedAt: null,
+                $or: [
+                    { title: { $regex: search, $options: 'i' } },
+                    { propertyName: { $regex: search, $options: 'i' } },
+                ]
+            }).select('_id');
+            const propIds = matchedProps.map(p => p._id);
+
+            // Find owners/dealers matching search query
+            const matchedUsers = await User.find({
+                deletedAt: null,
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } },
+                    { phone: { $regex: search, $options: 'i' } },
+                ]
+            }).select('_id');
+            const userIds = matchedUsers.map(u => u._id);
+
+            // Find properties linked to those users
+            const userProps = await Property.find({
+                deletedAt: null,
+                $or: [
+                    { ownerId: { $in: userIds } },
+                    { dealerId: { $in: userIds } }
+                ]
+            }).select('_id');
+            const allPropIds = [...new Set([...propIds, ...userProps.map(p => p._id)])];
+
+            filter.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { propertyId: { $in: allPropIds } }
+            ];
+        }
+
+        const { skip, limit: lim, page: pg } = paginate(page, limit);
+        const total = await PropertyDocument.countDocuments(filter);
+
+        const documents = await PropertyDocument.find(filter)
+            .populate({
+                path: 'propertyId',
+                select: 'title propertyName ownerId dealerId',
+                populate: [
+                    { path: 'ownerId', select: 'name phone email role' },
+                    { path: 'dealerId', select: 'name phone email role' }
+                ]
+            })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(lim);
+
+        const data = documents.map((doc) => {
+            const obj = doc.toObject();
+            return {
+                ...obj,
+                fileUrl: getPropertyDocumentUrl(obj.fileName),
+            };
+        });
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Admin property documents fetched successfully',
+            total,
+            page: pg,
+            limit: lim,
+            totalPages: Math.ceil(total / lim),
+            data,
+        });
+    } catch (err) {
+        return res.status(status.InternalServerError).json({ success: false, message: err.message });
+    }
+};
+
+// =============================================================================
+// 8.  PATCH /api/admin/property-docs/:id/status
+//     Update property document verification status with notifications
+// =============================================================================
+exports.updateAdminDocumentStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status: newStatus } = req.body;
+
+        if (!['Pending', 'Approved', 'Rejected'].includes(newStatus)) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: 'Invalid status. Must be Pending, Approved, or Rejected',
+            });
+        }
+
+        const document = await PropertyDocument.findOneAndUpdate(
+            { _id: id, deletedAt: null },
+            { status: newStatus, updatedAt: new Date() },
+            { new: true },
+        ).populate('propertyId', 'title propertyName ownerId dealerId');
+
+        if (!document) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Property document not found',
+            });
+        }
+
+        // Notify property owner/dealer
+        if (document.propertyId) {
+            const property = document.propertyId;
+            const ownerId = property.ownerId || property.dealerId;
+            if (ownerId) {
+                const { createAndSendNotification } = require('../utils/socket');
+                await createAndSendNotification({
+                    senderId: req.user.id,
+                    recipientId: ownerId,
+                    recipientType: 'user',
+                    title: `Property Document Status: ${newStatus}`,
+                    message: `Your document "${document.title}" for property "${property.title || property.propertyName}" has been ${newStatus.toLowerCase()}.`,
+                    type: 'property_approval',
+                    relatedId: document._id,
+                    relatedModel: 'PropertyDocument',
+                });
+            }
+        }
+
+        return res.status(status.OK).json({
+            success: true,
+            message: `Property document status updated to ${newStatus}`,
+            data: document,
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+

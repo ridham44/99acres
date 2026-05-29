@@ -2750,7 +2750,6 @@ limit = 10
 | `createdAt` | Date | Submission timestamp |
 | `updatedAt` | Date | Last update timestamp |
 | `deletedAt` | Date | Soft delete marker (null = active) |
-
 ---
 
 ## Admin APIs
@@ -3085,6 +3084,97 @@ isAgent = Yes (Yes or No)
     }
   ]
 }
+
+### 7. Get All Property Documents (Admin View)
+
+Returns all property documents uploaded by users, recursively populated with detailed property info, and owner/dealer details.
+
+`GET {{baseUrl}}/admin/property-docs`
+
+Headers: Auth required. Admin access only.
+
+Optional query params:
+```txt
+page         = 1
+limit        = 10
+status       = Pending (Pending, Approved, or Rejected)
+documentType = Floor Plan (Ownership Proof, Agreement, Floor Plan, Brochure, etc.)
+search       = Rahul (searches across document title, property title/name, user name, email, or phone)
+```
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Admin property documents fetched successfully",
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1,
+  "data": [
+    {
+      "_id": "6a19246d183b54c9357d78c0",
+      "propertyId": {
+        "_id": "664f000000000000000000b1",
+        "title": "3 BHK Apartment in Satellite",
+        "propertyName": "Green Valley Apartment",
+        "ownerId": {
+          "_id": "664f000000000000000000d1",
+          "name": "Rahul Sharma",
+          "phone": "9876543210",
+          "email": "rahul@example.com",
+          "role": "user"
+        },
+        "dealerId": null
+      },
+      "documentType": "Floor Plan",
+      "title": "Verified Floor Plan Draft",
+      "fileName": "property-doc-floorplan.pdf",
+      "fileSize": 120485,
+      "status": "Pending",
+      "createdAt": "2026-05-29T10:00:00.000Z",
+      "updatedAt": "2026-05-29T10:00:00.000Z",
+      "fileUrl": "https://ik.imagekit.io/aj6cyp5nm/properties/documents/property-doc-floorplan.pdf"
+    }
+  ]
+}
+```
+
+---
+
+### 8. Update Property Document Status (Admin View)
+
+Updates verification status of a property document, which triggers Socket.io and DB notifications to the property owner/dealer.
+
+`PATCH {{baseUrl}}/admin/property-docs/:id/status`
+
+Headers: Auth required. Admin access only.
+
+Body (JSON):
+```json
+{
+  "status": "Approved"
+}
+```
+
+**Field rules:**
+
+| Field | Type | Required | Validation |
+|---|---|---|---|
+| `status` | string | ✅ | "Pending", "Approved", or "Rejected" |
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Property document status updated to Approved",
+  "data": {
+    "_id": "6a19246d183b54c9357d78c0",
+    "status": "Approved",
+    "updatedAt": "2026-05-29T11:40:00.000Z"
+  }
+}
+```
 
 ---
 

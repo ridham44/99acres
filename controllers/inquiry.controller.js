@@ -132,6 +132,18 @@ exports.submitInquiry = async (req, res) => {
             });
         }
 
+        // ── Send Notification to Admins ────────────────────────────────────
+        await createAndSendNotification({
+            senderId: userId,
+            recipientId: null,
+            recipientType: 'admin',
+            title: 'New Property Inquiry Submitted',
+            message: `A new inquiry was submitted by ${username.trim()} for the property "${property.title || property.propertyName}".`,
+            type: 'inquiry',
+            relatedId: inquiry._id,
+            relatedModel: 'Inquiry',
+        });
+
         // ── Build full property response with media URLs ─────────────────────
         const propertyObj = formatPropertyWithMedia(property);
 
