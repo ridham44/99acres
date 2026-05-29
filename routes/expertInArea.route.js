@@ -5,8 +5,8 @@ const auth = require("../middleware/auth.middleware");
 const router = express.Router();
 
 router.post("/", auth, controller.createExpertInArea);
-router.get("/", controller.getExpertInAreas);
-router.get("/:id", controller.getExpertInAreaById);
+router.get("/", auth, controller.getExpertInAreas);
+router.get("/:id", auth, controller.getExpertInAreaById);
 router.put("/:id", auth, controller.updateExpertInArea);
 router.delete("/:id", auth, controller.deleteExpertInArea);
 

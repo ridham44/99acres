@@ -624,6 +624,189 @@ Returns a list of agents who are experts in the specified location.
 **Query Parameters:**
 * `page`, `limit` (optional)
 
+## Expert In Area APIs
+
+These APIs allow professionals (`broker`, `channel_partner`, `builder`) to manage the list of sub-areas/localities where they are experts. This data is used in the notification matching engine — **brokers receive requirement/inquiry notifications only when their registered expert areas match the property area**.
+
+All endpoints require auth (`Authorization: Bearer {{token}}`).
+
+> **Ownership Rule:** Every API is scoped to the **logged-in user's own records only**. Users cannot view, update, or delete another user's expert area records. Attempting to access another user's record returns `404 Not Found` (for GET/DELETE) or `403 Forbidden` (for update).
+
+---
+
+### Add Expert Area
+
+Registers a new sub-area/locality that the logged-in user is an expert in.
+
+`POST {{baseUrl}}/expertInArea`
+
+**Headers:** auth required.
+
+**Body:**
+
+```json
+{
+  "areaName": "Satellite"
+}
+```
+
+- `areaName` is normalized to Sentence Case (e.g. `satellite` → `Satellite`).
+- Duplicate area names per user are rejected with `409 Conflict`.
+
+**Postman test:**
+
+```js
+const json = pm.response.json();
+if (json.data && json.data._id) {
+  pm.environment.set("expertInAreaId", json.data._id);
+}
+```
+
+**Success Response:**
+
+```json
+{
+  "success": true,
+  "message": "Expert in area created successfully",
+  "data": {
+    "_id": "664f0000000000000000abc1",
+    "userId": "6a0ea275e194ff9a92e423e6",
+    "areaName": "Satellite",
+    "createdAt": "2026-05-29T10:00:00.000Z",
+    "updatedAt": "2026-05-29T10:00:00.000Z",
+    "deletedAt": null
+  }
+}
+```
+
+---
+
+### Get My Expert Areas
+
+Returns the list of active expert areas registered by the **currently logged-in user only**. Passing a `userId` query param has no effect — the response is always scoped to the auth user.
+
+`GET {{baseUrl}}/expertInArea`
+
+**Headers:** auth required.
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|:--|:--|:--|
+| `search` | `String` | Optional. Case-insensitive partial match on `areaName`. |
+| `page` | `Number` | Optional. For pagination. |
+| `limit` | `Number` | Optional. For pagination. |
+
+**Example:**
+
+```
+GET {{baseUrl}}/expertInArea?search=sat&page=1&limit=10
+```
+
+**Success Response:**
+
+```json
+{
+  "success": true,
+  "message": "Expert in areas fetched successfully",
+  "data": [
+    {
+      "_id": "664f0000000000000000abc1",
+      "userId": "6a0ea275e194ff9a92e423e6",
+      "areaName": "Satellite",
+      "createdAt": "2026-05-29T10:00:00.000Z"
+    },
+    {
+      "_id": "664f0000000000000000abc2",
+      "userId": "6a0ea275e194ff9a92e423e6",
+      "areaName": "Prahlad nagar",
+      "createdAt": "2026-05-29T09:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 2,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  },
+  "meta": {
+    "totalExpertInAreas": 2
+  }
+}
+```
+
+---
+
+### Get Expert Area By ID
+
+Returns a single expert area record by its ID, **only if it belongs to the logged-in user**.
+
+`GET {{baseUrl}}/expertInArea/{{expertInAreaId}}`
+
+**Headers:** auth required.
+
+Returns `404 Not Found` if the record does not exist or belongs to another user.
+
+---
+
+### Update Expert Area
+
+Updates the `areaName` of an expert area record owned by the logged-in user.
+
+`PUT {{baseUrl}}/expertInArea/{{expertInAreaId}}`
+
+**Headers:** auth required.
+
+**Body:**
+
+```json
+{
+  "areaName": "Bodakdev"
+}
+```
+
+**Validation:**
+- Returns `403 Forbidden` if the record belongs to another user.
+- Returns `409 Conflict` if the user already has another active area with the same name.
+- `areaName` is normalized to Sentence Case.
+
+---
+
+### Delete Expert Area
+
+Permanently (hard) deletes an expert area record. Only deletes records **owned by the logged-in user**.
+
+`DELETE {{baseUrl}}/expertInArea/{{expertInAreaId}}`
+
+**Headers:** auth required.
+
+Returns `404 Not Found` if the record does not exist or the user is not its owner.
+
+**Success Response:**
+
+```json
+{
+  "success": true,
+  "message": "Expert in area deleted successfully"
+}
+```
+
+---
+
+### How Expert Areas Are Used in Notifications
+
+Expert areas drive the notification matching engine:
+
+- When a new **inquiry** or **requirement** is submitted, the system checks all broker users.
+- A broker is notified **only if**:
+  1. Their `city` (from `User` model) matches the property/requirement's city.
+  2. One of their registered `ExpertInArea.areaName` values matches the property's `city_area` or the requirement's `area` field (case-insensitive regex).
+- `channel_partner` and `builder` roles are notified on **city match only** — no expert area check.
+
+Expert areas registered via this API are therefore directly linked to the notification broadcast scope for broker users.
+
+---
+
 ## Builder APIs
 
 All builder endpoints handle company information for users with the `builder` role.
