@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const Furniture = require('../models/furniture.model');
 const status = require('../utils/statusCodes');
+const { uploadToImagekit } = require('../utils/imagekitUpload');
+const { getFurnitureIconUrl } = require('../utils/imagekitUrl');
+
 
 exports.createFurniture = async (req, res) => {
     try {
@@ -25,16 +28,26 @@ exports.createFurniture = async (req, res) => {
             });
         }
 
+        let furnitureIcon = null;
+        if (req.file) {
+            const uploaded = await uploadToImagekit(req.file, 'furniture/icons');
+            furnitureIcon = uploaded.fileName;
+        }
+
         const furniture = await Furniture.create({
             furnitureName: furnitureName.trim(),
+            furnitureIcon,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
 
+        const furnitureObj = furniture.toObject();
+        furnitureObj.furnitureIconUrl = furnitureObj.furnitureIcon ? getFurnitureIconUrl(furnitureObj.furnitureIcon) : null;
+
         return res.status(status.CREATED).json({
             success: true,
             message: 'Furniture created successfully',
-            data: furniture,
+            data: furnitureObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -76,10 +89,18 @@ exports.getFurnitureList = async (req, res) => {
 
         const furnitureList = await query;
 
+        const mappedFurniture = furnitureList.map((furniture) => {
+            const furnitureObj = furniture.toObject();
+            return {
+                ...furnitureObj,
+                furnitureIconUrl: furnitureObj.furnitureIcon ? getFurnitureIconUrl(furnitureObj.furnitureIcon) : null,
+            };
+        });
+
         return res.status(status.OK).json({
             success: true,
             message: 'Furniture fetched successfully',
-            data: furnitureList,
+            data: mappedFurniture,
             pagination,
             meta: {
                 totalFurniture: total,
@@ -116,10 +137,13 @@ exports.getFurnitureById = async (req, res) => {
             });
         }
 
+        const furnitureObj = furniture.toObject();
+        furnitureObj.furnitureIconUrl = furnitureObj.furnitureIcon ? getFurnitureIconUrl(furnitureObj.furnitureIcon) : null;
+
         return res.status(status.OK).json({
             success: true,
             message: 'Furniture fetched successfully',
-            data: furniture,
+            data: furnitureObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -174,13 +198,22 @@ exports.updateFurniture = async (req, res) => {
         }
 
         furniture.furnitureName = furnitureName.trim();
+
+        if (req.file) {
+            const uploaded = await uploadToImagekit(req.file, 'furniture/icons');
+            furniture.furnitureIcon = uploaded.fileName;
+        }
+
         furniture.updatedAt = new Date();
         await furniture.save();
+
+        const furnitureObj = furniture.toObject();
+        furnitureObj.furnitureIconUrl = furnitureObj.furnitureIcon ? getFurnitureIconUrl(furnitureObj.furnitureIcon) : null;
 
         return res.status(status.OK).json({
             success: true,
             message: 'Furniture updated successfully',
-            data: furniture,
+            data: furnitureObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

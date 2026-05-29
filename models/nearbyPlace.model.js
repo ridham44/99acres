@@ -22,6 +22,10 @@ const nearbyPlaceSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        placeIcon: {
+            type: String,
+            default: null,
+        },
         createdAt: {
             type: Date,
             default: Date.now,

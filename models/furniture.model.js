@@ -8,6 +8,11 @@ const furnitureSchema = new mongoose.Schema(
             trim: true,
             unique: true,
         },
+        furnitureIcon: {
+            type: String,
+            default: null,
+        },
+
         createdAt: {
             type: Date,
             default: Date.now,

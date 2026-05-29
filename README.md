@@ -1269,7 +1269,7 @@ limit
 
 ### Get Properties By User ID
 
-Returns all properties associated with a specific user (where they are either the owner or the dealer).
+Returns all properties associated with a specific user (where they are either the owner or the dealer), along with the complete profile details of the user. If the user has a Builder or Broker (Agent) profile, those details are also nested within the response.
 
 `GET {{baseUrl}}/properties/user/:userId?page=1&limit=10&listingType=Sale&status=Active`
   
@@ -1284,6 +1284,74 @@ Returns all properties associated with a specific user (where they are either th
 `status` values: `Active`, `Inactive`, `Draft`, `Sold`, `Rented`.
 
 `sortBy` values: `price_asc`, `price_desc`, `oldest`, `newest`.
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "message": "User properties fetched successfully",
+  "user": {
+    "_id": "60d0fe4f5311236168a109ca",
+    "name": "Jane Doe",
+    "role": "builder",
+    "phone": "+919876543210",
+    "email": "builder@example.com",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "profileImageUrl": "https://ik.imagekit.io/aj6cyp5nm/users/profile-images/builder-avatar.jpg",
+    "isVerified": true,
+    "createdAt": "2026-01-01T12:00:00.000Z",
+    "updatedAt": "2026-05-29T12:00:00.000Z",
+    "builderProfile": {
+      "_id": "60d0fe4f5311236168a109cb",
+      "userId": "60d0fe4f5311236168a109ca",
+      "companyDetails": {
+        "companyName": "Apex Builders Group",
+        "groupName": "Apex Group",
+        "yearEstablished": 2010,
+        "about": "Premium residential and commercial developments.",
+        "website": "https://apexbuilders.com",
+        "socialLinks": {
+          "facebook": "https://facebook.com/apexbuilders",
+          "instagram": "https://instagram.com/apexbuilders",
+          "linkedin": "https://linkedin.com/company/apexbuilders"
+        }
+      }
+    }
+  },
+  "data": [
+    {
+      "_id": "6742fb0b28e23588df8e9766",
+      "title": "3 BHK Flat For Sale in Unique Luxuria",
+      "propertyName": "Unique Luxuria",
+      "propertyType": "Apartment",
+      "propertyCategory": "Residential",
+      "listingType": "Sale",
+      "price": 85000000,
+      "priceUnit": "Lakh",
+      "address": "S G Highway",
+      "locality": "Gota",
+      "city_area": "Gota",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "status": "Active",
+      "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/cover.jpg",
+      "bhk": 3,
+      "bedrooms": 3,
+      "bathrooms": 3,
+      "area": 1800,
+      "facing": "East",
+      "createdAt": "2026-05-29T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
 
 ### Get Property By ID
 
@@ -3829,4 +3897,239 @@ Headers:
 All active banks and their interest rates are automatically returned when querying property information:
 1. **Property List GET API (`GET /properties`)**: Returns a `banks` array at the top level of the JSON response.
 2. **Property Detail GET API (`GET /properties/:id`)**: Returns a `banks` array directly nested inside the property's `data` object.
+
+---
+
+## Amenity APIs
+
+CRUD endpoints to manage amenities. Creating, updating, and deleting amenities require admin authentication.
+
+### Create Amenity (Admin Only)
+
+`POST {{baseUrl}}/amenities`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data):
+- `amenityName` (string, required): Name of the amenity.
+- `amenityIcon` (file, optional): Amenity logo/icon image (`jpg`, `jpeg`, `png`, `webp` max 5 MB).
+
+Response Example (`201 Created`):
+```json
+{
+  "success": true,
+  "message": "Amenity created successfully",
+  "data": {
+    "_id": "6a224f0f62bbf5a9e320d601",
+    "amenityName": "Swimming Pool",
+    "amenityIcon": "1716982462000-pool.png",
+    "amenityIconUrl": "https://ik.imagekit.io/aj6cyp5nm/amenities/icons/1716982462000-pool.png",
+    "createdAt": "2026-05-29T12:00:00.000Z",
+    "updatedAt": "2026-05-29T12:00:00.000Z",
+    "deletedAt": null
+  }
+}
+```
+
+### Get All Amenities
+
+Fetches a list of all active amenities.
+
+`GET {{baseUrl}}/amenities`
+
+Optional query params:
+- `search` (string): Filter amenities by name.
+- `page` (number): Page number.
+- `limit` (number): Number of amenities per page.
+
+### Get Amenity By ID
+
+`GET {{baseUrl}}/amenities/:id`
+
+### Update Amenity (Admin Only)
+
+`PUT {{baseUrl}}/amenities/:id`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data) - any optional fields:
+- `amenityName` (string)
+- `amenityIcon` (file)
+
+### Delete Amenity (Admin Only)
+
+Soft deletes an amenity.
+
+`DELETE {{baseUrl}}/amenities/:id`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+
+---
+
+## Furniture APIs
+
+CRUD endpoints to manage furniture items. Creating, updating, and deleting furniture items require admin authentication.
+
+### Create Furniture (Admin Only)
+
+`POST {{baseUrl}}/furniture`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data):
+- `furnitureName` (string, required): Name of the furniture item.
+- `furnitureIcon` (file, optional): Furniture logo/icon image (`jpg`, `jpeg`, `png`, `webp` max 5 MB).
+
+Response Example (`201 Created`):
+```json
+{
+  "success": true,
+  "message": "Furniture created successfully",
+  "data": {
+    "_id": "6a224f0f62bbf5a9e320d701",
+    "furnitureName": "Sofa",
+    "furnitureIcon": "1716982462000-sofa.png",
+    "furnitureIconUrl": "https://ik.imagekit.io/aj6cyp5nm/furniture/icons/1716982462000-sofa.png",
+    "createdAt": "2026-05-29T12:00:00.000Z",
+    "updatedAt": "2026-05-29T12:00:00.000Z",
+    "deletedAt": null
+  }
+}
+```
+
+### Get All Furniture List
+
+Fetches a list of all active furniture items.
+
+`GET {{baseUrl}}/furniture`
+
+Optional query params:
+- `search` (string): Filter furniture items by name.
+- `page` (number): Page number.
+- `limit` (number): Number of items per page.
+
+### Get Furniture By ID
+
+`GET {{baseUrl}}/furniture/:id`
+
+### Update Furniture (Admin Only)
+
+`PUT {{baseUrl}}/furniture/:id`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data) - any optional fields:
+- `furnitureName` (string)
+- `furnitureIcon` (file)
+
+### Delete Furniture (Admin Only)
+
+Soft deletes a furniture item.
+
+`DELETE {{baseUrl}}/furniture/:id`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+
+---
+
+## Nearby Place (Landmark) APIs
+
+CRUD endpoints to manage nearby landmarks. Creating, updating, and deleting nearby places require admin authentication.
+
+### Create Nearby Place (Admin Only)
+
+`POST {{baseUrl}}/nearby-places`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data):
+- `city` (string, required): City name.
+- `locality` (string, required): Locality name.
+- `placeName` (string, required): Name of the landmark.
+- `placeType` (string, required): Type of landmark (e.g. School, Hospital).
+- `placeIcon` (file, optional): Landmark logo/icon image (`jpg`, `jpeg`, `png`, `webp` max 5 MB).
+
+Response Example (`201 Created`):
+```json
+{
+  "success": true,
+  "message": "Nearby place created successfully",
+  "data": {
+    "_id": "6a224f0f62bbf5a9e320d501",
+    "city": "Ahmedabad",
+    "locality": "Satellite",
+    "placeName": "Delhi Public School",
+    "placeType": "School",
+    "placeIcon": "1716982462000-dps.png",
+    "placeIconUrl": "https://ik.imagekit.io/aj6cyp5nm/nearby-places/icons/1716982462000-dps.png",
+    "createdAt": "2026-05-29T12:00:00.000Z",
+    "updatedAt": "2026-05-29T12:00:00.000Z",
+    "deletedAt": null
+  }
+}
+```
+
+### Get All Nearby Places
+
+Fetches a list of all active landmarks.
+
+`GET {{baseUrl}}/nearby-places`
+
+Optional query params:
+- `search` (string): Filter landmarks by name, type, city, or locality.
+- `city` (string)
+- `locality` (string)
+- `placeType` (string)
+- `page` (number)
+- `limit` (number)
+
+### Get Nearby Place By ID
+
+`GET {{baseUrl}}/nearby-places/:id`
+
+### Update Nearby Place (Admin Only)
+
+`PUT {{baseUrl}}/nearby-places/:id`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+- `Content-Type: multipart/form-data`
+
+Body (Form Data) - any optional fields:
+- `city` (string)
+- `locality` (string)
+- `placeName` (string)
+- `placeType` (string)
+- `placeIcon` (file)
+
+### Delete Nearby Place (Admin Only)
+
+Soft deletes a landmark.
+
+`DELETE {{baseUrl}}/nearby-places/:id`
+
+Headers:
+- `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
+
+---
+
+## Property Integration with Landmarks
+
+Landmarks are automatically returned when querying property details or updates:
+1. **Property Detail GET API (`GET /properties/:id`)** & **Property Update API (`PUT /properties/:id`)**: The `nearbyPlaces` list populated inside the property `data` object now includes a fully qualified `placeIconUrl` resolved from the landmark's icon file.
+
+
+
 

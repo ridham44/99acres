@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const Amenity = require('../models/amenity.model');
 const status = require('../utils/statusCodes');
+const { uploadToImagekit } = require('../utils/imagekitUpload');
+const { getAmenityIconUrl } = require('../utils/imagekitUrl');
+
 
 exports.createAmenity = async (req, res) => {
     try {
@@ -25,16 +28,26 @@ exports.createAmenity = async (req, res) => {
             });
         }
 
+        let amenityIcon = null;
+        if (req.file) {
+            const uploaded = await uploadToImagekit(req.file, 'amenities/icons');
+            amenityIcon = uploaded.fileName;
+        }
+
         const amenity = await Amenity.create({
             amenityName: amenityName.trim(),
+            amenityIcon,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
 
+        const amenityObj = amenity.toObject();
+        amenityObj.amenityIconUrl = amenityObj.amenityIcon ? getAmenityIconUrl(amenityObj.amenityIcon) : null;
+
         return res.status(status.CREATED).json({
             success: true,
             message: 'Amenity created successfully',
-            data: amenity,
+            data: amenityObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -76,10 +89,18 @@ exports.getAmenities = async (req, res) => {
 
         const amenities = await query;
 
+        const mappedAmenities = amenities.map((amenity) => {
+            const amenityObj = amenity.toObject();
+            return {
+                ...amenityObj,
+                amenityIconUrl: amenityObj.amenityIcon ? getAmenityIconUrl(amenityObj.amenityIcon) : null,
+            };
+        });
+
         return res.status(status.OK).json({
             success: true,
             message: 'Amenities fetched successfully',
-            data: amenities,
+            data: mappedAmenities,
             pagination,
             meta: {
                 totalAmenities: total,
@@ -116,10 +137,13 @@ exports.getAmenityById = async (req, res) => {
             });
         }
 
+        const amenityObj = amenity.toObject();
+        amenityObj.amenityIconUrl = amenityObj.amenityIcon ? getAmenityIconUrl(amenityObj.amenityIcon) : null;
+
         return res.status(status.OK).json({
             success: true,
             message: 'Amenity fetched successfully',
-            data: amenity,
+            data: amenityObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -174,13 +198,22 @@ exports.updateAmenity = async (req, res) => {
         }
 
         amenity.amenityName = amenityName.trim();
+
+        if (req.file) {
+            const uploaded = await uploadToImagekit(req.file, 'amenities/icons');
+            amenity.amenityIcon = uploaded.fileName;
+        }
+
         amenity.updatedAt = new Date();
         await amenity.save();
+
+        const amenityObj = amenity.toObject();
+        amenityObj.amenityIconUrl = amenityObj.amenityIcon ? getAmenityIconUrl(amenityObj.amenityIcon) : null;
 
         return res.status(status.OK).json({
             success: true,
             message: 'Amenity updated successfully',
-            data: amenity,
+            data: amenityObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

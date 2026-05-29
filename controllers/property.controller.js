@@ -2,6 +2,8 @@ const Property = require("../models/property.model");
 const User = require("../models/user.model");
 const Amenity = require("../models/amenity.model");
 const Bank = require("../models/bank.model");
+const Builder = require("../models/builder.model");
+const Agent = require("../models/agent.model");
 const status = require("../utils/statusCodes");
 const { uploadToImagekit } = require("../utils/imagekitUpload");
 const {
@@ -9,7 +11,12 @@ const {
   getUserProfileImageUrl,
   getPropertyBrochureUrl,
   getBankIconUrl,
+  getNearbyPlaceIconUrl,
+  getAmenityIconUrl,
+  getFurnitureIconUrl,
+  getAgentCompanyImageUrl,
 } = require("../utils/imagekitUrl");
+
 
 const { recordPropertyVisit } = require("./userHome.controller");
 
@@ -651,6 +658,27 @@ exports.getPropertiesByUser = async (req, res) => {
     const { page, limit, listingType, propertyCategory, propertyType, area, sortBy } =
       req.query;
 
+    const user = await User.findOne({ _id: userId, deletedAt: null }).lean();
+    if (!user) {
+      return res.status(status.NotFound).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.profileImageUrl = getUserProfileImageUrl(user.profileImage);
+
+    if (user.role === "builder") {
+      const builderProfile = await Builder.findOne({ userId, deletedAt: null }).lean();
+      user.builderProfile = builderProfile || null;
+    } else if (["broker", "channel_partner"].includes(user.role)) {
+      const agentProfile = await Agent.findOne({ userId, deletedAt: null }).lean();
+      if (agentProfile) {
+        agentProfile.companyImageUrl = getAgentCompanyImageUrl(agentProfile.companyImage);
+      }
+      user.agentProfile = agentProfile || null;
+    }
+
     const filter = {
       deletedAt: null,
       $or: [{ ownerId: userId }, { dealerId: userId }],
@@ -700,6 +728,7 @@ exports.getPropertiesByUser = async (req, res) => {
     return res.status(status.OK).json({
       success: true,
       message: "User properties fetched successfully",
+      user,
       data: properties.map(formatPropertyCard),
       pagination: {
         total,
@@ -727,9 +756,10 @@ exports.getPropertyById = async (req, res) => {
     })
       .populate("ownerId", "name email phone role profileImage")
       .populate("dealerId", "name email phone role profileImage")
-      .populate("amenityIds", "amenityName")
-      .populate("furnishings.furnishingId", "furnitureName")
-      .populate("nearbyPlaces.nearbyId", "placeName placeType city locality");
+      .populate("amenityIds", "amenityName amenityIcon")
+      .populate("furnishings.furnishingId", "furnitureName furnitureIcon")
+      .populate("nearbyPlaces.nearbyId", "placeName placeType city locality placeIcon");
+
 
     if (!property) {
       return res.status(status.NotFound).json({
@@ -773,20 +803,37 @@ exports.getPropertyById = async (req, res) => {
     const firstImage = propertyObj.media.find((item) => item.type === "image");
     propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
 
-    propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => ({
-      furnishingId: {
-        ...(item.furnishingId || {}),
-        quantity: item.quantity,
-      },
-    }));
+    propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
+      const am = amenity ? (amenity._doc || amenity) : {};
+      return {
+        ...am,
+        amenityIconUrl: am.amenityIcon ? getAmenityIconUrl(am.amenityIcon) : null,
+      };
+    });
 
-    propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => ({
-      nearbyId: {
-        ...(item.nearbyId || {}),
-        distance: item.distance,
-        distanceUnit: item.distanceUnit,
-      },
-    }));
+    propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => {
+      const fur = item.furnishingId ? (item.furnishingId._doc || item.furnishingId) : {};
+      return {
+        furnishingId: {
+          ...fur,
+          furnitureIconUrl: fur.furnitureIcon ? getFurnitureIconUrl(fur.furnitureIcon) : null,
+          quantity: item.quantity,
+        },
+      };
+    });
+
+    propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => {
+      const near = item.nearbyId ? (item.nearbyId._doc || item.nearbyId) : {};
+      return {
+        nearbyId: {
+          ...near,
+          placeIconUrl: near.placeIcon ? getNearbyPlaceIconUrl(near.placeIcon) : null,
+          distance: item.distance,
+          distanceUnit: item.distanceUnit,
+        },
+      };
+    });
+
 
     // Role-based filtering for sensitive builder fields
       // `availableUnits` and `developer` are visible to all roles in detail responses
@@ -950,9 +997,10 @@ exports.updateProperty = async (req, res) => {
     )
       .populate("ownerId", "name email phone role profileImage")
       .populate("dealerId", "name email phone role profileImage")
-      .populate("amenityIds", "amenityName")
-      .populate("furnishings.furnishingId", "furnitureName")
-      .populate("nearbyPlaces.nearbyId", "placeName placeType city locality");
+      .populate("amenityIds", "amenityName amenityIcon")
+      .populate("furnishings.furnishingId", "furnitureName furnitureIcon")
+      .populate("nearbyPlaces.nearbyId", "placeName placeType city locality placeIcon");
+
 
     const propertyObj = property.toObject();
 
@@ -983,20 +1031,37 @@ exports.updateProperty = async (req, res) => {
     const firstImage = propertyObj.media.find((item) => item.type === "image");
     propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
 
-    propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => ({
-      furnishingId: {
-        ...(item.furnishingId || {}),
-        quantity: item.quantity,
-      },
-    }));
+    propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
+      const am = amenity ? (amenity._doc || amenity) : {};
+      return {
+        ...am,
+        amenityIconUrl: am.amenityIcon ? getAmenityIconUrl(am.amenityIcon) : null,
+      };
+    });
 
-    propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => ({
-      nearbyId: {
-        ...(item.nearbyId || {}),
-        distance: item.distance,
-        distanceUnit: item.distanceUnit,
-      },
-    }));
+    propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => {
+      const fur = item.furnishingId ? (item.furnishingId._doc || item.furnishingId) : {};
+      return {
+        furnishingId: {
+          ...fur,
+          furnitureIconUrl: fur.furnitureIcon ? getFurnitureIconUrl(fur.furnitureIcon) : null,
+          quantity: item.quantity,
+        },
+      };
+    });
+
+    propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => {
+      const near = item.nearbyId ? (item.nearbyId._doc || item.nearbyId) : {};
+      return {
+        nearbyId: {
+          ...near,
+          placeIconUrl: near.placeIcon ? getNearbyPlaceIconUrl(near.placeIcon) : null,
+          distance: item.distance,
+          distanceUnit: item.distanceUnit,
+        },
+      };
+    });
+
 
     return res.status(status.OK).json({
       success: true,

@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const NearbyPlace = require('../models/nearbyPlace.model');
 const status = require('../utils/statusCodes');
+const { uploadToImagekit } = require('../utils/imagekitUpload');
+const { getNearbyPlaceIconUrl } = require('../utils/imagekitUrl');
 
 exports.createNearbyPlace = async (req, res) => {
     try {
@@ -49,19 +51,29 @@ exports.createNearbyPlace = async (req, res) => {
             });
         }
 
+        let placeIcon = null;
+        if (req.file) {
+            const uploaded = await uploadToImagekit(req.file, 'nearby-places/icons');
+            placeIcon = uploaded.fileName;
+        }
+
         const nearbyPlace = await NearbyPlace.create({
             city: city.trim(),
             locality: locality.trim(),
             placeName: placeName.trim(),
             placeType: placeType.trim(),
+            placeIcon,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
 
+        const placeObj = nearbyPlace.toObject();
+        placeObj.placeIconUrl = placeObj.placeIcon ? getNearbyPlaceIconUrl(placeObj.placeIcon) : null;
+
         return res.status(status.CREATED).json({
             success: true,
             message: 'Nearby place created successfully',
-            data: nearbyPlace,
+            data: placeObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -120,10 +132,18 @@ exports.getNearbyPlaces = async (req, res) => {
 
         const nearbyPlaces = await query;
 
+        const mappedPlaces = nearbyPlaces.map((place) => {
+            const placeObj = place.toObject();
+            return {
+                ...placeObj,
+                placeIconUrl: placeObj.placeIcon ? getNearbyPlaceIconUrl(placeObj.placeIcon) : null,
+            };
+        });
+
         return res.status(status.OK).json({
             success: true,
             message: 'Nearby places fetched successfully',
-            data: nearbyPlaces,
+            data: mappedPlaces,
             pagination,
             meta: {
                 totalNearbyPlaces: total,
@@ -160,10 +180,13 @@ exports.getNearbyPlaceById = async (req, res) => {
             });
         }
 
+        const placeObj = nearbyPlace.toObject();
+        placeObj.placeIconUrl = placeObj.placeIcon ? getNearbyPlaceIconUrl(placeObj.placeIcon) : null;
+
         return res.status(status.OK).json({
             success: true,
             message: 'Nearby place fetched successfully',
-            data: nearbyPlace,
+            data: placeObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -245,14 +268,23 @@ exports.updateNearbyPlace = async (req, res) => {
         nearbyPlace.locality = locality.trim();
         nearbyPlace.placeName = placeName.trim();
         nearbyPlace.placeType = placeType.trim();
+
+        if (req.file) {
+            const uploaded = await uploadToImagekit(req.file, 'nearby-places/icons');
+            nearbyPlace.placeIcon = uploaded.fileName;
+        }
+
         nearbyPlace.updatedAt = new Date();
 
         await nearbyPlace.save();
 
+        const placeObj = nearbyPlace.toObject();
+        placeObj.placeIconUrl = placeObj.placeIcon ? getNearbyPlaceIconUrl(placeObj.placeIcon) : null;
+
         return res.status(status.OK).json({
             success: true,
             message: 'Nearby place updated successfully',
-            data: nearbyPlace,
+            data: placeObj,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

@@ -54,6 +54,21 @@ const getBankIconUrl = (fileName) => {
     return `${getBaseUrl()}/banks/icons/${fileName}`;
 };
 
+const getNearbyPlaceIconUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/nearby-places/icons/${fileName}`;
+};
+
+const getAmenityIconUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/amenities/icons/${fileName}`;
+};
+
+const getFurnitureIconUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/furniture/icons/${fileName}`;
+};
+
 module.exports = {
     getImagekitFileUrl: exports.getImagekitFileUrl,
     getPropertyMediaUrl,
@@ -63,4 +78,9 @@ module.exports = {
     getUserDocumentUrl,
     getAgentCompanyImageUrl,
     getBankIconUrl,
+    getNearbyPlaceIconUrl,
+    getAmenityIconUrl,
+    getFurnitureIconUrl,
 };
+
+
