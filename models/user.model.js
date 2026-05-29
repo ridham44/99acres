@@ -111,6 +111,7 @@ async function handleUserDeletion(userId) {
     const Agent = mongoose.model("Agent");
     const Property = mongoose.model("Property");
     const PropertyDocument = mongoose.model("PropertyDocument");
+    const ExpertInArea = mongoose.model("ExpertInArea");
 
     // Delete shortlists
     await Shortlist.updateMany({ userId }, { deletedAt: new Date() });
@@ -141,6 +142,9 @@ async function handleUserDeletion(userId) {
 
     // Delete agent profile
     await Agent.updateMany({ userId }, { deletedAt: new Date() });
+
+    // Delete expert in areas
+    await ExpertInArea.updateMany({ userId }, { deletedAt: new Date() });
 
     // Find all properties owned or managed by this user
     const userProperties = await Property.find({

@@ -109,6 +109,8 @@ exports.submitInquiry = async (req, res) => {
         const inquiry = await Inquiry.create({
             userId,
             property_id,
+            city: property.city ? property.city.trim() : null,
+            city_area: property.city_area ? property.city_area.trim() : null,
             username: username.trim(),
             phoneNumber: phoneNumber.trim(),
             isAgent: isAgent || 'No',
@@ -143,6 +145,71 @@ exports.submitInquiry = async (req, res) => {
             relatedId: inquiry._id,
             relatedModel: 'Inquiry',
         });
+
+        // ── Send Matching Inquiry Notifications to Professionals ───────────
+        try {
+            const User = require('../models/user.model');
+            const ExpertInArea = require('../models/expertInArea.model');
+            const ownerDealerIdStr = propertyOwnerId ? propertyOwnerId.toString() : '';
+
+            // Find all active professionals whose city matches the property's city
+            const professionalsInCity = await User.find({
+                _id: { $ne: new mongoose.Types.ObjectId(userId) }, // exclude inquirer
+                deletedAt: null,
+                role: { $in: ['broker', 'channel_partner', 'builder'] },
+                city: { $regex: new RegExp(`^${property.city.trim()}$`, 'i') }
+            });
+
+            // Extract all broker IDs to query their registered ExpertInAreas
+            const brokerIds = professionalsInCity
+                .filter((u) => u.role === 'broker')
+                .map((u) => u._id);
+
+            // Fetch expert areas for these brokers matching property.city_area case-insensitively
+            const matchingExpertAreas = await ExpertInArea.find({
+                userId: { $in: brokerIds },
+                areaName: { $regex: new RegExp(`^${property.city_area.trim()}$`, 'i') },
+                deletedAt: null
+            });
+
+            const validBrokerIds = new Set(
+                matchingExpertAreas.map((ea) => ea.userId.toString())
+            );
+
+            // Filter valid professionals and avoid double-notifying the property owner/dealer
+            const recipients = [];
+            for (const prof of professionalsInCity) {
+                const profIdStr = prof._id.toString();
+
+                if (profIdStr === ownerDealerIdStr) continue;
+
+                if (prof.role === 'broker') {
+                    // Brokers must match both city and city_area (from their ExpertInArea)
+                    if (validBrokerIds.has(profIdStr)) {
+                        recipients.push(prof);
+                    }
+                } else {
+                    // Channel partners and builders match by city alone
+                    recipients.push(prof);
+                }
+            }
+
+            // Send notification to each matched professional user
+            for (const prof of recipients) {
+                await createAndSendNotification({
+                    senderId: userId,
+                    recipientId: prof._id,
+                    recipientType: 'user',
+                    title: 'New Matching Inquiry in Your Area',
+                    message: `An inquiry has been submitted in your active area (${property.city_area || ''}, ${property.city}) for property "${property.title || property.propertyName}".`,
+                    type: 'inquiry',
+                    relatedId: inquiry._id,
+                    relatedModel: 'Inquiry',
+                });
+            }
+        } catch (notifErr) {
+            console.error('Error sending matching professional notifications:', notifErr);
+        }
 
         // ── Build full property response with media URLs ─────────────────────
         const propertyObj = formatPropertyWithMedia(property);

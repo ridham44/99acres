@@ -60,10 +60,13 @@ exports.getProfile = async (req, res) => {
             });
         }
 
-        const [shortlistedCount, propertyViewedCount, contactedCount] = await Promise.all([
+        const ExpertInArea = require('../models/expertInArea.model');
+
+        const [shortlistedCount, propertyViewedCount, contactedCount, expertAreas] = await Promise.all([
             Shortlist.countDocuments({ userId, deletedAt: null }),
             PropertyVisit.countDocuments({ userId }),
             Inquiry.countDocuments({ userId, deletedAt: null }),
+            ExpertInArea.find({ userId, deletedAt: null }).select('areaName'),
         ]);
 
         const profileData = formatUserProfile(user);
@@ -72,6 +75,7 @@ exports.getProfile = async (req, res) => {
             success: true,
             data: {
                 ...profileData,
+                expertInAreas: expertAreas.map(ea => ea.areaName),
                 stats: {
                     shortlisted: shortlistedCount,
                     contacted: contactedCount,
@@ -140,6 +144,8 @@ exports.deleteProfile = async (req, res) => {
             });
         }
 
+        const ExpertInArea = require('../models/expertInArea.model');
+
         // Cascading delete all user-related data
         await Promise.all([
             // Delete shortlists
@@ -171,6 +177,9 @@ exports.deleteProfile = async (req, res) => {
             
             // Delete agent profile
             Agent.updateMany({ userId }, { deletedAt: new Date() }),
+
+            // Delete expert areas
+            ExpertInArea.updateMany({ userId }, { deletedAt: new Date() }),
         ]);
 
         // Find all properties owned or managed by this user

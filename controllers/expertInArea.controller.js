@@ -17,8 +17,9 @@ exports.createExpertInArea = async (req, res) => {
     // Normalize to Sentence Case (e.g. Ahmedabad)
     const normalizedName = trimmedAreaName.charAt(0).toUpperCase() + trimmedAreaName.slice(1).toLowerCase();
 
-    // Check if an ACTIVE area with the same name exists (case-insensitive check)
+    // Check if this user already registered this active area (case-insensitive check)
     const existingArea = await ExpertInArea.findOne({
+      userId: req.user.id,
       areaName: { $regex: new RegExp(`^${normalizedName}$`, "i") },
       deletedAt: null,
     });
@@ -26,11 +27,12 @@ exports.createExpertInArea = async (req, res) => {
     if (existingArea) {
       return res.status(status.Conflict).json({
         success: false,
-        message: "Expert in area already exists and is active",
+        message: "Expert in area already exists and is active for this user",
       });
     }
 
     const expertInArea = await ExpertInArea.create({
+      userId: req.user.id,
       areaName: normalizedName,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -51,9 +53,13 @@ exports.createExpertInArea = async (req, res) => {
 
 exports.getExpertInAreas = async (req, res) => {
   try {
-    const { search, page, limit } = req.query;
+    const { search, page, limit, userId } = req.query;
 
     const filter = { deletedAt: null };
+
+    if (userId) {
+      filter.userId = userId;
+    }
 
     if (search) {
       filter.areaName = { $regex: search, $options: "i" };

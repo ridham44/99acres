@@ -3301,8 +3301,10 @@ const socket = io("http://localhost:5000", {
 
 #### 2. Client Room Routing (Auto-Joined)
 When a client successfully authenticates and connects, the backend automatically joins them to target rooms:
-- **Individual Room**: `user_{{userId}}` (For direct, user-specific notifications)
+- **Individual Room**: `user_{{userId}}` AND the raw `{{userId}}` (For direct, user-specific notifications)
 - **Admin Room**: `admins` (Only joined if the user's role is `admin`, receives general admin alerts)
+
+The backend also handles standard custom register/join/login subscription events emitted from client-side controllers (e.g., Flutter) dynamically.
 
 #### 3. Real-Time Events
 - **Event Name**: `notification`
@@ -3322,6 +3324,39 @@ When a client successfully authenticates and connects, the backend automatically
   "createdAt": "2026-05-29T10:58:00.000Z"
 }
 ```
+
+---
+
+### Professional Matching Inquiry Notification Flow
+
+When a user submits a new inquiry on a property, the backend dynamically captures the property's `city` and `city_area` and stores them in the persistent `Inquiry` model. It then distributes matching notifications to registered real-estate professionals based on their locations:
+
+1. **Brokers**:
+   - **Matching Rules**: Must match BOTH `city` (exact case-insensitive match on the `User` document) **AND** the property's `city_area` must match one of the broker's registered active expert areas inside `ExpertInArea` (`models/expertInArea.model.js`).
+   
+2. **Channel Partners & Builders**:
+   - **Matching Rules**: Must match `city` (exact case-insensitive match on the `User` document) alone.
+
+3. **Exclusions**:
+   - The buyer submitting the inquiry and the direct owner/dealer of the property are automatically filtered out of the broadcast to prevent duplicate or irrelevant alerts.
+
+#### Expert In Area Updates
+- **Ownership**: `models/expertInArea.model.js` includes `userId` pointing to the `User` model, recording who registered the area.
+- **GET Profile integration**: The `GET /api/users/profile` (`controllers/user.controller.js`) endpoint now dynamically returns the logged-in user's list of registered active expert areas:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "6a0ea275e194ff9a92e423e6",
+    "name": "Amit Patel",
+    "role": "broker",
+    "city": "Ahmedabad",
+    "expertInAreas": ["Satellite", "Prahlad Nagar", "Bodakdev"],
+    "stats": {
+      "shortlisted": 3,
+      "contacted": 12,
+      "propertyViewed": 45
+    }
+  }
+}
 ```
-
-

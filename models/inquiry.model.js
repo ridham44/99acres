@@ -16,6 +16,19 @@ const inquirySchema = new mongoose.Schema(
             required: true,
         },
 
+        // Dynamic location fields populated from the property at submission time
+        city: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+
+        city_area: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+
         // User-supplied contact details
         username: {
             type: String,
