@@ -420,3 +420,142 @@ exports.toggleRequirementStatus = async (req, res) => {
         });
     }
 };
+
+// ─── Get Requirements Filtered by Role ───────────────────────────────────────
+// • broker          → requirements whose city matches the broker's city AND
+//                     whose area matches one of the broker's ExpertInArea records
+//                     (if the requirement has no area, city match alone qualifies)
+// • builder /
+//   channel_partner → requirements whose city matches the user's city only
+// • admin           → all requirements (no location filter)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getRequirementsForMe = async (req, res) => {
+    try {
+        const { id: userId, role: userRole } = req.user;
+
+        // Only professional roles are allowed
+        const allowedRoles = ['broker', 'builder', 'channel_partner', 'admin'];
+        if (!allowedRoles.includes(userRole)) {
+            return res.status(status.Forbidden).json({
+                success: false,
+                message: 'Forbidden: This endpoint is only accessible by broker, builder, channel_partner, or admin',
+            });
+        }
+
+        // Optional query filters (additional narrowing on top of role-based filter)
+        const {
+            transactionType,
+            reqStatus = 'Active',
+            page = 1,
+            limit = 10,
+        } = req.query;
+
+        // ── Admin: return all requirements without location filter ────────────
+        if (userRole === 'admin') {
+            const filter = { deletedAt: null };
+            if (reqStatus !== 'All') filter.status = reqStatus;
+            if (transactionType) filter.transactionType = transactionType;
+
+            const skip = (Number(page) - 1) * Number(limit);
+            const [requirements, total] = await Promise.all([
+                Requirement.find(filter)
+                    .populate('userId', 'name phone email')
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(Number(limit)),
+                Requirement.countDocuments(filter),
+            ]);
+
+            return res.status(status.OK).json({
+                success: true,
+                data: requirements,
+                pagination: {
+                    total,
+                    page: Number(page),
+                    limit: Number(limit),
+                    totalPages: Math.ceil(total / Number(limit)),
+                },
+            });
+        }
+
+        // ── Fetch logged-in user's city ───────────────────────────────────────
+        const currentUser = await User.findById(userId).select('city role');
+        if (!currentUser || !currentUser.city) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: 'Your profile does not have a city set. Please update your profile first.',
+            });
+        }
+
+        const userCity = currentUser.city.toLowerCase().trim();
+
+        // ── Base filter: requirements whose locations array contains user's city ─
+        const baseFilter = {
+            deletedAt: null,
+            locations: { $elemMatch: { $regex: userCity, $options: 'i' } },
+        };
+        if (reqStatus !== 'All') baseFilter.status = reqStatus;
+        if (transactionType) baseFilter.transactionType = transactionType;
+
+        // ── Broker: additionally filter by area via ExpertInArea ─────────────
+        if (userRole === 'broker') {
+            // Fetch all active expert-in-area records for this broker
+            const expertAreas = await ExpertInArea.find({
+                userId: new mongoose.Types.ObjectId(userId),
+                deletedAt: null,
+            }).select('areaName');
+
+            const areaNames = expertAreas.map(e => e.areaName.toLowerCase().trim());
+
+            // Requirements that qualify for a broker:
+            //   1. city matches AND
+            //   2. requirement has no area (open requirement) OR
+            //      requirement's area matches one of the broker's expert areas
+            if (areaNames.length > 0) {
+                // Build $or condition for area matching
+                const areaRegexList = areaNames.map(a => new RegExp(a, 'i'));
+                baseFilter.$or = [
+                    { area: null },
+                    { area: '' },
+                    { area: { $in: areaRegexList } },
+                ];
+            }
+            // If broker has no expert areas registered → only city-matched requirements
+            // with no area constraint qualify (open requirements)
+            else {
+                baseFilter.$or = [
+                    { area: null },
+                    { area: '' },
+                ];
+            }
+        }
+
+        // ── builder / channel_partner: city filter only (already in baseFilter) ─
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const [requirements, total] = await Promise.all([
+            Requirement.find(baseFilter)
+                .populate('userId', 'name phone email')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit)),
+            Requirement.countDocuments(baseFilter),
+        ]);
+
+        return res.status(status.OK).json({
+            success: true,
+            data: requirements,
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(total / Number(limit)),
+            },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};

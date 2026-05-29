@@ -2179,6 +2179,93 @@ Allows agents to discover buyer/renter leads. By default, only **Active** requir
 - `status` (string, optional) - Filter by status (defaults to `Active`).
 - `transactionType`, `city`, `minBudget`, `maxBudget`, `page`, `limit`.
 
+### Get Requirements For Me (Role-Based Filtered Feed)
+
+Returns requirements **automatically filtered based on the logged-in user's role and location profile**. This is the recommended endpoint for brokers and builders to discover relevant leads without manually entering city/area filters — the API derives the scope entirely from the user's profile.
+
+`GET {{baseUrl}}/requirements/for-me`
+
+**Headers:** auth required.
+
+**Constraint:** Only accessible by users with roles `broker`, `channel_partner`, `builder`, or `admin`.
+
+#### How Filtering Works
+
+| Role | What is returned |
+|:--|:--|
+| `broker` | Requirements whose `locations[]` **contains the broker's city** AND whose `area` **matches one of the broker's registered ExpertInArea records** (case-insensitive). Requirements with **no area set** are always included for city-matched brokers (open requirements). |
+| `builder` / `channel_partner` | Requirements whose `locations[]` **contains the user's city** (no area check). |
+| `admin` | **All** requirements — no location filter applied. |
+
+> **Important:** The user's `city` field in their profile is used as the location anchor. If the logged-in user does not have a `city` set in their profile, the API returns `400 Bad Request` with a message prompting them to update their profile first.
+
+> **Broker area matching:** Broker area eligibility is driven by `ExpertInArea` records registered via `POST /expertInArea`. If a broker has no expert area records, they will only see requirements with **no area constraint** in their city.
+
+#### Query Parameters
+
+| Param | Type | Default | Description |
+|:--|:--|:--|:--|
+| `reqStatus` | `String` | `Active` | Filter by requirement status. Use `All` to return all statuses. Allowed: `Active`, `Inactive`, `Fulfilled`, `Closed`, `All`. |
+| `transactionType` | `String` | — | Optional. Filter by transaction type: `Buy`, `Rent`, `Commercial`. |
+| `page` | `Number` | `1` | Page number for pagination. |
+| `limit` | `Number` | `10` | Results per page. |
+
+#### Example Requests
+
+```txt
+# Active requirements in my city (default)
+GET {{baseUrl}}/requirements/for-me
+
+# All statuses
+GET {{baseUrl}}/requirements/for-me?reqStatus=All
+
+# Only Buy requirements, page 2
+GET {{baseUrl}}/requirements/for-me?transactionType=Buy&page=2&limit=5
+```
+
+#### Success Response
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64f000000000000000000001",
+      "userId": {
+        "_id": "64f000000000000000000002",
+        "name": "Rahul Sharma",
+        "phone": "9876543210",
+        "email": "rahul@example.com"
+      },
+      "transactionType": "Buy",
+      "locations": ["Ahmedabad", "Satellite"],
+      "area": "Satellite",
+      "propertyTypes": ["Apartment"],
+      "bhks": ["2 BHK", "3 BHK"],
+      "minBudget": 5000000,
+      "maxBudget": 10000000,
+      "status": "Active",
+      "createdAt": "2026-05-22T10:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 42,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 5
+  }
+}
+```
+
+#### Error Cases
+
+| Status | Reason |
+|:--|:--|
+| `400 Bad Request` | The logged-in user's profile does not have a `city` set. |
+| `403 Forbidden` | The user's role is `user` — endpoint is professional-only. |
+
+---
+
 ### Get Requirement Detail
 
 Returns full details for a specific requirement.

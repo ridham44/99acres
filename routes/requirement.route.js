@@ -9,6 +9,7 @@ const AGENT_ROLES = ['broker', 'channel_partner', 'builder', 'admin'];
 router.post('/', protect, requirementController.createRequirement);
 router.get('/my', protect, requirementController.getMyRequirements);
 router.get('/all', protect, role(AGENT_ROLES), requirementController.getAllRequirements);
+router.get('/for-me', protect, role(AGENT_ROLES), requirementController.getRequirementsForMe);
 router.get('/:id', protect, requirementController.getRequirementById);
 router.get('/:requirementId/matches', protect, requirementController.getMatchedPropertiesForRequirement);
 router.put('/:id', protect, requirementController.updateRequirement);
