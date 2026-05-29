@@ -53,16 +53,16 @@ exports.createExpertInArea = async (req, res) => {
 
 exports.getExpertInAreas = async (req, res) => {
   try {
-    const { search, page, limit, userId } = req.query;
+    const { search, page, limit } = req.query;
 
-    const filter = { deletedAt: null };
-
-    if (userId) {
-      filter.userId = userId;
-    }
+    // Always scope to the logged-in user — a user can only see their own areas
+    const filter = {
+      userId: req.user.id,
+      deletedAt: null,
+    };
 
     if (search) {
-      filter.areaName = { $regex: search, $options: "i" };
+      filter.areaName = { $regex: search.trim(), $options: "i" };
     }
 
     const total = await ExpertInArea.countDocuments(filter);
@@ -115,8 +115,10 @@ exports.getExpertInAreaById = async (req, res) => {
       });
     }
 
+    // Ownership check — user can only view their own area records
     const expertInArea = await ExpertInArea.findOne({
       _id: id,
+      userId: req.user.id,
       deletedAt: null,
     });
 
@@ -171,12 +173,21 @@ exports.updateExpertInArea = async (req, res) => {
       });
     }
 
+    // Ownership check — user can only update their own area records
+    if (expertInArea.userId.toString() !== req.user.id.toString()) {
+      return res.status(status.Forbidden).json({
+        success: false,
+        message: "You are not authorized to update this expert area",
+      });
+    }
+
     const trimmedAreaName = areaName.trim();
     const normalizedName = trimmedAreaName.charAt(0).toUpperCase() + trimmedAreaName.slice(1).toLowerCase();
 
-    // Check if another ACTIVE area has this name (case-insensitive)
+    // Check if this user already has another ACTIVE area with this name (case-insensitive)
     const existingArea = await ExpertInArea.findOne({
       _id: { $ne: id },
+      userId: req.user.id,
       areaName: { $regex: new RegExp(`^${normalizedName}$`, "i") },
       deletedAt: null,
     });
@@ -184,7 +195,7 @@ exports.updateExpertInArea = async (req, res) => {
     if (existingArea) {
       return res.status(status.Conflict).json({
         success: false,
-        message: "Another active expert in area already has this name",
+        message: "You already have an active expert area with this name",
       });
     }
 
@@ -216,14 +227,16 @@ exports.deleteExpertInArea = async (req, res) => {
       });
     }
 
+    // Ownership check — user can only delete their own area records
     const expertInArea = await ExpertInArea.findOneAndDelete({
       _id: id,
+      userId: req.user.id,
     });
 
     if (!expertInArea) {
       return res.status(status.NotFound).json({
         success: false,
-        message: "Expert in area not found",
+        message: "Expert in area not found or you are not authorized to delete it",
       });
     }
 

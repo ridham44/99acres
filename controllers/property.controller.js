@@ -204,6 +204,7 @@ exports.getProperties = async (req, res) => {
       city,
       locality,
       city_area,
+      area,           // area-wise filter: matches city_area or locality (sub-area)
       state,
       listingType,
       propertyCategory,
@@ -284,6 +285,14 @@ exports.getProperties = async (req, res) => {
       if (locality) filter.locality = { $regex: locality, $options: "i" };
       if (city_area) filter.city_area = { $regex: city_area, $options: "i" };
       if (state) filter.state = { $regex: state, $options: "i" };
+    }
+
+    // 3b. Area-wise filter: narrows results to a specific sub-area/locality
+    //     Matches against city_area OR locality (case-insensitive)
+    if (area) {
+      const areaRegex = { $regex: area.trim(), $options: "i" };
+      filter.$and = filter.$and || [];
+      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
     }
 
     // 4. Listing Type & Category
@@ -500,6 +509,8 @@ exports.myProperty = async (req, res) => {
       listingType,
       propertyCategory,
       propertyType,
+      city,
+      area,           // area-wise filter: matches city_area or locality
       sortBy,
       page,
       limit,
@@ -543,6 +554,15 @@ exports.myProperty = async (req, res) => {
 
     if (propertyType) {
       filter.propertyType = propertyType;
+    }
+
+    if (city) filter.city = { $regex: city.trim(), $options: "i" };
+
+    // Area-wise filter for myProperty
+    if (area) {
+      const areaRegex = { $regex: area.trim(), $options: "i" };
+      filter.$and = filter.$and || [];
+      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
     }
 
     let sort = { createdAt: -1 };
@@ -597,7 +617,7 @@ exports.myProperty = async (req, res) => {
 exports.getPropertiesByUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { page, limit, listingType, propertyCategory, propertyType, sortBy } =
+    const { page, limit, listingType, propertyCategory, propertyType, area, sortBy } =
       req.query;
 
     const filter = {
@@ -609,6 +629,13 @@ exports.getPropertiesByUser = async (req, res) => {
     if (propertyCategory) filter.propertyCategory = propertyCategory;
     if (propertyType) filter.propertyType = propertyType;
     if (req.query.status) filter.status = req.query.status;
+
+    // Area-wise filter for getPropertiesByUser
+    if (area) {
+      const areaRegex = { $regex: area.trim(), $options: "i" };
+      filter.$and = filter.$and || [];
+      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
+    }
 
     let sort = { createdAt: -1 };
 
@@ -1083,10 +1110,15 @@ exports.getPropertyPriceTrends = async (req, res) => {
 // ─── GET /api/properties/popular?city=...&limit=30 ──────────────────────────
 exports.getPopularProperties = async (req, res) => {
   try {
-    const { city, limit = 30, listingType, propertyCategory } = req.query;
+    const { city, area, limit = 30, listingType, propertyCategory } = req.query;
 
     const filter = { deletedAt: null, status: "Active" };
     if (city) filter.city = { $regex: city, $options: "i" };
+    // Area-wise filter for popular properties
+    if (area) {
+      const areaRegex = { $regex: area.trim(), $options: "i" };
+      filter.$or = [{ city_area: areaRegex }, { locality: areaRegex }];
+    }
     if (listingType) filter.listingType = listingType;
     if (propertyCategory) filter.propertyCategory = propertyCategory;
 
@@ -1142,6 +1174,7 @@ exports.getPropertyCount = async (req, res) => {
   try {
     const {
       city,
+      area,
       listingType,
       propertyCategory,
       status: propStatus,
@@ -1149,6 +1182,11 @@ exports.getPropertyCount = async (req, res) => {
 
     const filter = { deletedAt: null };
     if (city) filter.city = { $regex: city, $options: "i" };
+    // Area-wise filter for property count
+    if (area) {
+      const areaRegex = { $regex: area.trim(), $options: "i" };
+      filter.$or = [{ city_area: areaRegex }, { locality: areaRegex }];
+    }
     if (listingType) filter.listingType = listingType;
     if (propertyCategory) filter.propertyCategory = propertyCategory;
     if (propStatus) filter.status = propStatus;
