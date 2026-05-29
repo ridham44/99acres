@@ -216,17 +216,9 @@ exports.deleteExpertInArea = async (req, res) => {
       });
     }
 
-    const expertInArea = await ExpertInArea.findOneAndUpdate(
-      {
-        _id: id,
-        deletedAt: null,
-      },
-      {
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-      },
-      { new: true },
-    );
+    const expertInArea = await ExpertInArea.findOneAndDelete({
+      _id: id,
+    });
 
     if (!expertInArea) {
       return res.status(status.NotFound).json({
