@@ -3085,6 +3085,153 @@ isAgent = Yes (Yes or No)
     }
   ]
 }
+
+---
+
+## Notification & Socket.io APIs
+
+Exposes HTTP API endpoints for managing notification logs and Socket.io specifications for real-time channels.
+
+### HTTP REST APIs
+
+All endpoints require valid JWT authentication (`Authorization: Bearer {{token}}`).
+
+**Base Path:** `{{baseUrl}}/notifications`
+
+#### 1. Get My Notifications
+Retrieves historical notifications targeting the logged-in user, paginated. If the logged-in user has the `admin` role, the response also includes system-wide and admin-targeted notifications.
+
+*   **Method:** `GET`
+*   **Path:** `{{baseUrl}}/notifications`
+*   **Query Parameters:**
+    *   `page` (number, optional, default: 1)
+    *   `limit` (number, optional, default: 10)
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Notifications fetched successfully",
+  "data": {
+    "notifications": [
+      {
+        "_id": "6a19246d183b54c9357d78c0",
+        "senderId": {
+          "_id": "6a0ea275e194ff9a92e423e5",
+          "name": "Admin User",
+          "email": "admin@example.com"
+        },
+        "recipientId": "6a0ea275e194ff9a92e423e6",
+        "recipientType": "user",
+        "title": "Property Document Status: Approved",
+        "message": "Your document \"Floor Plan\" for property \"Premium Lakeview Villa\" has been approved.",
+        "type": "property_approval",
+        "relatedId": "6a19246d183b54c9357d78bf",
+        "relatedModel": "PropertyDocument",
+        "isRead": false,
+        "readAt": null,
+        "createdAt": "2026-05-29T10:55:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 1,
+      "page": 1,
+      "limit": 10,
+      "pages": 1
+    },
+    "unreadCount": 1
+  }
+}
+```
+
+#### 2. Mark Single Notification As Read
+Marks a specific notification as read.
+
+*   **Method:** `PUT`
+*   **Path:** `{{baseUrl}}/notifications/:id/read`
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Notification marked as read successfully",
+  "data": {
+    "_id": "6a19246d183b54c9357d78c0",
+    "isRead": true,
+    "readAt": "2026-05-29T11:00:00.000Z",
+    "title": "Property Document Status: Approved",
+    "message": "Your document \"Floor Plan\" for property \"Premium Lakeview Villa\" has been approved.",
+    "type": "property_approval"
+  }
+}
+```
+
+#### 3. Mark All Notifications As Read
+Marks all notifications for the authenticated user as read.
+
+*   **Method:** `PUT`
+*   **Path:** `{{baseUrl}}/notifications/mark-all-read`
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "All notifications marked as read successfully"
+}
+```
+
+#### 4. Delete Notification
+Soft deletes a specific notification.
+
+*   **Method:** `DELETE`
+*   **Path:** `{{baseUrl}}/notifications/:id`
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Notification deleted successfully"
+}
+```
+
+---
+
+### Real-Time Socket.io Connection & Flow
+
+#### 1. Establishing Connection
+To connect, client libraries should pass the JWT token in `auth` handshake configurations or `query` parameters.
+
+```javascript
+const socket = io("http://localhost:5000", {
+  auth: {
+    token: "YOUR_JWT_ACCESS_TOKEN"
+  }
+});
+```
+
+#### 2. Client Room Routing (Auto-Joined)
+When a client successfully authenticates and connects, the backend automatically joins them to target rooms:
+- **Individual Room**: `user_{{userId}}` (For direct, user-specific notifications)
+- **Admin Room**: `admins` (Only joined if the user's role is `admin`, receives general admin alerts)
+
+#### 3. Real-Time Events
+- **Event Name**: `notification`
+- **Emitted Data Format**:
+```json
+{
+  "id": "6a19246d183b54c9357d78c0",
+  "senderId": "6a0ea275e194ff9a92e423e5",
+  "recipientId": "6a0ea275e194ff9a92e423e6",
+  "recipientType": "user",
+  "title": "New Property Inquiry Received",
+  "message": "Rahul Sharma submitted an inquiry for your property \"Luxury Penthouse\".",
+  "type": "inquiry",
+  "relatedId": "6a19246e183b54c9357d78a9",
+  "relatedModel": "Inquiry",
+  "isRead": false,
+  "createdAt": "2026-05-29T10:58:00.000Z"
+}
+```
 ```
 
 

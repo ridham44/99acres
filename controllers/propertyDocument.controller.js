@@ -3,6 +3,7 @@ const PropertyDocument = require('../models/propertyDocument.model');
 const status = require('../utils/statusCodes');
 const { uploadToImagekit } = require('../utils/imagekitUpload');
 const { getPropertyDocumentUrl } = require('../utils/imagekitUrl');
+const { createAndSendNotification } = require('../utils/socket');
 
 exports.createPropertyDocument = async (req, res) => {
     try {
@@ -299,13 +300,31 @@ exports.updateDocumentStatus = async (req, res) => {
             { _id: id, deletedAt: null },
             { status: newStatus, updatedAt: new Date() },
             { new: true },
-        ).populate('propertyId', 'title propertyName');
+        ).populate('propertyId', 'title propertyName ownerId dealerId');
 
         if (!document) {
             return res.status(status.NotFound).json({
                 success: false,
                 message: 'Property document not found',
             });
+        }
+
+        // Notify property owner/dealer
+        if (document.propertyId) {
+            const property = document.propertyId;
+            const ownerId = property.ownerId || property.dealerId;
+            if (ownerId) {
+                await createAndSendNotification({
+                    senderId: req.user.id,
+                    recipientId: ownerId,
+                    recipientType: 'user',
+                    title: `Property Document Status: ${newStatus}`,
+                    message: `Your document "${document.title}" for property "${property.title || property.propertyName}" has been ${newStatus.toLowerCase()}.`,
+                    type: 'property_approval',
+                    relatedId: document._id,
+                    relatedModel: 'PropertyDocument',
+                });
+            }
         }
 
         return res.status(status.OK).json({

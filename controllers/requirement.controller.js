@@ -2,6 +2,9 @@ const Requirement = require('../models/requirement.model');
 const Property = require('../models/property.model');
 const status = require('../utils/statusCodes');
 const mongoose = require('mongoose');
+const User = require('../models/user.model');
+const Notification = require('../models/notification.model');
+const { sendToUsers } = require('../utils/socket');
 
 // Create Requirement
 exports.createRequirement = async (req, res) => {
@@ -12,6 +15,45 @@ exports.createRequirement = async (req, res) => {
             userId,
             createdAt: new Date(),
         });
+
+        // Broadcast to all brokers, builders, channel partners, and admins (except current user)
+        const targetUsers = await User.find({
+            role: { $in: ['broker', 'builder', 'admin', 'channel_partner'] },
+            _id: { $ne: new mongoose.Types.ObjectId(userId) },
+            deletedAt: null,
+        }).select('_id');
+
+        if (targetUsers.length > 0) {
+            const userName = req.user.name || 'A user';
+            const locationStr = Array.isArray(requirement.locations) && requirement.locations.length > 0
+                ? requirement.locations.join(', ')
+                : 'N/A';
+
+            const notificationDataArray = targetUsers.map((user) => ({
+                senderId: userId,
+                recipientId: user._id,
+                recipientType: 'user',
+                title: 'New Property Requirement Submitted',
+                message: `${userName} submitted a new property requirement for: ${locationStr}.`,
+                type: 'general',
+                relatedId: requirement._id,
+                relatedModel: 'Requirement',
+            }));
+
+            // Batch insert for performance
+            await Notification.insertMany(notificationDataArray);
+
+            // Push real-time event to all targeted users
+            const targetUserIds = targetUsers.map((u) => u._id.toString());
+            sendToUsers(targetUserIds, 'notification', {
+                title: 'New Property Requirement Submitted',
+                message: `${userName} submitted a new property requirement for: ${locationStr}.`,
+                type: 'general',
+                relatedId: requirement._id,
+                relatedModel: 'Requirement',
+                createdAt: new Date(),
+            });
+        }
 
         return res.status(status.CREATED).json({
             success: true,

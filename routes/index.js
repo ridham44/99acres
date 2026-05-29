@@ -25,6 +25,7 @@ router.use("/support", require("./support.route"));
 router.use("/expert-in-areas", require("./expertInArea.route"));
 router.use("/inquiries", require("./inquiry.route"));
 router.use("/builders", require("./builder.route"));
+router.use("/notifications", require("./notification.route"));
 router.use("/admin", require("./admin.route"));
 
 module.exports = router;

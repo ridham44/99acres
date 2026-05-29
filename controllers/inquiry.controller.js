@@ -3,6 +3,7 @@ const Inquiry = require('../models/inquiry.model');
 const Property = require('../models/property.model');
 const status = require('../utils/statusCodes');
 const { getPropertyMediaUrl } = require('../utils/imagekitUrl');
+const { createAndSendNotification } = require('../utils/socket');
 
 // ─── Shared helper ────────────────────────────────────────────────────────────
 
@@ -115,6 +116,21 @@ exports.submitInquiry = async (req, res) => {
             createdAt: new Date(),
             updatedAt: new Date(),
         });
+
+        // ── Send Notification to Owner/Dealer ──────────────────────────────
+        const propertyOwnerId = property.ownerId?._id || property.ownerId || property.dealerId?._id || property.dealerId;
+        if (propertyOwnerId) {
+            await createAndSendNotification({
+                senderId: userId,
+                recipientId: propertyOwnerId,
+                recipientType: 'user',
+                title: 'New Property Inquiry Received',
+                message: `${username.trim()} submitted an inquiry for your property "${property.title || property.propertyName}".`,
+                type: 'inquiry',
+                relatedId: inquiry._id,
+                relatedModel: 'Inquiry',
+            });
+        }
 
         // ── Build full property response with media URLs ─────────────────────
         const propertyObj = formatPropertyWithMedia(property);
