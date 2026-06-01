@@ -73,6 +73,19 @@ const formatPropertyCard = (item) => {
 };
 
 
+const formatLaunchStatusPropertyCard = (item) => {
+  const formatted = formatPropertyCard(item);
+  return {
+    ...formatted,
+    isLaunch: item.isLaunch || null,
+    launchDateOption: item.launchDateOption || null,
+    launchDate: item.launchDate || null,
+    preLaunchMonth: item.preLaunchMonth || null,
+    preLaunchYear: item.preLaunchYear || null,
+  };
+};
+
+
 exports.createProperty = async (req, res) => {
   try {
     const imageFiles = req.files?.images || [];
@@ -772,6 +785,127 @@ exports.getPropertiesByUser = async (req, res) => {
       message: "User properties fetched successfully",
       user,
       data: properties.map(formatPropertyCard),
+      pagination: {
+        total,
+        page: currentPage,
+        limit: currentLimit,
+        totalPages: Math.ceil(total / currentLimit),
+      },
+    });
+  } catch (error) {
+    return res.status(status.InternalServerError).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+exports.getLaunchStatusProperties = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const {
+      page,
+      limit,
+      listingType,
+      propertyCategory,
+      propertyType,
+      isLaunch,
+      status: propertyStatus,
+      area,
+      sortBy,
+    } = req.query;
+
+    const user = await User.findOne({ _id: userId, deletedAt: null }).lean();
+    if (!user) {
+      return res.status(status.NotFound).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.role !== "builder" && user.role !== "channel_partner") {
+      return res.status(status.BadRequest).json({
+        success: false,
+        message: "User must be a builder or channel partner to access Launched Status Flow",
+      });
+    }
+
+    user.profileImageUrl = getUserProfileImageUrl(user.profileImage);
+
+    if (user.role === "builder") {
+      const builderProfile = await Builder.findOne({ userId, deletedAt: null }).lean();
+      user.builderProfile = builderProfile || null;
+    } else if (user.role === "channel_partner") {
+      const agentProfile = await Agent.findOne({ userId, deletedAt: null }).lean();
+      if (agentProfile) {
+        agentProfile.companyImageUrl = getAgentCompanyImageUrl(agentProfile.companyImage);
+      }
+      user.agentProfile = agentProfile || null;
+    }
+
+    const filter = {
+      deletedAt: null,
+      $or: [{ ownerId: userId }, { dealerId: userId }],
+    };
+
+    if (isLaunch) {
+      if (!["Launched", "Pre-Launch"].includes(isLaunch)) {
+        return res.status(status.BadRequest).json({
+          success: false,
+          message: "isLaunch must be either 'Launched' or 'Pre-Launch'",
+        });
+      }
+      filter.isLaunch = isLaunch;
+    } else {
+      filter.isLaunch = { $in: ["Launched", "Pre-Launch"] };
+    }
+
+    if (listingType) filter.listingType = listingType;
+    if (propertyCategory) filter.propertyCategory = propertyCategory;
+    if (propertyType) filter.propertyType = propertyType;
+    if (propertyStatus) filter.status = propertyStatus;
+
+    if (area) {
+      const areaRegex = { $regex: area.trim(), $options: "i" };
+      filter.$and = filter.$and || [];
+      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
+    }
+
+    let sort = { createdAt: -1 };
+
+    if (sortBy === "price_asc") {
+      sort = { price: 1 };
+    } else if (sortBy === "price_desc") {
+      sort = { price: -1 };
+    } else if (sortBy === "oldest") {
+      sort = { createdAt: 1 };
+    } else if (sortBy === "newest") {
+      sort = { createdAt: -1 };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const [properties, total] = await Promise.all([
+      Property.find(filter)
+        .select(
+          "_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt isLaunch launchDateOption launchDate preLaunchMonth preLaunchYear availableUnits developer",
+        )
+        .populate("ownerId", "name role profileImage")
+        .populate("dealerId", "name role profileImage")
+        .sort(sort)
+        .skip(skip)
+        .limit(currentLimit),
+      Property.countDocuments(filter),
+    ]);
+
+    return res.status(status.OK).json({
+      success: true,
+      message: "Launch status properties fetched successfully",
+      user,
+      data: properties.map(formatLaunchStatusPropertyCard),
       pagination: {
         total,
         page: currentPage,

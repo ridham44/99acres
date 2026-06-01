@@ -1372,6 +1372,101 @@ Returns all properties associated with a specific user (where they are either th
 }
 ```
 
+### Get Launch Status Properties By User ID
+
+Returns all properties under the launch flow (where `isLaunch` is either `"Launched"` or `"Pre-Launch"`) for a specific builder or channel partner user, along with the complete profile details of the user. If the user has a Builder profile or Agent profile, those details are also nested within the response.
+
+`GET {{baseUrl}}/properties/launch-status/:userId?page=1&limit=10&isLaunch=Launched&status=Active`
+
+**Headers:** auth required.
+
+**Path Parameter:**
+* `userId`: The ID of the user (must have a `builder` or `channel_partner` role) whose launch properties you want to retrieve.
+
+**Optional Filters:**
+* `page` (Number): Page number (default: 1)
+* `limit` (Number): Items per page (default: 10)
+* `isLaunch` (String): Filter strictly by `"Launched"` or `"Pre-Launch"`. If omitted, returns both.
+* `status` (String): Filter by property status (e.g., `"Active"`, `"Inactive"`, `"Draft"`, `"Sold"`, `"Rented"`).
+* `listingType` (String): `"Sale"` or `"Rent"`.
+* `propertyCategory` (String): `"Residential"`, `"Commercial"`, or `"PG"`.
+* `propertyType` (String): Sub-type of property.
+* `area` (String): Matches `city_area` or `locality` fields.
+* `sortBy` (String): `"price_asc"`, `"price_desc"`, `"oldest"`, or `"newest"`.
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "message": "Launch status properties fetched successfully",
+  "user": {
+    "_id": "60d0fe4f5311236168a109ca",
+    "name": "Jane Doe",
+    "role": "builder",
+    "phone": "+919876543210",
+    "email": "builder@example.com",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "profileImageUrl": "https://ik.imagekit.io/aj6cyp5nm/users/profile-images/builder-avatar.jpg",
+    "isVerified": true,
+    "createdAt": "2026-01-01T12:00:00.000Z",
+    "updatedAt": "2026-05-29T12:00:00.000Z",
+    "builderProfile": {
+      "_id": "60d0fe4f5311236168a109cb",
+      "userId": "60d0fe4f5311236168a109ca",
+      "companyDetails": {
+        "companyName": "Apex Builders Group",
+        "groupName": "Apex Group",
+        "yearEstablished": 2010,
+        "about": "Premium residential and commercial developments.",
+        "website": "https://apexbuilders.com",
+        "socialLinks": {
+          "facebook": "https://facebook.com/apexbuilders",
+          "instagram": "https://instagram.com/apexbuilders",
+          "linkedin": "https://linkedin.com/company/apexbuilders"
+        }
+      }
+    }
+  },
+  "data": [
+    {
+      "_id": "6742fb0b28e23588df8e9766",
+      "title": "3 BHK Flat For Sale in Unique Luxuria",
+      "propertyName": "Unique Luxuria",
+      "propertyType": "Apartment",
+      "propertyCategory": "Residential",
+      "listingType": "Sale",
+      "price": 85000000,
+      "priceUnit": "Lakh",
+      "address": "S G Highway",
+      "locality": "Gota",
+      "city_area": "Gota",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "status": "Active",
+      "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/cover.jpg",
+      "bhk": 3,
+      "bedrooms": 3,
+      "bathrooms": 3,
+      "area": 1800,
+      "facing": "East",
+      "isLaunch": "Launched",
+      "launchDateOption": "today",
+      "launchDate": "2026-06-01T10:38:58.000Z",
+      "preLaunchMonth": null,
+      "preLaunchYear": null,
+      "createdAt": "2026-05-29T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
 ### Get Property By ID
 
 Returns full property details with populated owner/dealer/amenities/media URLs. This endpoint includes all technical audit fields for residential and commercial views.

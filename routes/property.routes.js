@@ -22,6 +22,7 @@ router.post(
 router.get('/', auth, controller.getProperties);
 router.get('/my-property', auth, controller.myProperty);
 router.get('/user/:userId', auth, validation.validateUserId, controller.getPropertiesByUser);
+router.get('/launch-status/:userId', auth, validation.validateUserId, controller.getLaunchStatusProperties);
 
 // ── Static-segment routes MUST come before /:id ──────────────────────────────
 router.get('/popular', auth, controller.getPopularProperties);
