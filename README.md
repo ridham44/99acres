@@ -1263,6 +1263,19 @@ Returns paginated property cards/list data with advanced filtering based on the 
 `{{baseUrl}}/properties?locations=Ahmedabad,Gota&propertyCategory=Residential&propertyTypes=Flat/Apartment&minBudget=5000000&postedBy=Agent&amenities=Parking,Lift&sortBy=Price (H-L)`
 
 
+### Get Pre-Launch Properties
+
+Returns paginated Pre-Launch properties (`isLaunch === "Pre-Launch"`) containing **all detailed fields** (the full property data structure, with nested references like owner, dealer, amenities, furnishings, and nearby places fully populated and mapped with ImageKit URLs).
+
+`GET {{baseUrl}}/properties/prelaunched?page=1&limit=10`
+
+**Headers:** auth required.
+
+**Filters & Sorting:** Supports the identical comprehensive filtering, pagination, and sorting parameters as the standard `GET /properties` endpoint.
+
+---
+
+
 ### Get My Properties
 
 Returns properties uploaded/owned by the logged-in user. The user is taken from JWT.

@@ -27,6 +27,8 @@ router.get('/launch-status/:userId', auth, validation.validateUserId, controller
 // ── Static-segment routes MUST come before /:id ──────────────────────────────
 router.get('/popular', auth, controller.getPopularProperties);
 router.get('/count', auth, controller.getPropertyCount);
+router.get('/prelaunched', auth, controller.getPrelaunchedProperties);
+
 
 // ── Property-specific routes ──────────────────────────────────────────────────
 router.get('/:id/similar', auth, validation.validatePropertyId, controller.getSimilarProperties);

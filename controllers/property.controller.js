@@ -86,6 +86,72 @@ const formatLaunchStatusPropertyCard = (item) => {
 };
 
 
+const formatFullProperty = (item) => {
+  if (!item) return null;
+  const propertyObj = item.toObject ? item.toObject() : item;
+
+  // add `postedBy` field similar to list response (dealerId || ownerId)
+  const postedByData = propertyObj.dealerId || propertyObj.ownerId || null;
+  if (postedByData) {
+    propertyObj.postedBy = {
+      ...postedByData,
+      profileImageUrl: getUserProfileImageUrl(postedByData.profileImage),
+      url: getUserProfileImageUrl(postedByData.profileImage),
+    };
+  } else {
+    propertyObj.postedBy = null;
+  }
+
+  // map media using helper
+  propertyObj.media = (propertyObj.media || []).map((mediaItem) => ({
+    ...mediaItem,
+    url: getPropertyMediaUrl(mediaItem.fileName, mediaItem.type),
+  }));
+
+  // map brochure URLs
+  propertyObj.brochure = (propertyObj.brochure || []).map((brochureItem) => ({
+    ...brochureItem,
+    url: getPropertyBrochureUrl(brochureItem.fileName),
+  }));
+
+  const firstImage = propertyObj.media.find((mediaItem) => mediaItem.type === "image");
+  propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
+
+  propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
+    const am = amenity ? (amenity._doc || amenity) : {};
+    return {
+      ...am,
+      amenityIconUrl: am.amenityIcon ? getAmenityIconUrl(am.amenityIcon) : null,
+    };
+  });
+
+  propertyObj.furnishings = (propertyObj.furnishings || []).map((furnishItem) => {
+    const fur = furnishItem.furnishingId ? (furnishItem.furnishingId._doc || furnishItem.furnishingId) : {};
+    return {
+      furnishingId: {
+        ...fur,
+        furnitureIconUrl: fur.furnitureIcon ? getFurnitureIconUrl(fur.furnitureIcon) : null,
+        quantity: furnishItem.quantity,
+      },
+    };
+  });
+
+  propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((placeItem) => {
+    const near = placeItem.nearbyId ? (placeItem.nearbyId._doc || placeItem.nearbyId) : {};
+    return {
+      nearbyId: {
+        ...near,
+        placeIconUrl: near.placeIcon ? getNearbyPlaceIconUrl(near.placeIcon) : null,
+        distance: placeItem.distance,
+        distanceUnit: placeItem.distanceUnit,
+      },
+    };
+  });
+
+  return propertyObj;
+};
+
+
 exports.createProperty = async (req, res) => {
   try {
     const imageFiles = req.files?.images || [];
@@ -906,6 +972,322 @@ exports.getLaunchStatusProperties = async (req, res) => {
       message: "Launch status properties fetched successfully",
       user,
       data: properties.map(formatLaunchStatusPropertyCard),
+      pagination: {
+        total,
+        page: currentPage,
+        limit: currentLimit,
+        totalPages: Math.ceil(total / currentLimit),
+      },
+    });
+  } catch (error) {
+    return res.status(status.InternalServerError).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+exports.getPrelaunchedProperties = async (req, res) => {
+  try {
+    const {
+      search,
+      status: propertyStatus,
+      locations,
+      city,
+      locality,
+      city_area,
+      area,           // area-wise filter: matches city_area or locality (sub-area)
+      state,
+      listingType,
+      propertyCategory,
+      propertyTypes,
+      propertyType,
+      bhk,
+      bedrooms,
+      bathrooms,
+      minBudget,
+      maxBudget,
+      minPrice,
+      maxPrice,
+      minArea,
+      maxArea,
+      postedBy,
+      saleType,
+      furnishing,
+      amenities,
+      facing,
+      minFloor,
+      maxFloor,
+      ownerId,
+      dealerId,
+      sortBy,
+      page,
+      limit,
+    } = req.query;
+
+    const filter = { 
+      deletedAt: null,
+      isLaunch: "Pre-Launch"
+    };
+
+    // 1. Search
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { propertyName: { $regex: search, $options: "i" } },
+        { propertyType: { $regex: search, $options: "i" } },
+        { locality: { $regex: search, $options: "i" } },
+        { city: { $regex: search, $options: "i" } },
+        { state: { $regex: search, $options: "i" } },
+        { address: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // 2. Status (Default to Active for public API if not specified)
+    if (propertyStatus) {
+      filter.status = propertyStatus;
+    }
+
+    // 3. Locations (supports list of cities/localities)
+    if (locations) {
+      const locationArray = Array.isArray(locations)
+        ? locations
+        : String(locations)
+            .split(",")
+            .map((l) => l.trim())
+            .filter(Boolean);
+
+      if (locationArray.length > 0) {
+        const locationQueries = locationArray.map((loc) => ({
+          $or: [
+            { city: { $regex: loc, $options: "i" } },
+            { locality: { $regex: loc, $options: "i" } },
+            { city_area: { $regex: loc, $options: "i" } },
+            { address: { $regex: loc, $options: "i" } },
+          ],
+        }));
+
+        if (filter.$or) {
+          filter.$and = filter.$and || [];
+          filter.$and.push({ $or: locationQueries });
+        } else {
+          filter.$or = locationQueries;
+        }
+      }
+    } else {
+      // Support legacy individual location fields
+      if (city) filter.city = { $regex: city, $options: "i" };
+      if (locality) filter.locality = { $regex: locality, $options: "i" };
+      if (city_area) filter.city_area = { $regex: city_area, $options: "i" };
+      if (state) filter.state = { $regex: state, $options: "i" };
+    }
+
+    // 3b. Area-wise filter: narrows results to a specific sub-area/locality
+    //     Matches against city_area OR locality (case-insensitive)
+    if (area) {
+      const areaRegex = { $regex: area.trim(), $options: "i" };
+      filter.$and = filter.$and || [];
+      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
+    }
+
+    // 4. Listing Type & Category
+    if (listingType) filter.listingType = listingType;
+    if (propertyCategory) filter.propertyCategory = propertyCategory;
+
+    // 5. Property Type (Single or List)
+    if (propertyTypes || propertyType) {
+      const types = propertyTypes
+        ? Array.isArray(propertyTypes)
+          ? propertyTypes
+          : String(propertyTypes).split(",")
+        : [propertyType];
+      const cleanTypes = types.map((t) => t.trim()).filter(Boolean);
+      if (cleanTypes.length > 0) {
+        filter.propertyType = { $in: cleanTypes };
+      }
+    }
+
+    // 6. BHK / Bedrooms / Bathrooms
+    if (bhk) filter.bhk = Number(bhk);
+    if (bedrooms) filter.bedrooms = Number(bedrooms);
+    if (bathrooms) filter.bathrooms = Number(bathrooms);
+
+    // 7. Budget / Price Range
+    const minP = Number(minBudget || minPrice);
+    const maxP = Number(maxBudget || maxPrice);
+    if (minP || maxP) {
+      filter.price = {};
+      if (minP) filter.price.$gte = minP;
+      if (maxP) filter.price.$lte = maxP;
+    }
+
+    // 8. Area Range
+    const minA = Number(minArea);
+    const maxA = Number(maxArea);
+    if (minA || maxA) {
+      filter.area = {};
+      if (minA) filter.area.$gte = minA;
+      if (maxA) filter.area.$lte = maxA;
+    }
+
+    // 9. Furnishing
+    if (furnishing) {
+      const furnishingArray = Array.isArray(furnishing)
+        ? furnishing
+        : String(furnishing).split(",");
+      const mapping = {
+        Furnished: "Yes",
+        "Semi-Furnished": "Semi",
+        Unfurnished: "No",
+      };
+      const mappedValues = furnishingArray
+        .map((f) => mapping[f.trim()])
+        .filter(Boolean);
+      if (mappedValues.length > 0) {
+        filter.furnished = { $in: mappedValues };
+      }
+    }
+
+    // 10. Amenities (Look up by name)
+    if (amenities) {
+      const amenityNames = Array.isArray(amenities)
+        ? amenities
+        : String(amenities)
+            .split(",")
+            .map((a) => a.trim())
+            .filter(Boolean);
+      if (amenityNames.length > 0) {
+        const foundAmenities = await Amenity.find({
+          amenityName: {
+            $in: amenityNames.map((n) => new RegExp(`^${n}$`, "i")),
+          },
+        }).select("_id");
+        if (foundAmenities.length > 0) {
+          filter.amenityIds = { $in: foundAmenities.map((a) => a._id) };
+        }
+      }
+    }
+
+    // 11. Facing
+    if (facing) {
+      const facingArray = Array.isArray(facing)
+        ? facing
+        : String(facing)
+            .split(",")
+            .map((f) => f.trim())
+            .filter(Boolean);
+      if (facingArray.length > 0) {
+        filter.facing = {
+          $in: facingArray.map((f) => new RegExp(`^${f}$`, "i")),
+        };
+      }
+    }
+
+    // 12. Floor Levels
+    if (minFloor || maxFloor) {
+      filter.floor = {};
+      const parseFloor = (f) => {
+        if (f === "Ground") return 0;
+        if (f === "Basement") return -1;
+        const match = String(f).match(/\d+/);
+        return match ? Number(match[0]) : null;
+      };
+      const minF = parseFloor(minFloor);
+      const maxF = parseFloor(maxFloor);
+      if (minF !== null) filter.floor.$gte = minF;
+      if (maxF !== null) filter.floor.$lte = maxF;
+    }
+
+    // 13. Sale Type (New / Resale)
+    if (saleType) {
+      const types = Array.isArray(saleType)
+        ? saleType
+        : String(saleType)
+            .split(",")
+            .map((s) => s.trim().toLowerCase());
+      // Map "new" to properties with age 0 or "New"
+      if (types.includes("new") && !types.includes("resale")) {
+        filter.propertyAge = {
+          $in: ["0", "New", "New Construction", "0-1 Years"],
+        };
+      } else if (types.includes("resale") && !types.includes("new")) {
+        filter.propertyAge = {
+          $nin: ["0", "New", "New Construction", "0-1 Years"],
+        };
+      }
+    }
+
+    // 14. Posted By (Agent / Owner / Builder)
+    if (postedBy) {
+      const posters = Array.isArray(postedBy)
+        ? postedBy
+        : String(postedBy)
+            .split(",")
+            .map((p) => p.trim());
+      const roles = [];
+      if (posters.includes("Owner")) roles.push("user");
+      if (posters.includes("Agent")) roles.push("broker", "channel_partner");
+      if (posters.includes("Builder")) roles.push("builder");
+
+      if (roles.length > 0) {
+        const users = await User.find({ role: { $in: roles } }).select("_id");
+        const userIds = users.map((u) => u._id);
+        filter.$or = filter.$or || [];
+        filter.$or.push({ ownerId: { $in: userIds } });
+        filter.$or.push({ dealerId: { $in: userIds } });
+      }
+    }
+
+    // 15. IDs
+    if (ownerId) filter.ownerId = ownerId;
+    if (dealerId) filter.dealerId = dealerId;
+
+    // 16. Sort
+    let sort = { createdAt: -1 };
+    if (sortBy) {
+      if (sortBy === "price_asc" || sortBy === "Price (L-H)")
+        sort = { price: 1 };
+      else if (sortBy === "price_desc" || sortBy === "Price (H-L)")
+        sort = { price: -1 };
+      else if (sortBy === "oldest") sort = { createdAt: 1 };
+      else if (sortBy === "newest" || sortBy === "Most Recent")
+        sort = { createdAt: -1 };
+    }
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+
+    const [properties, total] = await Promise.all([
+      Property.find(filter)
+        .populate("ownerId", "name email phone role profileImage")
+        .populate("dealerId", "name email phone role profileImage")
+        .populate("amenityIds", "amenityName amenityIcon")
+        .populate("furnishings.furnishingId", "furnitureName furnitureIcon")
+        .populate("nearbyPlaces.nearbyId", "placeName placeType city locality placeIcon")
+        .sort(sort)
+        .skip(skip)
+        .limit(currentLimit),
+      Property.countDocuments(filter),
+    ]);
+
+    const data = properties.map(formatFullProperty);
+
+    const activeBanks = await Bank.find({ deletedAt: null }).sort({ createdAt: -1 });
+    const formattedBanks = activeBanks.map((bank) => {
+      const bankObj = bank.toObject();
+      return {
+        ...bankObj,
+        bankIconUrl: bankObj.bankIcon ? getBankIconUrl(bankObj.bankIcon) : null,
+      };
+    });
+
+    return res.status(status.OK).json({
+      success: true,
+      message: "Pre-Launch properties fetched successfully",
+      data,
+      banks: formattedBanks,
       pagination: {
         total,
         page: currentPage,
