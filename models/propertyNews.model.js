@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const blogSchema = new mongoose.Schema(
+const propertyNewsSchema = new mongoose.Schema(
     {
         title: {
             type: String,
@@ -28,28 +28,23 @@ const blogSchema = new mongoose.Schema(
             default: null,
             trim: true,
         },
-        category: {
+        images: [
+            {
+                type: String,
+                trim: true,
+            },
+        ],
+        city: {
             type: String,
             required: true,
             trim: true,
+            index: true,
         },
         authorName: {
             type: String,
             required: true,
             trim: true,
         },
-        readTime: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-        tags: [
-            {
-                type: String,
-                trim: true,
-                lowercase: true,
-            },
-        ],
         adminId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -75,24 +70,12 @@ const blogSchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
-        deletedAt: {
-            type: Date,
-            default: null,
-            index: true,
-        },
     },
     {
         timestamps: true,
     }
 );
 
-blogSchema.index({ tags: 1 });
-blogSchema.index(
-    { slug: 1 },
-    {
-        unique: true,
-        partialFilterExpression: { deletedAt: null },
-    }
-);
+propertyNewsSchema.index({ slug: 1 }, { unique: true });
 
-module.exports = mongoose.model('Blog', blogSchema);
+module.exports = mongoose.model('PropertyNews', propertyNewsSchema);

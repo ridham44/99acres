@@ -12,8 +12,6 @@ const sendError = (res, message) => {
 
 const requiredString = (value) => typeof value === 'string' && value.trim() !== '';
 
-const optionalString = (value) => value === undefined || typeof value === 'string';
-
 const toBoolean = (value) => {
     if (value === undefined || value === null || value === '') return undefined;
     if (typeof value === 'boolean') return value;
@@ -23,42 +21,29 @@ const toBoolean = (value) => {
 };
 
 const toNumber = (value) => {
+    if (Array.isArray(value)) {
+        value = value[0];
+    }
+
+    if (typeof value === 'string') {
+        value = value.trim();
+    }
+
     if (value === undefined || value === null || value === '') return undefined;
     const parsed = Number(value);
     return Number.isNaN(parsed) ? value : parsed;
 };
 
-const normalizeTag = (tag) => {
-    const trimmed = String(tag || '').trim().toLowerCase();
-    if (!trimmed) return null;
-    return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+const toDate = (value) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
 };
 
-const toTags = (value) => {
-    if (value === undefined || value === null || value === '') return undefined;
-
-    if (Array.isArray(value)) {
-        return value.map(normalizeTag).filter(Boolean);
-    }
-
-    if (typeof value === 'string') {
-        const trimmed = value.trim();
-
-        if (trimmed.startsWith('[')) {
-            try {
-                const parsed = JSON.parse(trimmed);
-                if (Array.isArray(parsed)) {
-                    return parsed.map(normalizeTag).filter(Boolean);
-                }
-            } catch (error) {
-                return null;
-            }
-        }
-
-        return trimmed.split(',').map(normalizeTag).filter(Boolean);
-    }
-
-    return null;
+const toPositiveInteger = (value) => {
+    const parsed = toNumber(value);
+    if (parsed === undefined) return undefined;
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
 const trimFields = (body, fields) => {
@@ -69,19 +54,11 @@ const trimFields = (body, fields) => {
     });
 };
 
-const validatePublishedAt = (value) => {
-    if (value === undefined || value === null || value === '') return undefined;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-};
-
-exports.validateCreateBlog = (req, res, next) => {
+exports.validateCreatePropertyNews = (req, res, next) => {
     try {
         req.body.isFeatured = toBoolean(req.body.isFeatured);
         req.body.views = toNumber(req.body.views);
-        req.body.readTime = toNumber(req.body.readTime);
-        req.body.tags = toTags(req.body.tags);
-        req.body.publishedAt = validatePublishedAt(req.body.publishedAt);
+        req.body.publishedAt = toDate(req.body.publishedAt);
 
         if (!requiredString(req.body.title)) {
             return sendError(res, 'title is required and must be a non-empty string');
@@ -99,8 +76,8 @@ exports.validateCreateBlog = (req, res, next) => {
             return sendError(res, 'content is required and must be a non-empty string');
         }
 
-        if (!requiredString(req.body.category)) {
-            return sendError(res, 'category is required and must be a non-empty string');
+        if (!requiredString(req.body.city)) {
+            return sendError(res, 'city is required and must be a non-empty string');
         }
 
         if (req.body.authorName !== undefined && !requiredString(req.body.authorName)) {
@@ -111,14 +88,6 @@ exports.validateCreateBlog = (req, res, next) => {
             return sendError(res, 'views must be a number greater than or equal to 0');
         }
 
-        if (req.body.readTime !== undefined && (typeof req.body.readTime !== 'number' || req.body.readTime < 0)) {
-            return sendError(res, 'readTime must be a number greater than or equal to 0');
-        }
-
-        if (req.body.tags === null) {
-            return sendError(res, 'tags must be an array, JSON array string, or comma-separated string');
-        }
-
         if (req.body.status !== undefined && !allowedStatuses.includes(req.body.status)) {
             return sendError(res, `status must be one of: ${allowedStatuses.join(', ')}`);
         }
@@ -131,7 +100,7 @@ exports.validateCreateBlog = (req, res, next) => {
             return sendError(res, 'publishedAt must be a valid date');
         }
 
-        trimFields(req.body, ['title', 'slug', 'summary', 'content', 'category', 'authorName', 'status']);
+        trimFields(req.body, ['title', 'slug', 'summary', 'content', 'city', 'authorName', 'status']);
         next();
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -141,26 +110,20 @@ exports.validateCreateBlog = (req, res, next) => {
     }
 };
 
-exports.validateUpdateBlog = (req, res, next) => {
+exports.validateUpdatePropertyNews = (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return sendError(res, 'Invalid blog id');
+            return sendError(res, 'Invalid property news id');
         }
 
         req.body.isFeatured = toBoolean(req.body.isFeatured);
         req.body.views = toNumber(req.body.views);
-        req.body.readTime = toNumber(req.body.readTime);
-        req.body.tags = toTags(req.body.tags);
-        req.body.publishedAt = validatePublishedAt(req.body.publishedAt);
+        req.body.publishedAt = toDate(req.body.publishedAt);
 
-        for (const field of ['title', 'slug', 'summary', 'content', 'category', 'authorName']) {
+        for (const field of ['title', 'slug', 'summary', 'content', 'city', 'authorName']) {
             if (req.body[field] !== undefined && !requiredString(req.body[field])) {
                 return sendError(res, `${field} must be a non-empty string`);
             }
-        }
-
-        if (!optionalString(req.body.status)) {
-            return sendError(res, 'status must be a string');
         }
 
         if (req.body.status !== undefined && !allowedStatuses.includes(req.body.status)) {
@@ -171,14 +134,6 @@ exports.validateUpdateBlog = (req, res, next) => {
             return sendError(res, 'views must be a number greater than or equal to 0');
         }
 
-        if (req.body.readTime !== undefined && (typeof req.body.readTime !== 'number' || req.body.readTime < 0)) {
-            return sendError(res, 'readTime must be a number greater than or equal to 0');
-        }
-
-        if (req.body.tags === null) {
-            return sendError(res, 'tags must be an array, JSON array string, or comma-separated string');
-        }
-
         if (req.body.isFeatured !== undefined && typeof req.body.isFeatured !== 'boolean') {
             return sendError(res, 'isFeatured must be true or false');
         }
@@ -187,7 +142,7 @@ exports.validateUpdateBlog = (req, res, next) => {
             return sendError(res, 'publishedAt must be a valid date');
         }
 
-        trimFields(req.body, ['title', 'slug', 'summary', 'content', 'category', 'authorName', 'status']);
+        trimFields(req.body, ['title', 'slug', 'summary', 'content', 'city', 'authorName', 'status']);
         next();
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -197,25 +152,24 @@ exports.validateUpdateBlog = (req, res, next) => {
     }
 };
 
-exports.validateBlogId = (req, res, next) => {
+exports.validatePropertyNewsId = (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        return sendError(res, 'Invalid blog id');
+        return sendError(res, 'Invalid property news id');
     }
+
     next();
 };
 
-exports.validateGetBlogs = (req, res, next) => {
-    req.query.page = toNumber(req.query.page);
-    req.query.limit = toNumber(req.query.limit);
+exports.validateGetPropertyNews = (req, res, next) => {
+    req.query.page = toPositiveInteger(req.query.page);
+    req.query.limit = toPositiveInteger(req.query.limit);
     req.query.isFeatured = toBoolean(req.query.isFeatured);
-    req.query.readTime = toNumber(req.query.readTime);
-    req.query.tags = toTags(req.query.tags || req.query.tag);
 
-    if (req.query.page !== undefined && (!Number.isInteger(req.query.page) || req.query.page < 1)) {
+    if (req.query.page === null) {
         return sendError(res, 'page must be a positive integer');
     }
 
-    if (req.query.limit !== undefined && (!Number.isInteger(req.query.limit) || req.query.limit < 1)) {
+    if (req.query.limit === null) {
         return sendError(res, 'limit must be a positive integer');
     }
 
@@ -225,14 +179,6 @@ exports.validateGetBlogs = (req, res, next) => {
 
     if (req.query.isFeatured !== undefined && typeof req.query.isFeatured !== 'boolean') {
         return sendError(res, 'isFeatured must be true or false');
-    }
-
-    if (req.query.readTime !== undefined && (typeof req.query.readTime !== 'number' || req.query.readTime < 0)) {
-        return sendError(res, 'readTime must be a number greater than or equal to 0');
-    }
-
-    if (req.query.tags === null) {
-        return sendError(res, 'tags must be an array, JSON array string, or comma-separated string');
     }
 
     next();

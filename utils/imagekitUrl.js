@@ -74,6 +74,16 @@ const getBlogCoverImageUrl = (fileName) => {
     return `${getBaseUrl()}/blogs/covers/${fileName}`;
 };
 
+const getPropertyNewsCoverImageUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/property-news/covers/${fileName}`;
+};
+
+const getPropertyNewsImageUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/property-news/images/${fileName}`;
+};
+
 module.exports = {
     getImagekitFileUrl: exports.getImagekitFileUrl,
     getPropertyMediaUrl,
@@ -87,6 +97,8 @@ module.exports = {
     getAmenityIconUrl,
     getFurnitureIconUrl,
     getBlogCoverImageUrl,
+    getPropertyNewsCoverImageUrl,
+    getPropertyNewsImageUrl,
 };
 
 

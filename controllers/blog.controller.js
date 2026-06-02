@@ -53,12 +53,21 @@ const buildBlogFilter = (query, includeStatus = false) => {
         filter.isFeatured = query.isFeatured;
     }
 
+    if (query.readTime !== undefined) {
+        filter.readTime = query.readTime;
+    }
+
+    if (query.tags && query.tags.length) {
+        filter.tags = { $in: query.tags };
+    }
+
     if (query.search) {
         filter.$or = [
             { title: { $regex: query.search, $options: 'i' } },
             { summary: { $regex: query.search, $options: 'i' } },
             { category: { $regex: query.search, $options: 'i' } },
             { authorName: { $regex: query.search, $options: 'i' } },
+            { tags: { $regex: query.search, $options: 'i' } },
         ];
     }
 
@@ -72,6 +81,8 @@ exports.createBlog = async (req, res) => {
             summary,
             content,
             category,
+            readTime = 0,
+            tags = [],
             views,
             status: blogStatus = 'draft',
             isFeatured = false,
@@ -95,6 +106,8 @@ exports.createBlog = async (req, res) => {
             coverImage,
             category,
             authorName,
+            readTime,
+            tags,
             adminId: req.user.id,
             views: views || 0,
             status: blogStatus,
@@ -307,7 +320,7 @@ exports.updateBlog = async (req, res) => {
             });
         }
 
-        const fields = ['title', 'summary', 'content', 'category', 'authorName', 'views', 'status', 'isFeatured', 'publishedAt'];
+        const fields = ['title', 'summary', 'content', 'category', 'authorName', 'readTime', 'tags', 'views', 'status', 'isFeatured', 'publishedAt'];
 
         fields.forEach((field) => {
             if (req.body[field] !== undefined) {

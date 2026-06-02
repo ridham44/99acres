@@ -4273,6 +4273,8 @@ Blogs support public user-side reads and protected admin-side CRUD. Blog cover i
 - `coverImage` - optional image file in `form-data`; stored in DB as file name only.
 - `category` - required string.
 - `authorName` - optional string; defaults to admin name from JWT or `Admin`.
+- `readTime` - optional number, usually reading time in minutes.
+- `tags` - optional array of tags such as `["#sell", "#ahmedabad"]`. In form-data, send JSON array string or comma-separated tags like `#sell,#ahmedabad`.
 - `adminId` - set automatically from authenticated admin JWT.
 - `views` - number, defaults to `0`.
 - `status` - one of `draft`, `published`, `archived`; defaults to `draft`.
@@ -4285,7 +4287,7 @@ Allowed cover image types: `jpg`, `jpeg`, `png`, `webp`. Max size: `5 MB`.
 
 #### Get Published Blogs
 
-`GET {{baseUrl}}/blogs?page=1&limit=10&search=home&category=Market&isFeatured=true`
+`GET {{baseUrl}}/blogs?page=1&limit=10&search=home&category=Market`
 GET /blogs?
 search=ahmedabad
 &category=Property Buying Guide
@@ -4294,6 +4296,42 @@ search=ahmedabad
 &publishedTo=2026-12-31
 &page=1
 &limit=10
+
+{
+    "success": true,
+    "message": "Blogs fetched successfully",
+    "data": [
+        {
+            "_id": "6a1ea941a4e315ba7658def6",
+            "title": "Best Areas to Buy Property in Ahmedabad in 2026",
+            "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
+            "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
+            "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
+            "coverImage": "1780394303068-b.jpg",
+            "category": "Property Buying Guide",
+            "authorName": "99acres Editorial Team",
+            "adminId": "6a199b556ff5abc84f938084",
+            "views": 2,
+            "status": "published",
+            "isFeatured": true,
+            "publishedAt": "2026-06-02T09:58:25.154Z",
+            "deletedAt": null,
+            "createdAt": "2026-06-02T09:58:25.164Z",
+            "updatedAt": "2026-06-02T11:02:09.083Z",
+            "__v": 1,
+            "readTime": 8,
+            "tags": [
+                "#sell",
+                "#surat"
+            ],
+            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
+        }
+    ],
+    "pagination": null,
+    "meta": {
+        "totalBlogs": 1
+    }
+}
 
 Auth: not required.
 
@@ -4304,7 +4342,8 @@ Query params:
 - `page`, `limit` - optional pagination.
 - `search` - searches title, summary, category, and author name.
 - `category` - filters by category.
-- `isFeatured` - `true` or `false`.
+- `tag` or `tags` - filters by one or more tags, for example `?tag=#sell` or `?tags=#sell,#ahmedabad`.
+- `readTime` - filters by exact read time number.
 
 #### Get Published Blog By ID
 
@@ -4314,9 +4353,41 @@ Auth: not required.
 
 Each successful detail call increments `views` by `1`.
 
+{
+    "success": true,
+    "message": "Blog fetched successfully",
+    "data": {
+        "_id": "6a1ea941a4e315ba7658def6",
+        "title": "Best Areas to Buy Property in Ahmedabad in 2026",
+        "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
+        "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
+        "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
+        "coverImage": "1780394303068-b.jpg",
+        "category": "Property Buying Guide",
+        "authorName": "99acres Editorial Team",
+        "adminId": "6a199b556ff5abc84f938084",
+        "views": 3,
+        "status": "published",
+        "isFeatured": true,
+        "publishedAt": "2026-06-02T09:58:25.154Z",
+        "deletedAt": null,
+        "createdAt": "2026-06-02T09:58:25.164Z",
+        "updatedAt": "2026-06-02T11:03:56.076Z",
+        "__v": 1,
+        "readTime": 8,
+        "tags": [
+            "#sell",
+            "#surat"
+        ],
+        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
+    }
+}
+
 #### Get Published Blog By Slug
 
 `GET {{baseUrl}}/blogs/slug/:slug`
+
+http://localhost:5000/api/blogs/slug/best-areas-to-buy-property-in-ahmedabad-2026
 
 Auth: not required.
 
@@ -4343,6 +4414,8 @@ Form-data fields:
 - `coverImage` - optional file.
 - `category` - required.
 - `authorName` - optional.
+- `readTime` - optional number.
+- `tags` - optional JSON array string or comma-separated tags.
 - `views` - optional number.
 - `status` - optional: `draft`, `published`, `archived`.
 - `isFeatured` - optional boolean.
@@ -4352,24 +4425,33 @@ Example response:
 
 ```json
 {
-  "success": true,
-  "message": "Blog created successfully",
-  "data": {
-    "_id": "665f1b2c3d4e5f6789012345",
-    "title": "Real Estate Market Trends",
-    "slug": "real-estate-market-trends",
-    "summary": "Short blog summary",
-    "content": "<p>Full blog content</p>",
-    "coverImage": "1716982462000-cover.jpg",
-    "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1716982462000-cover.jpg",
-    "category": "Market",
-    "authorName": "Admin",
-    "adminId": "665f1b2c3d4e5f6789011111",
-    "views": 0,
-    "status": "published",
-    "isFeatured": true,
-    "publishedAt": "2026-06-02T10:00:00.000Z"
-  }
+    "success": true,
+    "message": "Blog updated successfully",
+    "data": {
+        "readTime": 8,
+        "tags": [
+            "#sell",
+            "#surat"
+        ],
+        "_id": "6a1ea941a4e315ba7658def6",
+        "title": "Best Areas to Buy Property in Ahmedabad in 2026",
+        "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
+        "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
+        "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
+        "coverImage": "1780394303068-b.jpg",
+        "category": "Property Buying Guide",
+        "authorName": "99acres Editorial Team",
+        "adminId": "6a199b556ff5abc84f938084",
+        "views": 2,
+        "status": "published",
+        "isFeatured": true,
+        "publishedAt": "2026-06-02T09:58:25.154Z",
+        "deletedAt": null,
+        "createdAt": "2026-06-02T09:58:25.164Z",
+        "updatedAt": "2026-06-02T11:02:09.083Z",
+        "__v": 1,
+        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
+    }
 }
 ```
 
@@ -4378,6 +4460,81 @@ Example response:
 `GET {{baseUrl}}/blogs/admin?page=1&limit=10&status=draft&search=market&category=Market&isFeatured=false`
 
 Returns draft, published, and archived blogs unless `status` is supplied. Admin reads do not increase `views`.
+
+{
+    "success": true,
+    "message": "Blogs fetched successfully",
+    "data": [
+        {
+            "_id": "6a1eb7f42b0d0df023f4e1f8",
+            "title": "Best Areas to Buy Property in Surat in 2026",
+            "slug": "best-areas-to-buy-property-in-surat-in-2026",
+            "summary": "Discover the top localities in Surat for property investment and future growth.",
+            "content": "<h2>Why Invest in Surat?</h2><p>Surat has emerged as one of India's fastest-growing real estate markets...</p>",
+            "coverImage": "1780398067008-b.jpg",
+            "category": "Property Buying Guide",
+            "authorName": "99acres Editorial Team",
+            "readTime": 6,
+            "tags": [
+                "#sell",
+                "#surat"
+            ],
+            "adminId": {
+                "_id": "6a199b556ff5abc84f938084",
+                "name": "Reva",
+                "role": "admin",
+                "phone": "9754641232",
+                "email": "reva@test.com"
+            },
+            "views": 0,
+            "status": "draft",
+            "isFeatured": false,
+            "publishedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-06-02T11:01:08.832Z",
+            "updatedAt": "2026-06-02T11:01:08.832Z",
+            "__v": 0,
+            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780398067008-b.jpg"
+        },
+        {
+            "_id": "6a1ea941a4e315ba7658def6",
+            "title": "Best Areas to Buy Property in Ahmedabad in 2026",
+            "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
+            "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
+            "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
+            "coverImage": "1780394303068-b.jpg",
+            "category": "Property Buying Guide",
+            "authorName": "99acres Editorial Team",
+            "adminId": {
+                "_id": "6a199b556ff5abc84f938084",
+                "name": "Reva",
+                "role": "admin",
+                "phone": "9754641232",
+                "email": "reva@test.com"
+            },
+            "views": 3,
+            "status": "published",
+            "isFeatured": true,
+            "publishedAt": "2026-06-02T09:58:25.154Z",
+            "deletedAt": null,
+            "createdAt": "2026-06-02T09:58:25.164Z",
+            "updatedAt": "2026-06-02T11:03:56.076Z",
+            "__v": 1,
+            "readTime": 8,
+            "tags": [
+                "#sell",
+                "#surat"
+            ],
+            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
+        }
+    ],
+    "pagination": {
+        "total": 2,
+        "page": 1,
+        "limit": 10,
+        "totalPages": 1
+    }
+}
 
 #### Get Blog By ID For Admin
 
@@ -4398,3 +4555,217 @@ Any blog field can be updated. If a new `coverImage` file is sent, it is uploade
 `DELETE {{baseUrl}}/blogs/admin/:id`
 
 Permanently deletes the blog from MongoDB.
+## Property News API
+
+Property news supports admin-side CRUD and user-side published reads on `/property-news`. Cover images are uploaded to ImageKit under `property-news/covers/`. Only the ImageKit file name is stored in MongoDB as `coverImage`; API responses include `coverImageUrl`.
+
+### Property News Fields
+
+- `title` - required string.
+- `slug` - optional on create; generated from `title` when not provided.
+- `summary` - required string.
+- `content` - required string.
+- `coverImage` - optional single image file in `form-data`.
+- `images` - optional repeated image files in `form-data`, maximum 5 images.
+- `city` - required string.
+- `authorName` - optional string; defaults to admin name from JWT or `Admin`.
+- `adminId` - set automatically from authenticated admin JWT.
+- `views` - number, defaults to `0`.
+- `status` - `draft`, `published`, or `archived`; defaults to `draft`.
+- `isFeatured` - boolean, defaults to `false`.
+- `publishedAt` - optional date; auto-set when status is `published` and no date is supplied.
+- `createdAt`, `updatedAt` - managed automatically by MongoDB timestamps.
+
+Allowed image types: `jpg`, `jpeg`, `png`, `webp`. Max size: `5 MB` per image.
+
+### Admin Property News APIs
+
+Admin write APIs require:
+
+`Authorization: Bearer {{adminToken}}`
+
+#### Create Property News
+
+`POST {{baseUrl}}/property-news`
+
+Use `form-data` when uploading `coverImage` or `images`; otherwise JSON is accepted.
+
+#### Get Property News
+
+`GET {{baseUrl}}/property-news`
+
+Without auth, returns only published user-side news. With a valid admin token, returns all statuses and supports `status=draft|published|archived`.
+
+
+response with admin auth
+{
+    "success": true,
+    "message": "Property news fetched successfully",
+    "data": [
+        {
+            "_id": "6a1ec0e1e657b3d081305595",
+            "title": "Ahmedabad Metro Phase 2 Expected to Boost Property Prices",
+            "slug": "ahmedabad-metro-phase-2-expected-to-boost-property-prices",
+            "summary": "Real estate experts predict significant appreciation in property values along the new metro corridor.",
+            "content": "<p>Ahmedabad Metro Phase 2 is expected to improve connectivity and increase demand for residential properties...</p>",
+            "coverImage": "1780400345476-b.jpg",
+            "images": [
+                "1780400347151-download.png",
+                "1780400348455-download.png",
+                "1780400349742-download.png",
+                "1780400351053-download.png",
+                "1780400352405-download.png"
+            ],
+            "city": "Ahmedabad",
+            "authorName": "99acres News Desk",
+            "adminId": {
+                "_id": "6a199b556ff5abc84f938084",
+                "name": "Reva",
+                "role": "admin",
+                "phone": "9754641232",
+                "email": "reva@test.com"
+            },
+            "views": 0,
+            "status": "published",
+            "isFeatured": true,
+            "publishedAt": "2026-06-02T11:39:13.835Z",
+            "createdAt": "2026-06-02T11:39:14.008Z",
+            "updatedAt": "2026-06-02T11:39:14.008Z",
+            "__v": 0,
+            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780400345476-b.jpg",
+            "imageUrls": [
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400347151-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400348455-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400349742-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400351053-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400352405-download.png"
+            ]
+        }
+    ],
+    "pagination": null,
+    "meta": {
+        "totalPropertyNews": 1,
+        "mode": "admin"
+    }
+}
+
+response without auth or user auth 
+{
+    "success": true,
+    "message": "Property news fetched successfully",
+    "data": [
+        {
+            "_id": "6a1ec0e1e657b3d081305595",
+            "title": "Ahmedabad Metro Phase 2 Expected to Boost Property Prices",
+            "slug": "ahmedabad-metro-phase-2-expected-to-boost-property-prices",
+            "summary": "Real estate experts predict significant appreciation in property values along the new metro corridor.",
+            "content": "<p>Ahmedabad Metro Phase 2 is expected to improve connectivity and increase demand for residential properties...</p>",
+            "coverImage": "1780400345476-b.jpg",
+            "images": [
+                "1780400347151-download.png",
+                "1780400348455-download.png",
+                "1780400349742-download.png",
+                "1780400351053-download.png",
+                "1780400352405-download.png"
+            ],
+            "city": "Ahmedabad",
+            "authorName": "99acres News Desk",
+            "adminId": "6a199b556ff5abc84f938084",
+            "views": 1,
+            "status": "published",
+            "isFeatured": true,
+            "publishedAt": "2026-06-02T11:39:13.835Z",
+            "createdAt": "2026-06-02T11:39:14.008Z",
+            "updatedAt": "2026-06-02T11:41:30.742Z",
+            "__v": 0,
+            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780400345476-b.jpg",
+            "imageUrls": [
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400347151-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400348455-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400349742-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400351053-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400352405-download.png"
+            ]
+        }
+    ],
+    "pagination": null,
+    "meta": {
+        "totalPropertyNews": 1,
+        "mode": "public"
+    }
+}
+
+#### Get Property News By ID
+
+`GET {{baseUrl}}/property-news/:id`
+
+same condtion response with admin auth will show tatus=draft|published|archived` also addtional info admin like id name etc 
+without auth or user auth it will only show published and no admin info 
+{
+    "success": true,
+    "message": "Property news fetched successfully",
+    "data": {
+        "_id": "6a1ec0e1e657b3d081305595",
+        "title": "Ahmedabad Metro Phase 2 Expected to Boost Property Prices",
+        "slug": "ahmedabad-metro-phase-2-expected-to-boost-property-prices",
+        "summary": "Real estate experts predict significant appreciation in property values along the new metro corridor.",
+        "content": "<p>Ahmedabad Metro Phase 2 is expected to improve connectivity and increase demand for residential properties...</p>",
+        "coverImage": "1780400345476-b.jpg",
+        "images": [
+            "1780400347151-download.png",
+            "1780400348455-download.png",
+            "1780400349742-download.png",
+            "1780400351053-download.png",
+            "1780400352405-download.png"
+        ],
+        "city": "Ahmedabad",
+        "authorName": "99acres News Desk",
+        "adminId": "6a199b556ff5abc84f938084",
+        "views": 1,
+        "status": "published",
+        "isFeatured": true,
+        "publishedAt": "2026-06-02T11:39:13.835Z",
+        "createdAt": "2026-06-02T11:39:14.008Z",
+        "updatedAt": "2026-06-02T11:41:30.742Z",
+        "__v": 0,
+        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780400345476-b.jpg",
+        "imageUrls": [
+            "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400347151-download.png",
+            "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400348455-download.png",
+            "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400349742-download.png",
+            "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400351053-download.png",
+            "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400352405-download.png"
+        ]
+    }
+}
+Without auth, returns only published news and increments `views`. With a valid admin token, returns any status and does not increment `views`.
+
+#### Update Property News
+
+`PUT {{baseUrl}}/property-news/:id`
+
+Admin only. Use `form-data` to replace `coverImage` or the `images` array. The `images` field accepts up to 5 files.
+
+#### Delete Property News
+
+`DELETE {{baseUrl}}/property-news/:id`
+
+Admin only. Permanently deletes the property news record from MongoDB.
+
+### User Property News APIs
+
+#### Get Published Property News
+
+`GET {{baseUrl}}/property-news`
+
+Supported filters:
+
+- `GET {{baseUrl}}/property-news?search=metro`
+- `GET {{baseUrl}}/property-news?city=Ahmedabad`
+- `GET {{baseUrl}}/property-news?page=1&limit=10`
+
+#### Get Published Property News By ID
+
+`GET {{baseUrl}}/property-news/:id`
+
+Each successful public detail call increments `views` by `1`.
