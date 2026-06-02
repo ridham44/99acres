@@ -4769,3 +4769,495 @@ Supported filters:
 `GET {{baseUrl}}/property-news/:id`
 
 Each successful public detail call increments `views` by `1`.
+## Guides API
+
+Guides use three collections:
+
+- `Guide`
+- `GuideChapter`
+- `GuideTakeaway`
+
+Guide cover images are uploaded to ImageKit under `guides/covers/`. Only the ImageKit file name is stored in MongoDB as `coverImage`; API responses include `coverImageUrl`.
+
+### Guide Fields
+
+- `title` - required string.
+- `slug` - optional on create; generated from `title` when not provided.
+- `shortDescription` - required string.
+- `coverImage` - optional image file in `form-data`.
+- `authorName` - optional string; defaults to admin name from JWT or `Admin`.
+- `adminId` - set automatically from authenticated admin JWT.
+- `views` - number, defaults to `0`.
+- `status` - `draft`, `published`, or `archived`; defaults to `draft`.
+- `isFeatured` - boolean, defaults to `false`.
+- `publishedAt` - optional date; auto-set when status is `published` and no date is supplied.
+
+### Guide Chapter Fields
+
+- `guideId` - set from route param.
+- `title` - required string.
+- `content` - required string.
+- `sortOrder` - optional number, defaults to `0`.
+
+### Guide Takeaway Fields
+
+- `guideId` - set from route param.
+- `content` - required string.
+- `sortOrder` - optional number, defaults to `0`.
+
+### User Guide APIs
+
+#### Get Published Guides
+
+`GET {{baseUrl}}/guides?search=sell&isFeatured=true&page=1&limit=10`
+
+Auth: not required.
+
+Returns only published guides whose `publishedAt` is not in the future.
+
+Supported filters:
+
+- `search` - searches title, slug, short description, and author name.
+- `page`, `limit` - optional pagination.
+
+{
+    "success": true,
+    "message": "Guides fetched successfully",
+    "data": [
+        {
+            "_id": "6a1ed4d4ebe30a59a7ce1fab",
+            "title": "Home Buyer Guide",
+            "slug": "home-buyer-guide",
+            "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+            "coverImage": "1780405459099-b.jpg",
+            "authorName": "Research Panel",
+            "adminId": "6a199b556ff5abc84f938084",
+            "views": 0,
+            "status": "published",
+            "isFeatured": true,
+            "publishedAt": "2026-06-02T13:04:20.685Z",
+            "createdAt": "2026-06-02T13:04:20.689Z",
+            "updatedAt": "2026-06-02T13:04:20.689Z",
+            "__v": 0,
+            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg"
+        }
+    ],
+    "pagination": null,
+    "meta": {
+        "totalGuides": 1
+    }
+}
+#### Get Published Guide By ID
+
+`GET {{baseUrl}}/guides/:id`
+
+Auth: not required.
+
+Returns the guide with ordered `chapters` and `takeaways`. Each successful public detail call increments `views` by `1`.
+{
+    "success": true,
+    "message": "Guide fetched successfully",
+    "data": {
+        "_id": "6a1ed4d4ebe30a59a7ce1fab",
+        "title": "Home Buyer Guide",
+        "slug": "home-buyer-guide",
+        "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+        "coverImage": "1780405459099-b.jpg",
+        "authorName": "Research Panel",
+        "adminId": "6a199b556ff5abc84f938084",
+        "views": 1,
+        "status": "published",
+        "isFeatured": true,
+        "publishedAt": "2026-06-02T13:04:20.685Z",
+        "createdAt": "2026-06-02T13:04:20.689Z",
+        "updatedAt": "2026-06-02T13:31:38.629Z",
+        "__v": 0,
+        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
+        "chapters": [
+            {
+                "_id": "6a1ed7758f6765bad3bad218",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Capital Allocation & Pre-Approval",
+                "content": "Before cross-referencing neighborhood listing modules...",
+                "sortOrder": 1,
+                "createdAt": "2026-06-02T13:15:33.533Z",
+                "updatedAt": "2026-06-02T13:15:33.533Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1ed7b58f6765bad3bad219",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Micro-Market Due Diligence",
+                "content": "Evaluate locality growth indicators...",
+                "sortOrder": 2,
+                "createdAt": "2026-06-02T13:16:38.035Z",
+                "updatedAt": "2026-06-02T13:16:38.035Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1ed8ed8f6765bad3bad21b",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Transaction Execution & Escrow",
+                "content": "The closing sequence requires processing...",
+                "sortOrder": 3,
+                "createdAt": "2026-06-02T13:21:49.575Z",
+                "updatedAt": "2026-06-02T13:21:49.575Z",
+                "__v": 0
+            }
+        ],
+        "takeaways": [
+            {
+                "_id": "6a1ed9808f6765bad3bad21c",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "content": "Always verify builder RERA indices prior to initial allocation",
+                "sortOrder": 1,
+                "createdAt": "2026-06-02T13:24:16.128Z",
+                "updatedAt": "2026-06-02T13:24:16.128Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1edae68f6765bad3bad21e",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "content": "Maintain a 5% liquid capital cushion for registration fees.",
+                "sortOrder": 2,
+                "createdAt": "2026-06-02T13:30:14.263Z",
+                "updatedAt": "2026-06-02T13:30:14.263Z",
+                "__v": 0
+            }
+        ]
+    }
+}
+#### Get Published Guide By Slug
+
+`GET {{baseUrl}}/guides/slug/:slug`
+
+Auth: not required.
+
+Returns the guide with ordered `chapters` and `takeaways`. Each successful public detail call increments `views` by `1`.
+
+{
+    "success": true,
+    "message": "Guide fetched successfully",
+    "data": {
+        "_id": "6a1ed4d4ebe30a59a7ce1fab",
+        "title": "Home Buyer Guide",
+        "slug": "home-buyer-guide",
+        "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+        "coverImage": "1780405459099-b.jpg",
+        "authorName": "Research Panel",
+        "adminId": "6a199b556ff5abc84f938084",
+        "views": 3,
+        "status": "published",
+        "isFeatured": true,
+        "publishedAt": "2026-06-02T13:04:20.685Z",
+        "createdAt": "2026-06-02T13:04:20.689Z",
+        "updatedAt": "2026-06-02T13:33:06.737Z",
+        "__v": 0,
+        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
+        "chapters": [
+            {
+                "_id": "6a1ed7758f6765bad3bad218",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Capital Allocation & Pre-Approval",
+                "content": "Before cross-referencing neighborhood listing modules...",
+                "sortOrder": 1,
+                "createdAt": "2026-06-02T13:15:33.533Z",
+                "updatedAt": "2026-06-02T13:15:33.533Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1ed7b58f6765bad3bad219",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Micro-Market Due Diligence",
+                "content": "Evaluate locality growth indicators...",
+                "sortOrder": 2,
+                "createdAt": "2026-06-02T13:16:38.035Z",
+                "updatedAt": "2026-06-02T13:16:38.035Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1ed8ed8f6765bad3bad21b",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Transaction Execution & Escrow",
+                "content": "The closing sequence requires processing...",
+                "sortOrder": 3,
+                "createdAt": "2026-06-02T13:21:49.575Z",
+                "updatedAt": "2026-06-02T13:21:49.575Z",
+                "__v": 0
+            }
+        ],
+        "takeaways": [
+            {
+                "_id": "6a1ed9808f6765bad3bad21c",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "content": "Always verify builder RERA indices prior to initial allocation",
+                "sortOrder": 1,
+                "createdAt": "2026-06-02T13:24:16.128Z",
+                "updatedAt": "2026-06-02T13:24:16.128Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1edae68f6765bad3bad21e",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "content": "Maintain a 5% liquid capital cushion for registration fees.",
+                "sortOrder": 2,
+                "createdAt": "2026-06-02T13:30:14.263Z",
+                "updatedAt": "2026-06-02T13:30:14.263Z",
+                "__v": 0
+            }
+        ]
+    }
+}
+
+### Admin Guide APIs
+
+All admin guide APIs require:
+
+`Authorization: Bearer {{adminToken}}`
+
+#### Create Guide
+
+`POST {{baseUrl}}/guides/admin`
+
+Use `form-data` when uploading `coverImage`; otherwise JSON is accepted.
+
+#### Get All Guides For Admin
+
+`GET {{baseUrl}}/guides/admin?page=1&limit=10&status=draft&search=sell&isFeatured=false`
+
+Returns draft, published, and archived guides. Admin reads do not increase `views`.
+
+{
+    "success": true,
+    "message": "Guides fetched successfully",
+    "data": [
+        {
+            "_id": "6a1ed4d4ebe30a59a7ce1fab",
+            "title": "Home Buyer Guide",
+            "slug": "home-buyer-guide",
+            "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+            "coverImage": "1780405459099-b.jpg",
+            "authorName": "Research Panel",
+            "adminId": {
+                "_id": "6a199b556ff5abc84f938084",
+                "name": "Reva",
+                "role": "admin",
+                "phone": "9754641232",
+                "email": "reva@test.com"
+            },
+            "views": 0,
+            "status": "published",
+            "isFeatured": true,
+            "publishedAt": "2026-06-02T13:04:20.685Z",
+            "createdAt": "2026-06-02T13:04:20.689Z",
+            "updatedAt": "2026-06-02T13:04:20.689Z",
+            "__v": 0,
+            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg"
+        }
+    ],
+    "pagination": {
+        "total": 1,
+        "page": 1,
+        "limit": 10,
+        "totalPages": 1
+    }
+}
+
+#### Get Guide By ID For Admin
+
+`GET {{baseUrl}}/guides/admin/:id`
+
+Returns the guide with all ordered chapters and takeaways. Admin reads do not increase `views`.
+
+{
+    "success": true,
+    "message": "Guide fetched successfully",
+    "data": {
+        "_id": "6a1ed4d4ebe30a59a7ce1fab",
+        "title": "Home Buyer Guide",
+        "slug": "home-buyer-guide",
+        "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+        "coverImage": "1780405459099-b.jpg",
+        "authorName": "Research Panel",
+        "adminId": {
+            "_id": "6a199b556ff5abc84f938084",
+            "name": "Reva",
+            "role": "admin",
+            "phone": "9754641232",
+            "email": "reva@test.com"
+        },
+        "views": 0,
+        "status": "published",
+        "isFeatured": true,
+        "publishedAt": "2026-06-02T13:04:20.685Z",
+        "createdAt": "2026-06-02T13:04:20.689Z",
+        "updatedAt": "2026-06-02T13:04:20.689Z",
+        "__v": 0,
+        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
+        "chapters": [
+            {
+                "_id": "6a1ed7758f6765bad3bad218",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Capital Allocation & Pre-Approval",
+                "content": "Before cross-referencing neighborhood listing modules...",
+                "sortOrder": 1,
+                "createdAt": "2026-06-02T13:15:33.533Z",
+                "updatedAt": "2026-06-02T13:15:33.533Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1ed7b58f6765bad3bad219",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Micro-Market Due Diligence",
+                "content": "Evaluate locality growth indicators...",
+                "sortOrder": 2,
+                "createdAt": "2026-06-02T13:16:38.035Z",
+                "updatedAt": "2026-06-02T13:16:38.035Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1ed8ed8f6765bad3bad21b",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "title": "Transaction Execution & Escrow",
+                "content": "The closing sequence requires processing...",
+                "sortOrder": 3,
+                "createdAt": "2026-06-02T13:21:49.575Z",
+                "updatedAt": "2026-06-02T13:21:49.575Z",
+                "__v": 0
+            }
+        ],
+        "takeaways": [
+            {
+                "_id": "6a1ed9808f6765bad3bad21c",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "content": "Always verify builder RERA indices prior to initial allocation",
+                "sortOrder": 1,
+                "createdAt": "2026-06-02T13:24:16.128Z",
+                "updatedAt": "2026-06-02T13:24:16.128Z",
+                "__v": 0
+            },
+            {
+                "_id": "6a1ed99b8f6765bad3bad21d",
+                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+                "content": "Maintain a 5% liquid capital cushion for registration fees.",
+                "sortOrder": 2,
+                "createdAt": "2026-06-02T13:24:43.331Z",
+                "updatedAt": "2026-06-02T13:24:43.331Z",
+                "__v": 0
+            }
+        ]
+    }
+}
+
+#### Update Guide
+
+`PUT {{baseUrl}}/guides/admin/:id`
+
+Use `form-data` when replacing `coverImage`.
+
+#### Delete Guide
+
+`DELETE {{baseUrl}}/guides/admin/:id`
+
+Hard deletes the guide and permanently deletes its chapters and takeaways.
+
+### Admin Guide Chapter APIs
+
+#### Create Chapter
+
+`POST {{baseUrl}}/guides/admin/:guideId/chapters`
+
+#### Get Chapters
+
+`GET {{baseUrl}}/guides/admin/:guideId/chapters`
+{
+    "success": true,
+    "message": "Guide chapters fetched successfully",
+    "data": [
+        {
+            "_id": "6a1ed7758f6765bad3bad218",
+            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+            "title": "Capital Allocation & Pre-Approval",
+            "content": "Before cross-referencing neighborhood listing modules...",
+            "sortOrder": 1,
+            "createdAt": "2026-06-02T13:15:33.533Z",
+            "updatedAt": "2026-06-02T13:15:33.533Z",
+            "__v": 0
+        },
+        {
+            "_id": "6a1ed7b58f6765bad3bad219",
+            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+            "title": "Micro-Market Due Diligence",
+            "content": "Evaluate locality growth indicators...",
+            "sortOrder": 2,
+            "createdAt": "2026-06-02T13:16:38.035Z",
+            "updatedAt": "2026-06-02T13:16:38.035Z",
+            "__v": 0
+        },
+        {
+            "_id": "6a1ed7f88f6765bad3bad21a",
+            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+            "title": "Transaction Execution & Escrow",
+            "content": "The closing sequence requires processing...",
+            "sortOrder": 3,
+            "createdAt": "2026-06-02T13:17:44.603Z",
+            "updatedAt": "2026-06-02T13:17:44.603Z",
+            "__v": 0
+        }
+    ]
+}
+
+#### Update Chapter
+
+`PUT {{baseUrl}}/guides/admin/chapters/:id`
+
+#### Delete Chapter
+
+`DELETE {{baseUrl}}/guides/admin/chapters/:id`
+
+Hard deletes the chapter.
+
+### Admin Guide Takeaway APIs
+
+#### Create Takeaway
+
+`POST {{baseUrl}}/guides/admin/:guideId/takeaways`
+
+#### Get Takeaways
+
+`GET {{baseUrl}}/guides/admin/:guideId/takeaways`
+
+{
+    "success": true,
+    "message": "Guide takeaways fetched successfully",
+    "data": [
+        {
+            "_id": "6a1ed9808f6765bad3bad21c",
+            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+            "content": "Always verify builder RERA indices prior to initial allocation",
+            "sortOrder": 1,
+            "createdAt": "2026-06-02T13:24:16.128Z",
+            "updatedAt": "2026-06-02T13:24:16.128Z",
+            "__v": 0
+        },
+        {
+            "_id": "6a1ed99b8f6765bad3bad21d",
+            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
+            "content": "Maintain a 5% liquid capital cushion for registration fees.",
+            "sortOrder": 2,
+            "createdAt": "2026-06-02T13:24:43.331Z",
+            "updatedAt": "2026-06-02T13:24:43.331Z",
+            "__v": 0
+        }
+    ]
+}
+
+#### Update Takeaway
+
+`PUT {{baseUrl}}/guides/admin/takeaways/:id`
+
+#### Delete Takeaway
+
+`DELETE {{baseUrl}}/guides/admin/takeaways/:id`
+
+Hard deletes the takeaway.

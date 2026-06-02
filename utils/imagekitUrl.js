@@ -84,6 +84,11 @@ const getPropertyNewsImageUrl = (fileName) => {
     return `${getBaseUrl()}/property-news/images/${fileName}`;
 };
 
+const getGuideCoverImageUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/guides/covers/${fileName}`;
+};
+
 module.exports = {
     getImagekitFileUrl: exports.getImagekitFileUrl,
     getPropertyMediaUrl,
@@ -99,6 +104,7 @@ module.exports = {
     getBlogCoverImageUrl,
     getPropertyNewsCoverImageUrl,
     getPropertyNewsImageUrl,
+    getGuideCoverImageUrl,
 };
 
 
