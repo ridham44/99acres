@@ -69,6 +69,11 @@ const getFurnitureIconUrl = (fileName) => {
     return `${getBaseUrl()}/furniture/icons/${fileName}`;
 };
 
+const getBlogCoverImageUrl = (fileName) => {
+    if (!fileName) return null;
+    return `${getBaseUrl()}/blogs/covers/${fileName}`;
+};
+
 module.exports = {
     getImagekitFileUrl: exports.getImagekitFileUrl,
     getPropertyMediaUrl,
@@ -81,6 +86,7 @@ module.exports = {
     getNearbyPlaceIconUrl,
     getAmenityIconUrl,
     getFurnitureIconUrl,
+    getBlogCoverImageUrl,
 };
 
 

@@ -28,5 +28,6 @@ router.use("/builders", require("./builder.route"));
 router.use("/notifications", require("./notification.route"));
 router.use("/admin", require("./admin.route"));
 router.use("/banks", require("./bank.route"));
+router.use("/blogs", require("./blog.route"));
 
 module.exports = router;

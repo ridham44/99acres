@@ -4260,3 +4260,141 @@ Landmarks are automatically returned when querying property details or updates:
 
 
 
+## Blogs API
+
+Blogs support public user-side reads and protected admin-side CRUD. Blog cover images are uploaded to ImageKit under `blogs/covers/`. Only the uploaded ImageKit file name is stored in MongoDB as `coverImage`; API responses include `coverImageUrl`.
+
+### Blog Fields
+
+- `title` - required string.
+- `slug` - optional on create; if not provided, generated from `title`. Must be unique among non-deleted blogs.
+- `summary` - required string.
+- `content` - required string.
+- `coverImage` - optional image file in `form-data`; stored in DB as file name only.
+- `category` - required string.
+- `authorName` - optional string; defaults to admin name from JWT or `Admin`.
+- `adminId` - set automatically from authenticated admin JWT.
+- `views` - number, defaults to `0`.
+- `status` - one of `draft`, `published`, `archived`; defaults to `draft`.
+- `isFeatured` - boolean, defaults to `false`.
+- `publishedAt` - optional date; auto-set when status is `published` and no date is provided.
+
+Allowed cover image types: `jpg`, `jpeg`, `png`, `webp`. Max size: `5 MB`.
+
+### User-Side Blog APIs
+
+#### Get Published Blogs
+
+`GET {{baseUrl}}/blogs?page=1&limit=10&search=home&category=Market&isFeatured=true`
+GET /blogs?
+search=ahmedabad
+&category=Property Buying Guide
+&authorName=Admin
+&publishedFrom=2026-01-01
+&publishedTo=2026-12-31
+&page=1
+&limit=10
+
+Auth: not required.
+
+Returns only published, non-deleted blogs whose `publishedAt` is not in the future.
+
+Query params:
+
+- `page`, `limit` - optional pagination.
+- `search` - searches title, summary, category, and author name.
+- `category` - filters by category.
+- `isFeatured` - `true` or `false`.
+
+#### Get Published Blog By ID
+
+`GET {{baseUrl}}/blogs/:id`
+
+Auth: not required.
+
+Each successful detail call increments `views` by `1`.
+
+#### Get Published Blog By Slug
+
+`GET {{baseUrl}}/blogs/slug/:slug`
+
+Auth: not required.
+
+Each successful detail call increments `views` by `1`.
+
+### Admin Blog APIs
+
+All admin blog APIs require an admin JWT:
+
+`Authorization: Bearer {{adminToken}}`
+
+#### Create Blog
+
+`POST {{baseUrl}}/blogs/admin`
+
+Body type: `form-data` when uploading cover image, otherwise JSON.
+
+Form-data fields:
+
+- `title` - required.
+- `slug` - optional.
+- `summary` - required.
+- `content` - required.
+- `coverImage` - optional file.
+- `category` - required.
+- `authorName` - optional.
+- `views` - optional number.
+- `status` - optional: `draft`, `published`, `archived`.
+- `isFeatured` - optional boolean.
+- `publishedAt` - optional date.
+
+Example response:
+
+```json
+{
+  "success": true,
+  "message": "Blog created successfully",
+  "data": {
+    "_id": "665f1b2c3d4e5f6789012345",
+    "title": "Real Estate Market Trends",
+    "slug": "real-estate-market-trends",
+    "summary": "Short blog summary",
+    "content": "<p>Full blog content</p>",
+    "coverImage": "1716982462000-cover.jpg",
+    "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1716982462000-cover.jpg",
+    "category": "Market",
+    "authorName": "Admin",
+    "adminId": "665f1b2c3d4e5f6789011111",
+    "views": 0,
+    "status": "published",
+    "isFeatured": true,
+    "publishedAt": "2026-06-02T10:00:00.000Z"
+  }
+}
+```
+
+#### Get All Blogs For Admin
+
+`GET {{baseUrl}}/blogs/admin?page=1&limit=10&status=draft&search=market&category=Market&isFeatured=false`
+
+Returns draft, published, and archived blogs unless `status` is supplied. Admin reads do not increase `views`.
+
+#### Get Blog By ID For Admin
+
+`GET {{baseUrl}}/blogs/admin/:id`
+
+Admin detail reads do not increase `views`.
+
+#### Update Blog
+
+`PUT {{baseUrl}}/blogs/admin/:id`
+
+Body type: `form-data` when replacing cover image, otherwise JSON.
+
+Any blog field can be updated. If a new `coverImage` file is sent, it is uploaded to ImageKit and the stored `coverImage` file name is replaced.
+
+#### Delete Blog
+
+`DELETE {{baseUrl}}/blogs/admin/:id`
+
+Permanently deletes the blog from MongoDB.

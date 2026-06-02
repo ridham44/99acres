@@ -216,3 +216,23 @@ exports.deleteBank = async (req, res) => {
         });
     }
 };
+
+// Hard Delete All Banks
+exports.hardDeleteAllBanks = async (req, res) => {
+    try {
+        const result = await Bank.deleteMany({});
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'All banks permanently deleted successfully',
+            data: {
+                deletedCount: result.deletedCount,
+            },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};

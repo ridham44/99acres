@@ -18,6 +18,8 @@ router.post(
 
 router.get('/', controller.getBanks);
 
+router.delete('/hard-delete/all', auth, admin, controller.hardDeleteAllBanks);
+
 router.get('/:id', validation.validateBankId, controller.getBankById);
 
 router.put(

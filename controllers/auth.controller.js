@@ -333,6 +333,39 @@ exports.logout = async (req, res) => {
     }
 };
 
+exports.deleteUser = async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(status.BadRequest).json({
+            success: false,
+            message: 'Invalid user id',
+        });
+    }
+
+    try {
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
+
+        if (!deletedUser) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'User hard deleted successfully',
+            data: {
+                userId: deletedUser._id,
+            },
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 exports.getLogLoginList = async (req, res) => {
     try {
         const { page = 1, limit = 10, isAdmin, isLogin, userId, deviceType, search } = req.query;

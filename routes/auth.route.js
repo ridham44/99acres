@@ -23,7 +23,8 @@ router.post('/admin/login', validateLogin, controller.adminLogin);
 router.post('/admin/verify-login-otp', validateVerifyLoginOtp, controller.verifyAdminLoginOtp);
 router.post('/resend-otp', controller.resendOtp);
 router.post('/logout', auth, controller.logout);
+router.delete('/delete-user/:id', controller.deleteUser);
 router.get('/log-login', auth, admin, controller.getLogLoginList);
-router.get('/getAllUsers', auth, admin, controller.getAllUsers);
+router.get('/getAllUsers', controller.getAllUsers);
 
 module.exports = router;
