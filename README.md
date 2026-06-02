@@ -5261,3 +5261,183 @@ Hard deletes the chapter.
 `DELETE {{baseUrl}}/guides/admin/takeaways/:id`
 
 Hard deletes the takeaway.
+## Sponsors API
+
+Sponsors support public active reads and protected admin CRUD. Sponsor logos are uploaded to ImageKit under `sponsors/logos/`. Only the uploaded ImageKit file name is stored in MongoDB as `logo`; API responses include `logoUrl`.
+
+### Sponsor Fields
+
+- `name` - required string.
+- `logo` - optional image file in `form-data`.
+- `location` - required string.
+- `websiteUrl` - optional string.
+- `displayOrder` - optional number, defaults to `0`.
+- `status` - `active` or `inactive`, defaults to `active`.
+- `startDate` - optional date.
+- `endDate` - optional date.
+
+Allowed logo image types: `jpg`, `jpeg`, `png`, `webp`. Max size: `5 MB`.
+
+### User Sponsor APIs
+
+#### Get Active Sponsors
+
+`GET {{baseUrl}}/sponsors?search=bank&location=Ahmedabad&page=1&limit=10`
+
+Auth: not required.
+
+Returns only active sponsors whose date range is currently valid:
+
+- `startDate` is empty or already started.
+- `endDate` is empty or not expired.
+
+Supported filters:
+
+- `search` - searches name, location, and website URL.
+- `location` - filters by location.
+- `displayOrder` - filters by exact display order.
+- `page`, `limit` - optional pagination.
+
+{
+    "success": true,
+    "message": "Sponsors fetched successfully",
+    "data": [
+        {
+            "_id": "6a1edf5002dcc6b11d0e5faf",
+            "name": "Shreeji",
+            "logo": "1780408142538-b.jpg",
+            "location": "Ahmedabad",
+            "websiteUrl": "www.webearl.com",
+            "displayOrder": 1,
+            "status": "active",
+            "startDate": "2026-06-02T00:00:00.000Z",
+            "endDate": "2026-11-02T00:00:00.000Z",
+            "createdAt": "2026-06-02T13:49:04.774Z",
+            "updatedAt": "2026-06-02T13:49:04.774Z",
+            "__v": 0,
+            "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
+        },
+        {
+            "_id": "6a1ee08502dcc6b11d0e5fb1",
+            "name": "Trump",
+            "logo": "1780408451959-b.jpg",
+            "location": "Ahmedabad",
+            "websiteUrl": "www.webearl.com",
+            "displayOrder": 2,
+            "status": "active",
+            "startDate": null,
+            "endDate": null,
+            "createdAt": "2026-06-02T13:54:13.454Z",
+            "updatedAt": "2026-06-02T13:54:13.454Z",
+            "__v": 0,
+            "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408451959-b.jpg"
+        }
+    ],
+    "pagination": null,
+    "meta": {
+        "totalSponsors": 2
+    }
+}
+
+#### Get Active Sponsor By ID
+
+`GET {{baseUrl}}/sponsors/:id`
+
+Auth: not required.
+
+### Admin Sponsor APIs
+
+All admin sponsor APIs require:
+
+`Authorization: Bearer {{adminToken}}`
+
+#### Create Sponsor
+
+`POST {{baseUrl}}/sponsors/admin`
+
+Use `form-data` when uploading `logo`; otherwise JSON is accepted.
+
+#### Get All Sponsors For Admin
+
+`GET {{baseUrl}}/sponsors/admin?page=1&limit=10&status=active&search=bank&location=Ahmedabad`
+
+Returns active and inactive sponsors unless `status` is supplied.
+
+{
+    "success": true,
+    "message": "Sponsors fetched successfully",
+    "data": [
+        {
+            "_id": "6a1edf5002dcc6b11d0e5faf",
+            "name": "Shreeji",
+            "logo": "1780408142538-b.jpg",
+            "location": "Ahmedabad",
+            "websiteUrl": "www.webearl.com",
+            "displayOrder": 1,
+            "status": "active",
+            "startDate": "2026-06-02T00:00:00.000Z",
+            "endDate": "2026-11-02T00:00:00.000Z",
+            "createdAt": "2026-06-02T13:49:04.774Z",
+            "updatedAt": "2026-06-02T13:49:04.774Z",
+            "__v": 0,
+            "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
+        },
+        {
+            "_id": "6a1edf9302dcc6b11d0e5fb0",
+            "name": "Trump",
+            "logo": "1780408210497-b.jpg",
+            "location": "Ahmedabad",
+            "websiteUrl": "www.webearl.com",
+            "displayOrder": 2,
+            "status": "inactive",
+            "startDate": null,
+            "endDate": null,
+            "createdAt": "2026-06-02T13:50:11.932Z",
+            "updatedAt": "2026-06-02T13:50:11.932Z",
+            "__v": 0,
+            "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408210497-b.jpg"
+        }
+    ],
+    "pagination": {
+        "total": 2,
+        "page": 1,
+        "limit": 10,
+        "totalPages": 1
+    }
+}
+
+#### Get Sponsor By ID For Admin
+
+`GET {{baseUrl}}/sponsors/admin/:id`
+
+{
+    "success": true,
+    "message": "Sponsor fetched successfully",
+    "data": {
+        "_id": "6a1edf5002dcc6b11d0e5faf",
+        "name": "Shreeji",
+        "logo": "1780408142538-b.jpg",
+        "location": "Ahmedabad",
+        "websiteUrl": "www.webearl.com",
+        "displayOrder": 1,
+        "status": "active",
+        "startDate": "2026-06-02T00:00:00.000Z",
+        "endDate": "2026-11-02T00:00:00.000Z",
+        "createdAt": "2026-06-02T13:49:04.774Z",
+        "updatedAt": "2026-06-02T13:49:04.774Z",
+        "__v": 0,
+        "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
+    }
+}
+
+#### Update Sponsor
+
+`PUT {{baseUrl}}/sponsors/admin/:id`
+
+Use `form-data` when replacing `logo`.
+
+#### Delete Sponsor
+
+`DELETE {{baseUrl}}/sponsors/admin/:id`
+
+Hard deletes the sponsor from MongoDB.
