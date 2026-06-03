@@ -5492,3 +5492,108 @@ Use `form-data` when replacing `logo`.
 `DELETE {{baseUrl}}/sponsors/admin/:id`
 
 Hard deletes the sponsor from MongoDB.
+
+## Policy Changes API
+
+Base path: `/api/policy-changes`
+
+No authentication is required for these routes. Delete is a hard delete.
+
+Fields:
+
+- `title` - required string
+- `content` - required string
+- `status` - optional string: 'active','inactive'
+- `publishedAt` - optional date
+
+#### Create Policy Change
+
+`POST {{baseUrl}}/policy-changes`
+
+```json
+{
+    "title": "Privacy policy update",
+    "content": "We updated our privacy policy content.",
+    "status": "active",
+    "publishedAt": "2026-06-03T00:00:00.000Z"
+}
+```
+
+#### Get All Policy Changes
+
+`GET {{baseUrl}}/policy-changes?page=1&limit=10&status=published`
+
+Filters:
+
+- `page` - positive integer, default `1`
+- `limit` - positive integer, default `10`
+- `status` - 'active','inactive'
+{
+    "success": true,
+    "message": "Policy changes fetched successfully",
+    "data": [
+        {
+            "_id": "6a1fbf5f4f47eebde8fa8f63",
+            "title": "Privacy policy update",
+            "content": "We updated our privacy policy content.",
+            "status": "inactive",
+            "publishedAt": null,
+            "createdAt": "2026-06-03T05:45:03.225Z",
+            "updatedAt": "2026-06-03T05:45:03.225Z",
+            "__v": 0
+        },
+        {
+            "_id": "6a1fbe734f47eebde8fa8f62",
+            "title": "Terms of Service",
+            "content": "<h2>Account Security & Verification</h2><p>Welcome to our digital platform ecosystem...</p><h2>Prohibited Platform Misuse</h2><p>You explicitly agree not to deploy automated scrapers...</p>",
+            "status": "active",
+            "publishedAt": null,
+            "createdAt": "2026-06-03T05:41:07.529Z",
+            "updatedAt": "2026-06-03T05:41:07.529Z",
+            "__v": 0
+        }
+    ],
+    "pagination": {
+        "total": 2,
+        "page": 1,
+        "limit": 10,
+        "totalPages": 1
+    }
+}
+#### Get Policy Change By ID
+
+`GET {{baseUrl}}/policy-changes/:id`
+
+{
+    "success": true,
+    "message": "Policy change fetched successfully",
+    "data": {
+        "_id": "6a1fbf5f4f47eebde8fa8f63",
+        "title": "Privacy policy update",
+        "content": "We updated our privacy policy content.",
+        "status": "inactive",
+        "publishedAt": null,
+        "createdAt": "2026-06-03T05:45:03.225Z",
+        "updatedAt": "2026-06-03T05:45:03.225Z",
+        "__v": 0
+    }
+}
+
+#### Update Policy Change
+
+`PUT {{baseUrl}}/policy-changes/:id`
+
+```json
+{
+    "title": "Updated policy title",
+    "content": "Updated policy change content.",
+    "status": "draft",
+    "publishedAt": null
+}
+```
+
+#### Delete Policy Change
+
+`DELETE {{baseUrl}}/policy-changes/:id`
+
+Permanently deletes the policy change from MongoDB.

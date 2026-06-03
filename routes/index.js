@@ -20,6 +20,7 @@ router.use("/user-subscriptions", require("./userSubscription.route"));
 router.use("/requirements", require("./requirement.route"));
 router.use("/agents", require("./agent.route"));
 router.use("/privacy-policy", require("./privacyPolicy.route"));
+router.use("/policy-changes", require("./policyChange.route"));
 router.use("/terms-conditions", require("./termsCondition.route"));
 router.use("/support", require("./support.route"));
 router.use("/expert-in-areas", require("./expertInArea.route"));
