@@ -80,6 +80,10 @@ exports.validateCreatePropertyNews = (req, res, next) => {
             return sendError(res, 'city is required and must be a non-empty string');
         }
 
+        if (req.body.source !== undefined && typeof req.body.source !== 'string') {
+            return sendError(res, 'source must be a string');
+        }
+
         if (req.body.authorName !== undefined && !requiredString(req.body.authorName)) {
             return sendError(res, 'authorName must be a non-empty string');
         }
@@ -100,7 +104,7 @@ exports.validateCreatePropertyNews = (req, res, next) => {
             return sendError(res, 'publishedAt must be a valid date');
         }
 
-        trimFields(req.body, ['title', 'slug', 'summary', 'content', 'city', 'authorName', 'status']);
+        trimFields(req.body, ['title', 'slug', 'summary', 'content', 'city', 'source', 'authorName', 'status']);
         next();
     } catch (error) {
         return res.status(status.InternalServerError).json({
@@ -126,6 +130,10 @@ exports.validateUpdatePropertyNews = (req, res, next) => {
             }
         }
 
+        if (req.body.source !== undefined && typeof req.body.source !== 'string') {
+            return sendError(res, 'source must be a string');
+        }
+
         if (req.body.status !== undefined && !allowedStatuses.includes(req.body.status)) {
             return sendError(res, `status must be one of: ${allowedStatuses.join(', ')}`);
         }
@@ -142,7 +150,7 @@ exports.validateUpdatePropertyNews = (req, res, next) => {
             return sendError(res, 'publishedAt must be a valid date');
         }
 
-        trimFields(req.body, ['title', 'slug', 'summary', 'content', 'city', 'authorName', 'status']);
+        trimFields(req.body, ['title', 'slug', 'summary', 'content', 'city', 'source', 'authorName', 'status']);
         next();
     } catch (error) {
         return res.status(status.InternalServerError).json({

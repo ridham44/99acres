@@ -97,12 +97,17 @@ const buildFilter = (query, isAdminRequest = false) => {
             { summary: { $regex: query.search, $options: 'i' } },
             { content: { $regex: query.search, $options: 'i' } },
             { city: { $regex: query.search, $options: 'i' } },
+            { source: { $regex: query.search, $options: 'i' } },
             { authorName: { $regex: query.search, $options: 'i' } },
         ];
     }
 
     if (query.city) {
         filter.city = { $regex: query.city, $options: 'i' };
+    }
+
+    if (query.source) {
+        filter.source = { $regex: query.source, $options: 'i' };
     }
 
     if (query.isFeatured !== undefined) {
@@ -119,6 +124,7 @@ exports.createPropertyNews = async (req, res) => {
             summary,
             content,
             city,
+            source = '',
             views,
             status: newsStatus = 'draft',
             isFeatured = false,
@@ -150,6 +156,7 @@ exports.createPropertyNews = async (req, res) => {
             coverImage,
             images,
             city,
+            source,
             authorName,
             adminId: req.user.id,
             views: views || 0,
@@ -264,7 +271,7 @@ exports.updatePropertyNews = async (req, res) => {
             });
         }
 
-        const fields = ['title', 'summary', 'content', 'city', 'authorName', 'views', 'status', 'isFeatured', 'publishedAt'];
+        const fields = ['title', 'summary', 'content', 'city', 'source', 'authorName', 'views', 'status', 'isFeatured', 'publishedAt'];
         fields.forEach((field) => {
             if (req.body[field] !== undefined) {
                 propertyNews[field] = req.body[field];

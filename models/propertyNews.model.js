@@ -40,6 +40,11 @@ const propertyNewsSchema = new mongoose.Schema(
             trim: true,
             index: true,
         },
+        source: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         authorName: {
             type: String,
             required: true,

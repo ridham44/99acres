@@ -4287,7 +4287,8 @@ Allowed cover image types: `jpg`, `jpeg`, `png`, `webp`. Max size: `5 MB`.
 
 #### Get Published Blogs
 
-`GET {{baseUrl}}/blogs?page=1&limit=10&search=home&category=Market`
+`GET {{baseUrl}}/blogs
+?page=1&limit=10&search=home&category=Market`
 GET /blogs?
 search=ahmedabad
 &category=Property Buying Guide
@@ -4542,6 +4543,42 @@ Returns draft, published, and archived blogs unless `status` is supplied. Admin 
 
 Admin detail reads do not increase `views`.
 
+{
+    "success": true,
+    "message": "Blog fetched successfully",
+    "data": {
+        "_id": "6a1eb7f42b0d0df023f4e1f8",
+        "title": "Best Areas to Buy Property in Surat in 2026",
+        "slug": "best-areas-to-buy-property-in-surat-in-2026",
+        "summary": "Discover the top localities in Surat for property investment and future growth.",
+        "content": "<h2>Why Invest in Surat?</h2><p>Surat has emerged as one of India's fastest-growing real estate markets...</p>",
+        "coverImage": "1780398067008-b.jpg",
+        "category": "Property Buying Guide",
+        "authorName": "99acres Editorial Team",
+        "readTime": 6,
+        "tags": [
+            "#sell",
+            "#surat"
+        ],
+        "adminId": {
+            "_id": "6a199b556ff5abc84f938084",
+            "name": "Reva",
+            "role": "admin",
+            "phone": "9754641232",
+            "email": "reva@test.com"
+        },
+        "views": 0,
+        "status": "draft",
+        "isFeatured": false,
+        "publishedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-06-02T11:01:08.832Z",
+        "updatedAt": "2026-06-02T11:01:08.832Z",
+        "__v": 0,
+        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780398067008-b.jpg"
+    }
+}
+
 #### Update Blog
 
 `PUT {{baseUrl}}/blogs/admin/:id`
@@ -4555,6 +4592,7 @@ Any blog field can be updated. If a new `coverImage` file is sent, it is uploade
 `DELETE {{baseUrl}}/blogs/admin/:id`
 
 Permanently deletes the blog from MongoDB.
+
 ## Property News API
 
 Property news supports admin-side CRUD and user-side published reads on `/property-news`. Cover images are uploaded to ImageKit under `property-news/covers/`. Only the ImageKit file name is stored in MongoDB as `coverImage`; API responses include `coverImageUrl`.
@@ -4568,6 +4606,7 @@ Property news supports admin-side CRUD and user-side published reads on `/proper
 - `coverImage` - optional single image file in `form-data`.
 - `images` - optional repeated image files in `form-data`, maximum 5 images.
 - `city` - required string.
+- `source` - optional string, such as newspaper, portal, agency, or publication source.
 - `authorName` - optional string; defaults to admin name from JWT or `Admin`.
 - `adminId` - set automatically from authenticated admin JWT.
 - `views` - number, defaults to `0`.
@@ -4632,6 +4671,7 @@ response with admin auth
             "createdAt": "2026-06-02T11:39:14.008Z",
             "updatedAt": "2026-06-02T11:39:14.008Z",
             "__v": 0,
+            "source": "Government Press Release",
             "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780400345476-b.jpg",
             "imageUrls": [
                 "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400347151-download.png",
@@ -4655,40 +4695,46 @@ response without auth or user auth
     "message": "Property news fetched successfully",
     "data": [
         {
-            "_id": "6a1ec0e1e657b3d081305595",
+            "_id": "6a1ec661e657b3d081305596",
             "title": "Ahmedabad Metro Phase 2 Expected to Boost Property Prices",
             "slug": "ahmedabad-metro-phase-2-expected-to-boost-property-prices",
             "summary": "Real estate experts predict significant appreciation in property values along the new metro corridor.",
             "content": "<p>Ahmedabad Metro Phase 2 is expected to improve connectivity and increase demand for residential properties...</p>",
-            "coverImage": "1780400345476-b.jpg",
+            "coverImage": "1780401752936-b.jpg",
             "images": [
-                "1780400347151-download.png",
-                "1780400348455-download.png",
-                "1780400349742-download.png",
-                "1780400351053-download.png",
-                "1780400352405-download.png"
+                "1780401754451-download.png",
+                "1780401755766-download.png",
+                "1780401757102-download.png",
+                "1780401758411-download.png",
+                "1780401759726-download.png"
             ],
             "city": "Ahmedabad",
             "authorName": "99acres News Desk",
             "adminId": "6a199b556ff5abc84f938084",
-            "views": 1,
+            "views": 0,
             "status": "published",
             "isFeatured": true,
-            "publishedAt": "2026-06-02T11:39:13.835Z",
-            "createdAt": "2026-06-02T11:39:14.008Z",
-            "updatedAt": "2026-06-02T11:41:30.742Z",
+            "publishedAt": "2026-06-02T12:02:41.101Z",
+            "createdAt": "2026-06-02T12:02:41.147Z",
+            "updatedAt": "2026-06-02T12:02:41.147Z",
             "__v": 0,
-            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780400345476-b.jpg",
+            "source": "Government Press Release",
+            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780401752936-b.jpg",
             "imageUrls": [
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400347151-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400348455-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400349742-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400351053-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400352405-download.png"
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401754451-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401755766-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401757102-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401758411-download.png",
+                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401759726-download.png"
             ]
         }
     ],
-    "pagination": null,
+    "pagination": {
+        "total": 1,
+        "page": "1",
+        "limit": "10",
+        "totalPages": 1
+    },
     "meta": {
         "totalPropertyNews": 1,
         "mode": "public"
@@ -4728,6 +4774,7 @@ without auth or user auth it will only show published and no admin info
         "createdAt": "2026-06-02T11:39:14.008Z",
         "updatedAt": "2026-06-02T11:41:30.742Z",
         "__v": 0,
+        "source": "Government Press Release",
         "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780400345476-b.jpg",
         "imageUrls": [
             "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400347151-download.png",
@@ -4762,6 +4809,7 @@ Supported filters:
 
 - `GET {{baseUrl}}/property-news?search=metro`
 - `GET {{baseUrl}}/property-news?city=Ahmedabad`
+- `GET {{baseUrl}}/property-news?source=Times`
 - `GET {{baseUrl}}/property-news?page=1&limit=10`
 
 #### Get Published Property News By ID
@@ -4769,6 +4817,8 @@ Supported filters:
 `GET {{baseUrl}}/property-news/:id`
 
 Each successful public detail call increments `views` by `1`.
+
+
 ## Guides API
 
 Guides use three collections:
@@ -4809,7 +4859,8 @@ Guide cover images are uploaded to ImageKit under `guides/covers/`. Only the Ima
 
 #### Get Published Guides
 
-`GET {{baseUrl}}/guides?search=sell&isFeatured=true&page=1&limit=10`
+`GET {{baseUrl}}/guides
+?search=sell&isFeatured=true&page=1&limit=10`
 
 Auth: not required.
 
