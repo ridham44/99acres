@@ -13,8 +13,11 @@ const buildFilter = (query) => {
 
 exports.createPolicyChange = async (req, res) => {
     try {
-        const policyChangeStatus = req.body.status || 'draft';
-        const publishedAt = req.body.publishedAt || (policyChangeStatus === 'published' ? new Date() : null);
+        const policyChangeStatus = req.body.status || 'inactive';
+
+        const publishedAt =
+            req.body.publishedAt ||
+            (policyChangeStatus === 'active' ? new Date() : null);
 
         const policyChange = await PolicyChange.create({
             title: req.body.title,
@@ -105,17 +108,19 @@ exports.updatePolicyChange = async (req, res) => {
             });
         }
 
-        for (const field of ['title', 'content', 'status', 'publishedAt']) {
+        for (const field of ['title', 'content', 'status']) {
             if (req.body[field] !== undefined) {
                 policyChange[field] = req.body[field];
             }
         }
 
-        if (req.body.status === 'published' && !policyChange.publishedAt) {
+        // inactive -> active
+        if (req.body.status === 'active' && !policyChange.publishedAt) {
             policyChange.publishedAt = new Date();
         }
 
-        if (req.body.status && req.body.status !== 'published' && req.body.publishedAt === undefined) {
+        // active -> inactive
+        if (req.body.status === 'inactive') {
             policyChange.publishedAt = null;
         }
 

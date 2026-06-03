@@ -5533,6 +5533,16 @@ Filters:
     "message": "Policy changes fetched successfully",
     "data": [
         {
+            "_id": "6a1fc4538f54a534d908bdea",
+            "title": "Terms of Service",
+            "content": "<h2>Account Security & Verification</h2><p>Welcome to our digital platform ecosystem...</p><h2>Prohibited Platform Misuse</h2><p>You explicitly agree not to deploy automated scrapers...</p>",
+            "status": "active",
+            "publishedAt": "2026-06-03T06:06:11.711Z",
+            "createdAt": "2026-06-03T06:06:11.817Z",
+            "updatedAt": "2026-06-03T06:06:11.817Z",
+            "__v": 0
+        },
+        {
             "_id": "6a1fbf5f4f47eebde8fa8f63",
             "title": "Privacy policy update",
             "content": "We updated our privacy policy content.",
@@ -5540,16 +5550,6 @@ Filters:
             "publishedAt": null,
             "createdAt": "2026-06-03T05:45:03.225Z",
             "updatedAt": "2026-06-03T05:45:03.225Z",
-            "__v": 0
-        },
-        {
-            "_id": "6a1fbe734f47eebde8fa8f62",
-            "title": "Terms of Service",
-            "content": "<h2>Account Security & Verification</h2><p>Welcome to our digital platform ecosystem...</p><h2>Prohibited Platform Misuse</h2><p>You explicitly agree not to deploy automated scrapers...</p>",
-            "status": "active",
-            "publishedAt": null,
-            "createdAt": "2026-06-03T05:41:07.529Z",
-            "updatedAt": "2026-06-03T05:41:07.529Z",
             "__v": 0
         }
     ],
@@ -5563,18 +5563,17 @@ Filters:
 #### Get Policy Change By ID
 
 `GET {{baseUrl}}/policy-changes/:id`
-
 {
     "success": true,
-    "message": "Policy change fetched successfully",
+    "message": "Policy change created successfully",
     "data": {
-        "_id": "6a1fbf5f4f47eebde8fa8f63",
-        "title": "Privacy policy update",
-        "content": "We updated our privacy policy content.",
-        "status": "inactive",
-        "publishedAt": null,
-        "createdAt": "2026-06-03T05:45:03.225Z",
-        "updatedAt": "2026-06-03T05:45:03.225Z",
+        "title": "Terms of Service",
+        "content": "<h2>Account Security & Verification</h2><p>Welcome to our digital platform ecosystem...</p><h2>Prohibited Platform Misuse</h2><p>You explicitly agree not to deploy automated scrapers...</p>",
+        "status": "active",
+        "publishedAt": "2026-06-03T06:06:11.711Z",
+        "_id": "6a1fc4538f54a534d908bdea",
+        "createdAt": "2026-06-03T06:06:11.817Z",
+        "updatedAt": "2026-06-03T06:06:11.817Z",
         "__v": 0
     }
 }
