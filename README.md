@@ -2793,6 +2793,12 @@ Soft deletes the record and sets `isActive: false`.
 
 This section outlines the API endpoints, database fields, and JSON payloads required to support the Help & Support features.
 
+        category: {
+            type: String,
+            enum: ['buy', 'rent', 'sell', 'property', 'payment', 'subscription', 'account', 'broker', 'builder', 'general'],
+            required: true,
+        },
+        
 ### 1. Fetch Support Data & FAQs
 Fetches support contact details, help topics, and frequently asked questions (FAQs). Supports search and category filtering. If the database is empty, it automatically populates default data.
 

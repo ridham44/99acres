@@ -3,13 +3,14 @@ const router = express.Router();
 const supportController = require("../controllers/support.controller");
 const protect = require("../middleware/auth.middleware");
 const admin = require("../middleware/admin.middleware");
+const faqValidation = require("../validation/faq.validation");
 
 /**
  * @route   GET /api/support
  * @desc    Get support contact, topics and FAQs
  * @access  Public
  */
-router.get("/", supportController.getSupportData);
+router.get("/", faqValidation.validateGetSupportData, supportController.getSupportData);
 
 /**
  * @route   POST /api/support/ticket
@@ -34,10 +35,10 @@ router.post(
  * @route   Admin CRUD for FAQs
  * @access  Admin
  */
-router.get("/admin/faqs", protect, admin, supportController.getAllFAQsAdmin);
-router.post("/admin/faqs", protect, admin, supportController.createFAQ);
-router.patch("/admin/faqs/:id", protect, admin, supportController.updateFAQ);
-router.delete("/admin/faqs/:id", protect, admin, supportController.deleteFAQ);
+router.get("/admin/faqs", protect, admin, faqValidation.validateGetFAQs, supportController.getAllFAQsAdmin);
+router.post("/admin/faqs", protect, admin, faqValidation.validateCreateFAQ, supportController.createFAQ);
+router.patch("/admin/faqs/:id", protect, admin, faqValidation.validateUpdateFAQ, supportController.updateFAQ);
+router.delete("/admin/faqs/:id", protect, admin, faqValidation.validateFAQId, supportController.deleteFAQ);
 
 router.get("/admin/tickets", protect, admin, supportController.getAllSupportTicketsAdmin);
 router.get("/admin/tickets/:id", protect, admin, supportController.getSupportTicketByIdAdmin);

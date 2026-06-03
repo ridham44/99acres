@@ -38,18 +38,21 @@ const defaultHelpTopics = [
 const defaultFAQs = [
   {
     topicId: "user_profile",
+    category: "account",
     question: "How can I de-activate my account?",
     answer:
       "To deactivate your RealEstate account, please login to your profile settings and select the 'Deactivate Account' option. Your data will be preserved for 30 days.",
   },
   {
     topicId: "payments",
+    category: "payment",
     question: "How can I know the status or validity of my package?",
     answer:
       "You can check your package status by going to 'My Packages' section in your dashboard. All active and expired packages will be displayed with their validity dates.",
   },
   {
     topicId: "property_listings",
+    category: "property",
     question: "When will my Property become visible on the site?",
     answer:
       "Properties go through a verification process that takes up to 24 hours. Once approved, your property will be visible immediately on the site.",
@@ -81,7 +84,7 @@ exports.getSupportData = async (req, res) => {
   try {
     await initializeDefaults();
 
-    const { search, topic } = req.query;
+    const { search, topic, category } = req.query;
 
     // Fetch Support Contact
     const supportContact = await SupportContact.findOne().select(
@@ -104,6 +107,9 @@ exports.getSupportData = async (req, res) => {
     if (topic) {
       faqQuery.topicId = topic;
     }
+    if (category) {
+      faqQuery.category = category;
+    }
     if (search) {
       faqQuery.$or = [
         { question: { $regex: search, $options: "i" } },
@@ -111,12 +117,13 @@ exports.getSupportData = async (req, res) => {
       ];
     }
 
-    const faqs = await FAQ.find(faqQuery).select("topicId question answer _id");
+    const faqs = await FAQ.find(faqQuery).select("topicId category question answer _id");
 
     // Map _id to id for the response as per spec
     const formattedFaqs = faqs.map((f) => ({
       id: f._id,
       topicId: f.topicId,
+      category: f.category,
       question: f.question,
       answer: f.answer,
     }));
@@ -171,24 +178,51 @@ exports.submitTicket = async (req, res) => {
 // Admin CRUD for FAQs
 exports.getAllFAQsAdmin = async (req, res) => {
   try {
-    const faqs = await FAQ.find().sort({ createdAt: -1 });
-    res.status(status.OK).json({ success: true, data: faqs });
+    const { category, search, page, limit } = req.query;
+
+    const filter = {};
+
+    if (category) {
+      filter.category = category;
+    }
+
+    if (search) {
+      filter.$or = [
+        { question: { $regex: search, $options: 'i' } },
+        { answer: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 20;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [total, faqs] = await Promise.all([
+      FAQ.countDocuments(filter),
+      FAQ.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber),
+    ]);
+
+    return res.status(status.OK).json({
+      success: true,
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      data: faqs,
+    });
   } catch (error) {
-    res
-      .status(status.InternalServerError)
-      .json({ success: false, message: error.message });
+    return res.status(status.InternalServerError).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
-
 exports.createFAQ = async (req, res) => {
   try {
-    const { topicId, question, answer } = req.body;
-    if (!topicId || !question || !answer) {
-      return res
-        .status(status.BadRequest)
-        .json({ success: false, message: "All fields are required" });
-    }
-    const newFAQ = await FAQ.create({ topicId, question, answer });
+    const { topicId, category, question, answer } = req.body;
+    const newFAQ = await FAQ.create({ topicId, category, question, answer });
     res.status(status.CREATED).json({ success: true, data: newFAQ });
   } catch (error) {
     res
@@ -200,7 +234,19 @@ exports.createFAQ = async (req, res) => {
 exports.updateFAQ = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedFAQ = await FAQ.findByIdAndUpdate(id, req.body, { new: true });
+    const allowedFields = ['topicId', 'category', 'question', 'answer'];
+    const updateData = {};
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    const updatedFAQ = await FAQ.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
     if (!updatedFAQ)
       return res
         .status(status.NotFound)
@@ -233,10 +279,24 @@ exports.deleteFAQ = async (req, res) => {
 
 exports.getAllSupportTicketsAdmin = async (req, res) => {
   try {
-    const { status: ticketStatus, search, page, limit } = req.query;
+    const {
+      status: ticketStatus,
+      category,
+      search,
+      page,
+      limit,
+    } = req.query;
+
     const filter = {};
 
-    if (ticketStatus) filter.status = ticketStatus;
+    if (ticketStatus) {
+      filter.status = ticketStatus;
+    }
+
+    if (category) {
+      filter.category = category;
+    }
+
     if (search) {
       filter.$or = [
         { ticketId: { $regex: search, $options: 'i' } },
@@ -266,12 +326,12 @@ exports.getAllSupportTicketsAdmin = async (req, res) => {
       data: tickets,
     });
   } catch (error) {
-    return res
-      .status(status.InternalServerError)
-      .json({ success: false, message: error.message });
+    return res.status(status.InternalServerError).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
-
 exports.getSupportTicketByIdAdmin = async (req, res) => {
   try {
     const { id } = req.params;
