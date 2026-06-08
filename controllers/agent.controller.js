@@ -197,3 +197,44 @@ exports.getAgentsAroundMe = async (req, res) => {
     });
   }
 };
+
+exports.getAllAgents = async (req, res) => {
+  try {
+    const { page, limit } = req.query;
+
+    const currentPage = Number(page) || 1;
+    const currentLimit = Number(limit) || 10;
+    const skip = (currentPage - 1) * currentLimit;
+    const filter = {
+      deletedAt: null,
+    };
+
+    const [agents, total] = await Promise.all([
+      Agent.find(filter)
+        .populate("userId", "name profileImage role phone email")
+        .sort({ propertiesListed: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(currentLimit),
+      Agent.countDocuments(filter),
+    ]);
+
+    const data = await Promise.all(agents.map(formatAgent));
+
+    return res.status(status.OK).json({
+      success: true,
+      message: "Agents fetched successfully",
+      data,
+      pagination: {
+        total,
+        page: currentPage,
+        limit: currentLimit,
+        totalPages: Math.ceil(total / currentLimit),
+      },
+    });
+  } catch (error) {
+    return res.status(status.InternalServerError).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

@@ -61,7 +61,7 @@ exports.getExpertInAreas = async (req, res) => {
       deletedAt: null,
     };
 
-    if (search) {
+    if (search) { 
       filter.areaName = { $regex: search.trim(), $options: "i" };
     }
 

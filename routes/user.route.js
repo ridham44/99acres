@@ -12,6 +12,7 @@ router.put(
     authMiddleware,
     uploadUserFiles.fields([
         { name: 'profileImage', maxCount: 1 },
+        { name: 'companyLogo', maxCount: 1 },
         { name: 'documents', maxCount: 10 },
     ]),
     validation.validateUpdateProfile,

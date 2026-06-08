@@ -29,6 +29,9 @@ router.get('/popular', auth, controller.getPopularProperties);
 router.get('/count', auth, controller.getPropertyCount);
 router.get('/prelaunched', auth, controller.getPrelaunchedProperties);
 
+// Support legacy frontend calling `/properties/search`
+router.get('/search', auth, controller.getProperties);
+
 
 // ── Property-specific routes ──────────────────────────────────────────────────
 router.get('/:id/similar', auth, validation.validatePropertyId, controller.getSimilarProperties);

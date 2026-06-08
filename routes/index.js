@@ -33,5 +33,7 @@ router.use("/blogs", require("./blog.route"));
 router.use("/property-news", require("./propertyNews.route"));
 router.use("/guides", require("./guide.route"));
 router.use("/sponsors", require("./sponsor.route"));
+router.use("/payments", require("./payment.routes"));
+
 
 module.exports = router;

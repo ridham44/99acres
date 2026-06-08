@@ -559,3 +559,40 @@ exports.getRequirementsForMe = async (req, res) => {
         });
     }
 };
+
+exports.deleteRequirement = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const requirement = await Requirement.findOne({ _id: id, deletedAt: null });
+
+        if (!requirement) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Requirement not found',
+            });
+        }
+
+        // Only the owner can delete
+        if (requirement.userId.toString() !== userId.toString()) {
+            return res.status(status.Forbidden).json({
+                success: false,
+                message: 'You are not authorized to delete this requirement',
+            });
+        }
+
+        requirement.deletedAt = new Date();
+        await requirement.save();
+
+        return res.status(status.OK).json({
+            success: true,
+            message: 'Requirement deleted successfully',
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};

@@ -72,7 +72,9 @@ const getRecentlyVisitedProperties = async (userId, limit = 10) => {
 
 const getVisitedProperties = async (userId, page = 1, limit = 10) => {
     const userObjectId = new mongoose.Types.ObjectId(userId);
-    const skip = (page - 1) * limit;
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const skip = (pageNum - 1) * limitNum;
 
     const [result] = await PropertyVisit.aggregate([
         {
@@ -101,7 +103,7 @@ const getVisitedProperties = async (userId, page = 1, limit = 10) => {
         },
         {
             $facet: {
-                data: [{ $skip: skip }, { $limit: limit }],
+                data: [{ $skip: skip }, { $limit: limitNum }],
                 total: [{ $count: 'count' }],
             },
         },
@@ -119,9 +121,9 @@ const getVisitedProperties = async (userId, page = 1, limit = 10) => {
         properties,
         pagination: {
             total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum),
         },
     };
 };
@@ -299,8 +301,8 @@ exports.getUserHome = async (req, res) => {
 exports.getMyVisitedProperties = async (req, res) => {
     try {
         const userId = req.user.id;
-        const page = req.query.page || 1;
-        const limit = req.query.limit || 10;
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
 
         const { properties, pagination } = await getVisitedProperties(userId, page, limit);
 

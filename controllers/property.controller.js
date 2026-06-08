@@ -1086,7 +1086,8 @@ exports.getPrelaunchedProperties = async (req, res) => {
     // 3b. Area-wise filter: narrows results to a specific sub-area/locality
     //     Matches against city_area OR locality (case-insensitive)
     if (area) {
-      const areaRegex = { $regex: area.trim(), $options: "i" };
+      // const areaRegex = { $regex: area.trim(), $options: "i" };
+      const areaRegex = { $regex: `^${area.trim()}$`, $options: "i" };
       filter.$and = filter.$and || [];
       filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
     }

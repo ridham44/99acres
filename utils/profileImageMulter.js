@@ -17,11 +17,15 @@ const fileFilter = (req, file, cb) => {
         return cb(null, true);
     }
 
+    if (file.fieldname === 'companyLogo' && allowedImageTypes.includes(file.mimetype)) {
+        return cb(null, true);
+    }
+
     if (file.fieldname === 'documents' && allowedDocumentTypes.includes(file.mimetype)) {
         return cb(null, true);
     }
 
-    return cb(new Error('Invalid file. Use profileImage for images or documents for pdf/image/doc/docx files'), false);
+    return cb(new Error('Invalid file. Use profileImage/companyLogo for images or documents for pdf/image/doc/docx files'), false);
 };
 
 const uploadUserFiles = multer({

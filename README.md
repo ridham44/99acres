@@ -2226,6 +2226,17 @@ Body:
   "planName": "Premium",
   "planDescription": "Better visibility for serious sellers",
   "durationInMonths": 3,
+  "targetRole": "broker_channel_partner",
+  "pricing": [
+    {
+      "durationInMonths": 1,
+      "price": 999
+    },
+    {
+      "durationInMonths": 3,
+      "price": 2499
+    }
+  ],
   "listingVisibilityPercentage": 75,
   "planBenefits": ["Higher property ranking", "More buyer reach"],
   "planPrice": 2999,
@@ -2292,6 +2303,86 @@ Allowed `status` values: `pending`, `active`, `expired`, `cancelled`.
 ### My Active Subscription
 
 `GET {{baseUrl}}/user-subscriptions/active`
+
+## Payment (Razorpay) APIs
+
+These APIs handle the actual payment gateway integration for buying subscription plans using Razorpay. 
+
+**Frontend Integration Flow:**
+1. User selects a subscription plan.
+2. Call `POST /payments/create-order` with the `planId`. It returns an `orderId` and amount in paise.
+3. Initialize the Razorpay SDK (Checkout Modal) using the returned `orderId` and the test Key ID (`rzp_test_Sz48XKolevveez`).
+4. Upon successful payment, the Razorpay SDK's `handler` function will receive `razorpay_order_id`, `razorpay_payment_id`, and `razorpay_signature`.
+5. Pass these three fields to `POST /payments/verify-payment`. The backend will verify the HMAC signature, update the transaction to `completed`, fetch the payment method (UPI, Card, etc.), and formally activate the subscription.
+
+### 1. Create Razorpay Order
+
+Validates the requested plan, generates a Razorpay Order ID, and creates a `pending` local transaction.
+
+`POST {{baseUrl}}/payments/create-order`
+
+**Headers:** auth required.
+
+**Body:**
+```json
+{
+  "planId": "{{subscriptionPlanId}}"
+}
+```
+
+**Success Response `201 Created`:**
+```json
+{
+  "success": true,
+  "message": "Order created successfully",
+  "data": {
+    "orderId": "order_P1abc123xyz",
+    "amount": 49900,
+    "currency": "INR",
+    "transactionId": "64f00...123"
+  }
+}
+```
+> *Note: The `amount` returned is in paise (e.g., `49900` = `₹499`).*
+
+### 2. Verify Payment & Activate Subscription
+
+Verifies the Razorpay signature to ensure data integrity. If valid, marks the transaction as `completed`, auto-detects the payment method, and activates the new subscription (marking previous active ones as expired).
+
+`POST {{baseUrl}}/payments/verify-payment`
+
+**Headers:** auth required.
+
+**Body:**
+```json
+{
+  "razorpay_order_id": "order_P1abc123xyz",
+  "razorpay_payment_id": "pay_P1def456uvw",
+  "razorpay_signature": "b1c2d3e4f5g6h7i8j9k0..."
+}
+```
+
+**Success Response `200 OK`:**
+```json
+{
+  "success": true,
+  "message": "Payment verified and subscription activated successfully",
+  "data": {
+    "transaction": {
+      "_id": "64f00...123",
+      "status": "completed",
+      "paymentMethod": "upi",
+      "amount": 49900
+    },
+    "subscription": {
+      "_id": "64f00...456",
+      "status": "active",
+      "startDate": "2026-05-29T10:00:00.000Z",
+      "endDate": "2026-08-29T10:00:00.000Z"
+    }
+  }
+}
+```
 
 ## User Home API
 

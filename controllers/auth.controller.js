@@ -38,6 +38,7 @@ const formatUserResponse = (user) => ({
     email: user.email,
     city: user.city,
     state: user.state,
+    country: user.country,
     documents: user.documents,
     documentUrls: (user.documents || []).map((fileName) => getUserDocumentUrl(fileName)),
     profileImage: user.profileImage,
@@ -47,7 +48,7 @@ const formatUserResponse = (user) => ({
 
 exports.register = async (req, res) => {
     try {
-        const { name, phone, role, agencyName, email, city, state, documents } = req.body;
+        const { name, phone, role, agencyName, email, city, state, country, documents } = req.body;
 
         let user = await User.findOne({ phone, deletedAt: null });
 
@@ -73,6 +74,7 @@ exports.register = async (req, res) => {
                 email,
                 city,
                 state,
+                country,
                 documents: documentFileNames,
                 profileImage,
             });

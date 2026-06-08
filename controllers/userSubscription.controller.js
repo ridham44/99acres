@@ -1,5 +1,6 @@
 const SubscriptionPlan = require('../models/subscriptionPlan.model');
 const UserSubscription = require('../models/userSubscription.model');
+const PaymentTransaction = require('../models/paymentTransaction.model');
 const status = require('../utils/statusCodes');
 
 const addMonths = (date, months) => {
@@ -170,12 +171,30 @@ exports.getMyActiveSubscription = async (req, res) => {
 
         await expireOldSubscriptions(userId);
 
-        const activeSubscription = await UserSubscription.findOne({
+        let activeSubscription = await UserSubscription.findOne({
             userId,
             status: 'active',
             endDate: { $gte: new Date() },
             deletedAt: null,
         }).sort({ endDate: -1 });
+
+        // Ensure the associated plan and payment transaction are not deleted
+        if (activeSubscription) {
+            const planExists = await SubscriptionPlan.findOne({
+                _id: activeSubscription.planId,
+                deletedAt: null,
+            });
+
+            const transactionExists = activeSubscription.transactionId
+                ? await PaymentTransaction.findById(activeSubscription.transactionId)
+                : true;
+
+            if (!planExists || !transactionExists) {
+                activeSubscription.status = 'cancelled';
+                await activeSubscription.save();
+                activeSubscription = null;
+            }
+        }
 
         return res.status(status.OK).json({
             success: true,

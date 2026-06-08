@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    phone: {
+    phone: {  
       type: String,
       required: true,
       unique: true,
@@ -42,6 +42,12 @@ const userSchema = new mongoose.Schema(
     state: {
       type: String,
       trim: true,
+    },
+
+    country: {
+      type: String,
+      trim: true,
+      default: "India",
     },
 
     documents: [

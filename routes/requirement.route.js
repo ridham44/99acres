@@ -14,5 +14,6 @@ router.get('/:id', protect, requirementController.getRequirementById);
 router.get('/:requirementId/matches', protect, requirementController.getMatchedPropertiesForRequirement);
 router.put('/:id', protect, requirementController.updateRequirement);
 router.patch('/:id/status', protect, requirementController.toggleRequirementStatus);
+router.delete('/:id', protect, requirementController.deleteRequirement);
 
 module.exports = router;

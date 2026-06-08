@@ -8,5 +8,6 @@ const router = express.Router();
 router.post('/register', auth, uploadAgentImage.single('companyImage'), controller.createOrUpdateMyAgent);
 router.post('/me', auth, uploadAgentImage.single('companyImage'), controller.createOrUpdateMyAgent);
 router.get('/around-me/:location', auth, controller.getAgentsAroundMe);
+router.get('/', auth, controller.getAllAgents);
 
 module.exports = router;
