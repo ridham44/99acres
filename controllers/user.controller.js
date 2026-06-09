@@ -12,6 +12,7 @@ const SupportTicket = require("../models/supportTicket.model");
 const UserStatus = require("../models/userStatus.model");
 const UserSubscription = require("../models/userSubscription.model");
 const PaymentTransaction = require("../models/paymentTransaction.model");
+const SubscriptionPlan = require("../models/subscriptionPlan.model");
 const LogLogin = require("../models/logLogin");
 const Inquiry = require("../models/inquiry.model");
 const status = require("../utils/statusCodes");
@@ -103,12 +104,28 @@ exports.getProfile = async (req, res) => {
 
     let validActiveSubscription = activeSubscription;
 
-    if (activeSubscription && activeSubscription.transactionId) {
-      const transactionExists = await PaymentTransaction.findById(
-        activeSubscription.transactionId,
-      );
+    if (activeSubscription) {
+      const userRole = user.role;
+      let targetRole = null;
+      if (userRole === 'user') targetRole = 'user';
+      else if (userRole === 'broker' || userRole === 'channel_partner') targetRole = 'broker_channel_partner';
+      else if (userRole === 'builder') targetRole = 'builder';
 
-      if (!transactionExists) {
+      const planQuery = {
+        _id: activeSubscription.planId,
+        deletedAt: null,
+      };
+      if (targetRole) {
+        planQuery.targetRole = targetRole;
+      }
+
+      const planExists = await SubscriptionPlan.findOne(planQuery);
+
+      const transactionExists = activeSubscription.transactionId
+        ? await PaymentTransaction.findById(activeSubscription.transactionId)
+        : true;
+
+      if (!planExists || !transactionExists) {
         activeSubscription.status = "cancelled";
         await activeSubscription.save();
         validActiveSubscription = null;

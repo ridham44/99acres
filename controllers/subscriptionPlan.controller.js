@@ -18,6 +18,10 @@ const buildPlanFilter = (query) => {
         filter.isActive = query.isActive;
     }
 
+    if (query.targetRole) {
+        filter.targetRole = query.targetRole;
+    }
+
     return filter;
 };
 
@@ -38,10 +42,10 @@ exports.createSubscriptionPlan = async (req, res) => {
         const subscriptionPlan = await SubscriptionPlan.create({
             planName: req.body.planName,
             planDescription: req.body.planDescription,
-            durationInMonths: req.body.durationInMonths,
+            targetRole: req.body.targetRole,
+            pricing: req.body.pricing || [],
             listingVisibilityPercentage: req.body.listingVisibilityPercentage,
             planBenefits: req.body.planBenefits,
-            planPrice: req.body.planPrice,
             isActive: req.body.isActive === undefined ? true : req.body.isActive,
         });
 
@@ -156,10 +160,10 @@ exports.updateSubscriptionPlan = async (req, res) => {
         const updateFields = [
             'planName',
             'planDescription',
-            'durationInMonths',
+            'targetRole',
+            'pricing',
             'listingVisibilityPercentage',
             'planBenefits',
-            'planPrice',
             'isActive',
         ];
 

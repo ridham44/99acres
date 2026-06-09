@@ -3,10 +3,17 @@ const UserSubscription = require('../models/userSubscription.model');
 const PaymentTransaction = require('../models/paymentTransaction.model');
 const status = require('../utils/statusCodes');
 
-const addMonths = (date, months) => {
+const addDays = (date, days) => {
     const result = new Date(date);
-    result.setMonth(result.getMonth() + months);
+    result.setDate(result.getDate() + days);
     return result;
+};
+
+const getTargetRole = (userRole) => {
+    if (userRole === 'user') return 'user';
+    if (userRole === 'broker' || userRole === 'channel_partner') return 'broker_channel_partner';
+    if (userRole === 'builder') return 'builder';
+    return null;
 };
 
 const expireOldSubscriptions = async (userId) => {
@@ -27,14 +34,20 @@ const expireOldSubscriptions = async (userId) => {
 
 exports.getActivePlans = async (req, res) => {
     try {
-        const plans = await SubscriptionPlan.find({
-            isActive: true,
-            deletedAt: null,
-        })
+        const userRole = req.user ? req.user.role : null;
+        const filter = { isActive: true, deletedAt: null };
+        
+        if (userRole) {
+            const targetRole = getTargetRole(userRole);
+            if (targetRole) {
+                filter.targetRole = targetRole;
+            }
+        }
+
+        const plans = await SubscriptionPlan.find(filter)
             .select(
-                '_id planName planDescription durationInMonths listingVisibilityPercentage planBenefits planPrice',
-            )
-            .sort({ planPrice: 1, durationInMonths: 1 });
+                '_id planName planDescription targetRole pricing listingVisibilityPercentage planBenefits isActive',
+            ).sort({ createdAt: -1 });
 
         return res.status(status.OK).json({
             success: true,
@@ -52,7 +65,7 @@ exports.getActivePlans = async (req, res) => {
 exports.buySubscriptionPlan = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { planId } = req.body;
+        const { planId, durationInDays } = req.body;
 
         await expireOldSubscriptions(userId);
 
@@ -71,36 +84,52 @@ exports.buySubscriptionPlan = async (req, res) => {
             });
         }
 
-        const plan = await SubscriptionPlan.findOne({
+        const userRole = req.user ? req.user.role : null;
+        const targetRole = getTargetRole(userRole);
+
+        const planQuery = {
             _id: planId,
             isActive: true,
             deletedAt: null,
-        });
+        };
+        if (targetRole) {
+            planQuery.targetRole = targetRole;
+        }
+
+        const plan = await SubscriptionPlan.findOne(planQuery);
 
         if (!plan) {
             return res.status(status.NotFound).json({
                 success: false,
-                message: 'Subscription plan not found or inactive',
+                message: 'Subscription plan not found, inactive, or not applicable for your role',
+            });
+        }
+
+        const pricingOption = plan.pricing && plan.pricing.find(p => p.durationInDays === Number(durationInDays));
+        if (!pricingOption) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: 'Invalid duration selected for this plan',
             });
         }
 
         const startDate = new Date();
-        const endDate = addMonths(startDate, plan.durationInMonths);
+        const endDate = addDays(startDate, pricingOption.durationInDays);
 
         const userSubscription = await UserSubscription.create({
             userId,
             planId: plan._id,
             planName: plan.planName,
             planDescription: plan.planDescription,
-            durationInMonths: plan.durationInMonths,
+            durationInDays: pricingOption.durationInDays,
             listingVisibilityPercentage: plan.listingVisibilityPercentage,
             planBenefits: plan.planBenefits,
-            planPrice: plan.planPrice,
+            planPrice: pricingOption.price,
             startDate,
             endDate,
             status: 'active',
             paymentStatus: 'paid',
-            paymentAmount: plan.planPrice,
+            paymentAmount: pricingOption.price,
         });
 
         return res.status(status.CREATED).json({
@@ -180,10 +209,18 @@ exports.getMyActiveSubscription = async (req, res) => {
 
         // Ensure the associated plan and payment transaction are not deleted
         if (activeSubscription) {
-            const planExists = await SubscriptionPlan.findOne({
+            const userRole = req.user ? req.user.role : null;
+            const targetRole = getTargetRole(userRole);
+
+            const planQuery = {
                 _id: activeSubscription.planId,
                 deletedAt: null,
-            });
+            };
+            if (targetRole) {
+                planQuery.targetRole = targetRole;
+            }
+
+            const planExists = await SubscriptionPlan.findOne(planQuery);
 
             const transactionExists = activeSubscription.transactionId
                 ? await PaymentTransaction.findById(activeSubscription.transactionId)

@@ -28,7 +28,7 @@ const userSubscriptionSchema = new mongoose.Schema(
             trim: true,
         },
 
-        durationInMonths: {
+        durationInDays: {
             type: Number,
             required: true,
             min: 1,

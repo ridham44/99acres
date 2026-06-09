@@ -2213,33 +2213,30 @@ Response includes user name/profile image, agent company data, property count, v
 
 ## Subscription Plan Admin APIs
 
-All subscription plan endpoints require an admin auth token.
+All subscription plan endpoints require an admin auth token (`Authorization: Bearer {{token}}`).
 
-### Create Subscription Plan
+### 1. Create Subscription Plan
 
 `POST {{baseUrl}}/subscription-plans`
 
-Body:
-
+**Body:**
 ```json
 {
-  "planName": "Premium",
+  "planName": "Premium Plan",
   "planDescription": "Better visibility for serious sellers",
-  "durationInMonths": 3,
   "targetRole": "broker_channel_partner",
   "pricing": [
     {
-      "durationInMonths": 1,
+      "durationInDays": 30,
       "price": 999
     },
     {
-      "durationInMonths": 3,
+      "durationInDays": 90,
       "price": 2499
     }
   ],
   "listingVisibilityPercentage": 75,
   "planBenefits": ["Higher property ranking", "More buyer reach"],
-  "planPrice": 2999,
   "isActive": true
 }
 ```
@@ -2286,7 +2283,8 @@ Body:
 
 ```json
 {
-  "planId": "{{subscriptionPlanId}}"
+  "planId": "{{subscriptionPlanId}}",
+  "durationInDays": 90
 }
 ```
 

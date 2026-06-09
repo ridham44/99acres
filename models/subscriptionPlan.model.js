@@ -14,11 +14,26 @@ const subscriptionPlanSchema = new mongoose.Schema(
             trim: true,
         },
 
-        durationInMonths: {
-            type: Number,
+        targetRole: {
+            type: String,
+            enum: ['user', 'broker_channel_partner', 'builder'],
             required: true,
-            min: 1,
         },
+
+        pricing: [
+            {
+                durationInDays: {
+                    type: Number,
+                    required: true,
+                    min: 1,
+                },
+                price: {
+                    type: Number,
+                    required: true,
+                    min: 0,
+                },
+            },
+        ],
 
         listingVisibilityPercentage: {
             type: Number,
@@ -33,12 +48,6 @@ const subscriptionPlanSchema = new mongoose.Schema(
                 trim: true,
             },
         ],
-
-        planPrice: {
-            type: Number,
-            required: true,
-            min: 0,
-        },
 
         isActive: {
             type: Boolean,

@@ -26,18 +26,22 @@ exports.validateBuySubscriptionPlan = (req, res, next) => {
 
 exports.validateGetMySubscriptions = (req, res, next) => {
     try {
+        req.query.page = toNumber(req.query.page);
         if (req.query.page !== undefined) {
-            req.query.page = toNumber(req.query.page);
             if (!Number.isInteger(req.query.page) || req.query.page < 1) {
                 return sendError(res, 'page must be an integer greater than or equal to 1');
             }
         }
 
+        req.query.limit = toNumber(req.query.limit);
         if (req.query.limit !== undefined) {
-            req.query.limit = toNumber(req.query.limit);
             if (!Number.isInteger(req.query.limit) || req.query.limit < 1 || req.query.limit > 100) {
                 return sendError(res, 'limit must be an integer between 1 and 100');
             }
+        }
+
+        if (req.query.status === '') {
+            req.query.status = undefined;
         }
 
         if (

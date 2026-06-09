@@ -12,6 +12,10 @@ const paymentTransactionSchema = new mongoose.Schema(
       required: true,
       ref: "SubscriptionPlan", 
     },
+    durationInDays: {
+      type: Number,
+      required: true,
+    },
     // Razorpay order ID returned from createOrder API (e.g. "order_xxxxx")
     orderId: {
       type: String,

@@ -14,7 +14,7 @@ const razorpay = new Razorpay({
 // 1. Create a Razorpay Order
 exports.createOrder = async (req, res) => {
   try {
-    const { planId } = req.body;
+    const { planId, durationInDays } = req.body;
     const userId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(planId)) {
@@ -41,11 +41,25 @@ exports.createOrder = async (req, res) => {
     }
 
     // Fetch the plan details to get pricing
-    const plan = await SubscriptionPlan.findById(planId);
+    const userRole = req.user ? req.user.role : null;
+    let targetRole = null;
+    if (userRole === 'user') targetRole = 'user';
+    else if (userRole === 'broker' || userRole === 'channel_partner') targetRole = 'broker_channel_partner';
+    else if (userRole === 'builder') targetRole = 'builder';
+
+    const planQuery = {
+      _id: planId,
+      deletedAt: null,
+    };
+    if (targetRole) {
+      planQuery.targetRole = targetRole;
+    }
+
+    const plan = await SubscriptionPlan.findOne(planQuery);
     if (!plan) {
       return res.status(status.NotFound).json({
         success: false,
-        message: "Subscription plan not found",
+        message: "Subscription plan not found or not applicable for your role",
       });
     }
 
@@ -56,8 +70,16 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    const pricingOption = plan.pricing && plan.pricing.find(p => p.durationInDays === Number(durationInDays));
+    if (!pricingOption) {
+      return res.status(status.BadRequest).json({
+        success: false,
+        message: "Invalid duration selected for this plan",
+      });
+    }
+
     // Razorpay amount expects to be in paise (₹1 = 100 paise)
-    const amountInPaise = Math.round(plan.planPrice * 100);
+    const amountInPaise = Math.round(pricingOption.price * 100);
 
     if (amountInPaise < 100) {
       return res.status(status.BadRequest).json({
@@ -85,6 +107,7 @@ exports.createOrder = async (req, res) => {
     const paymentTransaction = await PaymentTransaction.create({
       user: userId,
       plan: planId,
+      durationInDays: pricingOption.durationInDays,
       orderId: order.id,
       amount: amountInPaise,
       currency: order.currency,
@@ -162,11 +185,13 @@ exports.verifyPayment = async (req, res) => {
       return res.status(status.NotFound).json({ success: false, message: "Associated subscription plan not found" });
     }
 
-    const durationInMonths = plan.durationInMonths || 1;
+    const durationInDays = transaction.durationInDays || 30;
+    const pricingOption = plan.pricing && plan.pricing.find(p => p.durationInDays === durationInDays);
+    const planPrice = pricingOption ? pricingOption.price : 0;
 
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + durationInMonths);
+    endDate.setDate(endDate.getDate() + durationInDays);
 
     // Deactivate previous active plans to enforce a single active plan rule
     await UserSubscription.updateMany(
@@ -180,15 +205,15 @@ exports.verifyPayment = async (req, res) => {
       planId: transaction.plan,
       planName: plan.planName,
       planDescription: plan.planDescription,
-      durationInMonths: plan.durationInMonths,
+      durationInDays: durationInDays,
       listingVisibilityPercentage: plan.listingVisibilityPercentage,
       planBenefits: plan.planBenefits,
-      planPrice: plan.planPrice,
+      planPrice: planPrice,
       startDate,
       endDate,
       status: "active",
       paymentStatus: "paid",
-      paymentAmount: plan.planPrice,
+      paymentAmount: planPrice,
       transactionId: transaction._id.toString(),
     });
 
@@ -232,7 +257,7 @@ exports.getAllPaymentTransactions = async (req, res) => {
     const [transactions, total] = await Promise.all([
       PaymentTransaction.find(filter)
         .populate("user", "name email phone role")
-        .populate("plan", "planName planPrice durationInMonths")
+        .populate("plan", "planName targetRole pricing")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
