@@ -27,8 +27,9 @@ const fileFilter = (req, file, cb) => {
     const isImageField = file.fieldname === 'images';
     const isVideoField = file.fieldname === 'videos';
     const isBrochureField = file.fieldname === 'brochure';
+    const isCoverImageField = file.fieldname === 'coverImage';
 
-    if (isImageField && allowedImageTypes.includes(file.mimetype)) {
+    if ((isImageField || isCoverImageField) && allowedImageTypes.includes(file.mimetype)) {
         return cb(null, true);
     }
 
@@ -65,6 +66,7 @@ const validatePropertyUploadLimits = (req, res, next) => {
     const imageFiles = req.files?.images || [];
     const videoFiles = req.files?.videos || [];
     const brochureFiles = req.files?.brochure || [];
+    const coverImageFiles = req.files?.coverImage || [];
 
     if (videoFiles.length > 1) {
         deleteUploadedFiles(req.files);
@@ -81,6 +83,16 @@ const validatePropertyUploadLimits = (req, res, next) => {
         return res.status(400).json({
             success: false,
             message: 'Each image must be 5 MB or less',
+        });
+    }
+
+    const largeCover = coverImageFiles.find((file) => file.size > maxImageSize);
+
+    if (largeCover) {
+        deleteUploadedFiles(req.files);
+        return res.status(400).json({
+            success: false,
+            message: 'Cover image must be 5 MB or less',
         });
     }
 

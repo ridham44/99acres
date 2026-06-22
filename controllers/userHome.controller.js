@@ -14,9 +14,9 @@ const formatPropertyCard = (property, extra = {}) => {
 
     const item = typeof property.toObject === 'function' ? property.toObject() : property;
     const firstImage = (item.media || []).find((mediaItem) => mediaItem.type === 'image');
-    const coverImage = firstImage
+    const coverImage = item.coverImage || (firstImage
         ? getPropertyMediaUrl(firstImage.fileName, firstImage.type)
-        : item.coverImage || null;
+        : null);
 
     return {
         _id: item._id,

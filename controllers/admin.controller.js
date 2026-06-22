@@ -26,7 +26,7 @@ const formatProperty = (prop) => {
         url: getPropertyMediaUrl(m.fileName, m.type),
     }));
     const firstImage = obj.media.find((m) => m.type === 'image');
-    obj.coverImage = firstImage?.url || obj.coverImage || null;
+    obj.coverImage = obj.coverImage || firstImage?.url || null;
     return obj;
 };
 

@@ -25,9 +25,9 @@ const formatPropertyCard = (item) => {
   const firstImage = (item.media || []).find(
     (mediaItem) => mediaItem.type === "image",
   );
-  const coverImage = firstImage
+  const coverImage = item.coverImage || (firstImage
     ? getPropertyMediaUrl(firstImage.fileName, firstImage.type)
-    : item.coverImage || null;
+    : null);
 
   return {
     _id: item._id,
@@ -115,7 +115,7 @@ const formatFullProperty = (item) => {
   }));
 
   const firstImage = propertyObj.media.find((mediaItem) => mediaItem.type === "image");
-  propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
+  propertyObj.coverImage = propertyObj.coverImage || firstImage?.url || null;
 
   propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
     const am = amenity ? (amenity._doc || amenity) : {};
@@ -1360,7 +1360,7 @@ exports.getPropertyById = async (req, res) => {
     }));
 
     const firstImage = propertyObj.media.find((item) => item.type === "image");
-    propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
+    propertyObj.coverImage = propertyObj.coverImage || firstImage?.url || null;
 
     propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
       const am = amenity ? (amenity._doc || amenity) : {};
@@ -1550,6 +1550,12 @@ exports.updateProperty = async (req, res) => {
     const imageFiles = req.files?.images || [];
     const videoFiles = req.files?.videos || [];
     const brochureFiles = req.files?.brochure || [];
+    const coverImageFile = req.files?.coverImage?.[0];
+
+    if (coverImageFile) {
+      const uploaded = await uploadToImagekit(coverImageFile, "properties/images");
+      req.body.coverImage = getPropertyMediaUrl(uploaded.fileName, "image");
+    }
 
     let media = existingProperty.media || [];
 
@@ -1631,7 +1637,7 @@ exports.updateProperty = async (req, res) => {
     }));
 
     const firstImage = propertyObj.media.find((item) => item.type === "image");
-    propertyObj.coverImage = firstImage?.url || propertyObj.coverImage || null;
+    propertyObj.coverImage = propertyObj.coverImage || firstImage?.url || null;
 
     propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
       const am = amenity ? (amenity._doc || amenity) : {};

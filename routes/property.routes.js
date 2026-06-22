@@ -45,6 +45,7 @@ router.put(
         { name: 'images', maxCount: 5 },
         { name: 'videos', maxCount: 1 },
         { name: 'brochure', maxCount: 3 },
+        { name: 'coverImage', maxCount: 1 },
     ]),
     validatePropertyUploadLimits,
     validation.validateUpdateProperty,
