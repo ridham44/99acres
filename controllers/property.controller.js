@@ -297,6 +297,11 @@ exports.createProperty = async (req, res) => {
       });
     }
 
+    // Coerce string booleans from FormData to actual booleans
+    if (req.body.isReraApproved !== undefined) {
+      req.body.isReraApproved = req.body.isReraApproved === 'true' || req.body.isReraApproved === true;
+    }
+
     const property = await Property.create({
       ...req.body,
       ownerId,
@@ -1437,6 +1442,7 @@ exports.updateProperty = async (req, res) => {
       "viewStats",
       "availableUnits",
       "developer",
+      "media",
     ];
 
     // Only builders and admins can set availableUnits and developer fields
@@ -1518,6 +1524,11 @@ exports.updateProperty = async (req, res) => {
       });
     }
 
+    // Coerce string booleans from FormData to actual booleans
+    if (req.body.isReraApproved !== undefined) {
+      req.body.isReraApproved = req.body.isReraApproved === 'true' || req.body.isReraApproved === true;
+    }
+
     const imageFiles = req.files?.images || [];
     const videoFiles = req.files?.videos || [];
     const brochureFiles = req.files?.brochure || [];
@@ -1528,7 +1539,7 @@ exports.updateProperty = async (req, res) => {
       req.body.coverImage = getPropertyMediaUrl(uploaded.fileName, "image");
     }
 
-    let media = existingProperty.media || [];
+    let media = req.body.media || existingProperty.media || [];
 
     if (videoFiles.length > 0) {
       media = media.filter((item) => item.type !== "video");

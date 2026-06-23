@@ -137,7 +137,7 @@ const propertySchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-
+        
         lift: {
             type: Boolean,
             default: false,
@@ -146,7 +146,6 @@ const propertySchema = new mongoose.Schema(
         floor: {
             type: Number,
             default: 0,
-            min: 0,
         },
 
         totalFloors: {
@@ -192,6 +191,29 @@ const propertySchema = new mongoose.Schema(
         },
 
         possession: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+
+        availableDate: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+
+        ageOfConstruction: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+
+        isReraApproved: {
+            type: Boolean,
+            default: false,
+        },
+
+        reraNumber: {
             type: String,
             trim: true,
             default: '',

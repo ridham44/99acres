@@ -118,7 +118,7 @@ const normalizeBody = (req) => {
 
     req.body.amenityIds = toJsonArray(req.body.amenityIds);
     req.body.furnishings = toJsonArray(req.body.furnishings);
-    delete req.body.nearbyPlaces;
+    req.body.nearbyPlaces = toJsonArray(req.body.nearbyPlaces);
 
     // --- Technical Audit Fields Normalization ---
     req.body.nearbyLandmarks = toJsonArray(req.body.nearbyLandmarks);
