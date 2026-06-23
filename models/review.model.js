@@ -20,58 +20,6 @@ const reviewSchema = new mongoose.Schema(
             required: true,
         },
 
-        userType: {
-            type: String,
-            enum: ['Owner', 'Tenant'],
-            required: true,
-        },
-
-        stayDuration: {
-            type: String,
-            trim: true,
-            required: true,
-        },
-
-        connectivity: {
-            type: Number,
-            min: 1,
-            max: 5,
-            required: true,
-        },
-
-        lifestyle: {
-            type: Number,
-            min: 1,
-            max: 5,
-            required: true,
-        },
-
-        safety: {
-            type: Number,
-            min: 1,
-            max: 5,
-            required: true,
-        },
-
-        environment: {
-            type: Number,
-            min: 1,
-            max: 5,
-            required: true,
-        },
-
-        positive: {
-            type: String,
-            trim: true,
-            default: '',
-        },
-
-        negative: {
-            type: String,
-            trim: true,
-            default: '',
-        },
-
         positiveKeywordIds: [
             {
                 type: mongoose.Schema.Types.ObjectId,
@@ -86,14 +34,16 @@ const reviewSchema = new mongoose.Schema(
             },
         ],
 
-        agreeCount: {
-            type: Number,
-            default: 0,
+        comment: {
+            type: String,
+            trim: true,
+            default: '',
         },
 
-        disagreeCount: {
+        rating: {
             type: Number,
-            default: 0,
+            min: 1,
+            max: 5,
         },
 
         createdAt: {

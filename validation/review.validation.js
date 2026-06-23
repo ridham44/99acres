@@ -13,12 +13,9 @@ exports.validateCreateReview = (req, res, next) => {
     try {
         const {
             propertyId,
-            userType,
-            stayDuration,
-            connectivity,
-            lifestyle,
-            safety,
-            environment,
+            name,
+            comment,
+            rating,
             positiveKeywordIds = [],
             negativeKeywordIds = [],
         } = req.body;
@@ -30,45 +27,45 @@ exports.validateCreateReview = (req, res, next) => {
             });
         }
 
-        if (!userType || !['Owner', 'Tenant'].includes(userType)) {
+        // Validate new rating field (Required, out of 5)
+        if (rating === undefined || rating === null) {
             return res.status(status.BadRequest).json({
                 success: false,
-                message: 'Valid userType is required',
+                message: 'Rating is required',
+            });
+        }
+        if (isNaN(rating) || Number(rating) < 1 || Number(rating) > 5) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: 'Rating must be a number between 1 and 5',
             });
         }
 
-        if (!stayDuration || typeof stayDuration !== 'string' || !stayDuration.trim()) {
+        // Validate name (Required, max 25 characters)
+        if (name === undefined || name === null || typeof name !== 'string' || !name.trim()) {
             return res.status(status.BadRequest).json({
                 success: false,
-                message: 'Stay duration is required',
+                message: 'Name is required',
+            });
+        }
+        if (name.trim().length > 25) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: 'Name must be at most 25 characters long',
             });
         }
 
-        if (Number(connectivity) < 1 || Number(connectivity) > 5) {
+        // Validate comment (Required, min 10 and max 100 characters)
+        if (comment === undefined || comment === null || typeof comment !== 'string' || comment.trim().length < 10) {
             return res.status(status.BadRequest).json({
                 success: false,
-                message: 'Connectivity must be between 1 and 5',
+                message: 'Comment is required and must be at least 10 characters long',
             });
         }
-
-        if (Number(lifestyle) < 1 || Number(lifestyle) > 5) {
+        if (comment.trim().length > 100) {
             return res.status(status.BadRequest).json({
                 success: false,
-                message: 'Lifestyle must be between 1 and 5',
-            });
-        }
-
-        if (Number(safety) < 1 || Number(safety) > 5) {
-            return res.status(status.BadRequest).json({
-                success: false,
-                message: 'Safety must be between 1 and 5',
-            });
-        }
-
-        if (Number(environment) < 1 || Number(environment) > 5) {
-            return res.status(status.BadRequest).json({
-                success: false,
-                message: 'Environment must be between 1 and 5',
+                message: 'Comment must be at most 100 characters long',
             });
         }
 
@@ -86,27 +83,10 @@ exports.validateCreateReview = (req, res, next) => {
             });
         }
 
-        if (req.body.positive && typeof req.body.positive !== 'string') {
-            return res.status(status.BadRequest).json({
-                success: false,
-                message: 'Positive must be a string',
-            });
-        }
-
-        if (req.body.negative && typeof req.body.negative !== 'string') {
-            return res.status(status.BadRequest).json({
-                success: false,
-                message: 'Negative must be a string',
-            });
-        }
-
-        req.body.stayDuration = stayDuration.trim();
-        req.body.positive = req.body.positive ? req.body.positive.trim() : '';
-        req.body.negative = req.body.negative ? req.body.negative.trim() : '';
-        req.body.connectivity = Number(connectivity);
-        req.body.lifestyle = Number(lifestyle);
-        req.body.safety = Number(safety);
-        req.body.environment = Number(environment);
+        // Sanitize & format req.body
+        req.body.name = name.trim();
+        req.body.comment = comment.trim();
+        req.body.rating = Number(rating);
 
         next();
     } catch (error) {

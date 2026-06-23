@@ -2020,36 +2020,70 @@ Creates one review per user per property.
 
 `POST {{baseUrl}}/reviews`
 
-Headers: auth required.
+**Headers:** auth required.
 
-Body:
+**Validations:**
+* **Inquiry Check**: The user must have previously submitted an inquiry for this property. If not, returns `403 Forbidden`.
+* **Self-Review Prevention**: The user cannot be the owner or dealer of the property. If so, returns `403 Forbidden`.
 
+**Body:**
 ```json
 {
   "propertyId": "{{propertyId}}",
-  "userType": "Tenant",
-  "stayDuration": "1 year",
-  "connectivity": 4,
-  "lifestyle": 5,
-  "safety": 4,
-  "environment": 3,
-  "positive": "Good society and connectivity.",
-  "negative": "Traffic during peak hours.",
+  "name": "John Doe (Optional, defaults to user profile name)",
+  "comment": "Good society and connectivity.",
+  "rating": 5,
   "positiveKeywordIds": ["{{positiveKeywordId}}"],
   "negativeKeywordIds": ["{{negativeKeywordId}}"]
 }
 ```
 
-Allowed `userType`: `Owner`, `Tenant`.
-Ratings must be numbers from 1 to 5.
+* `rating` is required and must be a number from 1 to 5.
+* `comment` and `name` are optional.
 
 ### Get Reviews
 
-Public endpoint.
+Public endpoint. Returns a list of reviews. Each review object contains `userRole` and `userType` indicating the reviewer's type (e.g., `"user"`, `"broker"`, `"channel_partner"`, `"builder"`, `"admin"`).
 
 ```txt
 GET {{baseUrl}}/reviews
 GET {{baseUrl}}/reviews?propertyId={{propertyId}}&page=1&limit=10
+```
+
+### Get Property Reviews and Average
+
+Public endpoint. Returns the overall average rating and list of reviews for a particular property.
+
+`GET {{baseUrl}}/reviews/property/{{propertyId}}`
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Reviews and average rating fetched successfully",
+  "data": {
+    "averageRating": 4.5,
+    "totalReviews": 2,
+    "reviews": [
+      {
+        "_id": "...",
+        "propertyId": "...",
+        "userId": {
+          "_id": "...",
+          "role": "broker"
+        },
+        "name": "Amit Broker",
+        "comment": "Very accessible.",
+        "rating": 5,
+        "positiveKeywordIds": [],
+        "negativeKeywordIds": [],
+        "userRole": "broker",
+        "userType": "broker",
+        "createdAt": "..."
+      }
+    ]
+  }
+}
 ```
 
 ### Get Property Review Summary
