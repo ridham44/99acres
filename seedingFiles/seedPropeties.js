@@ -27,39 +27,6 @@ const furnishingIds = [
     '6a0ea543e194ff9a92e42481',
 ];
 
-const nearbyPlaceIds = [
-    '6a0eb1e811a08f82bfa481c5',
-    '6a0eb1e811a08f82bfa481d1',
-    '6a0eb1e811a08f82bfa481c6',
-    '6a0eb1e811a08f82bfa481cc',
-    '6a0eb1e811a08f82bfa481c4',
-    '6a0eb1e811a08f82bfa481d2',
-    '6a0eb1e811a08f82bfa481cb',
-    '6a0eb1e811a08f82bfa481c7',
-    '6a0eb1e811a08f82bfa481d0',
-    '6a0eb1e811a08f82bfa481ca',
-    '6a0eb1e811a08f82bfa481c8',
-    '6a0eb1e811a08f82bfa481cd',
-    '6a0eb1e811a08f82bfa481c9',
-    '6a0eb1e811a08f82bfa481cf',
-    '6a0eb1e811a08f82bfa481ce',
-    '6a0eb1e811a08f82bfa481d3',
-    '6a0eb1e811a08f82bfa481c2',
-    '6a0eb1e811a08f82bfa481c3',
-    '6a0eb1e811a08f82bfa481c1',
-    '6a0eb1e811a08f82bfa481be',
-    '6a0eb1e811a08f82bfa481bf',
-    '6a0eb1e811a08f82bfa481c0',
-    '6a0eb1e811a08f82bfa481bd',
-    '6a0eb1e811a08f82bfa481bc',
-    '6a0eb1e811a08f82bfa481bb',
-    '6a0ea5ace194ff9a92e4249f',
-    '6a0ea5a2e194ff9a92e4249b',
-    '6a0ea599e194ff9a92e42497',
-    '6a0ea590e194ff9a92e42493',
-    '6a0ea584e194ff9a92e4248f',
-];
-
 const propertyImages = [
     {
         id: '6a155df8907a122bdca28be5',
@@ -730,12 +697,6 @@ function buildProperty(item, index) {
             furnishingId: toObjectId(id),
             quantity: furnishingIndex + 1,
         })),
-        nearbyPlaces: pickFromIndex(nearbyPlaceIds, index, 3).map((id, nearbyIndex) => ({
-            nearbyId: toObjectId(id),
-            distance: Number((1.2 + nearbyIndex + index * 0.2).toFixed(1)),
-            distanceUnit: 'km',
-        })),
-
         media: [
             { type: 'image', fileName: imageFileName, uploadedAt: createdAt },
             { type: 'video', fileName: `${item.id}.mp4`, uploadedAt: updatedAt },
@@ -753,30 +714,11 @@ function buildProperty(item, index) {
         deletedAt: null,
 
         nearbyLandmarks: [
-            {
-                category: 'Educational Institute',
-                icon: 'school_outlined',
-                places: [
-                    { name: `${item.locality} Public School`, distance: '2.1 Km' },
-                    { name: 'Ahmedabad International School', distance: '4.4 Km' },
-                ],
-            },
-            {
-                category: 'Hospital',
-                icon: 'local_hospital_outlined',
-                places: [
-                    { name: `${item.locality} Multispeciality Hospital`, distance: '1.8 Km' },
-                    { name: 'Zydus Hospitals', distance: '5.0 Km' },
-                ],
-            },
-            {
-                category: 'Shopping',
-                icon: 'shopping_cart_outlined',
-                places: [
-                    { name: `${item.locality} Market`, distance: '1.0 Km' },
-                    { name: 'Acropolis Mall', distance: '3.5 Km' },
-                ],
-            },
+            { name: `${item.locality} Public School`, distance: '2.1 Km' },
+            { name: 'Ahmedabad International School', distance: '4.4 Km' },
+            { name: `${item.locality} Multispeciality Hospital`, distance: '1.8 Km' },
+            { name: 'Zydus Hospitals', distance: '5.0 Km' },
+            { name: `${item.locality} Market`, distance: '1.0 Km' },
         ],
 
         locationCoordinates: {

@@ -80,8 +80,7 @@ exports.submitInquiry = async (req, res) => {
             .populate('ownerId', 'name email phone role')
             .populate('dealerId', 'name email phone role')
             .populate('amenityIds', 'amenityName')
-            .populate('furnishings.furnishingId', 'furnitureName')
-            .populate('nearbyPlaces.nearbyId', 'placeName placeType city locality');
+            .populate('furnishings.furnishingId', 'furnitureName');
 
         if (!property) {
             return res.status(status.NotFound).json({
@@ -284,7 +283,6 @@ exports.getReceivedInquiries = async (req, res) => {
                     { path: 'dealerId', select: 'name email phone role' },
                     { path: 'amenityIds', select: 'amenityName' },
                     { path: 'furnishings.furnishingId', select: 'furnitureName' },
-                    { path: 'nearbyPlaces.nearbyId', select: 'placeName placeType city locality' },
                 ],
             })
             .sort({ createdAt: -1 });
@@ -370,7 +368,6 @@ exports.getMyInquiries = async (req, res) => {
                     { path: 'dealerId', select: 'name email phone role' },
                     { path: 'amenityIds', select: 'amenityName' },
                     { path: 'furnishings.furnishingId', select: 'furnitureName' },
-                    { path: 'nearbyPlaces.nearbyId', select: 'placeName placeType city locality' },
                 ],
             })
             .sort({ createdAt: -1 });

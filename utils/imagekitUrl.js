@@ -54,11 +54,6 @@ const getBankIconUrl = (fileName) => {
     return `${getBaseUrl()}/banks/icons/${fileName}`;
 };
 
-const getNearbyPlaceIconUrl = (fileName) => {
-    if (!fileName) return null;
-    return `${getBaseUrl()}/nearby-places/icons/${fileName}`;
-};
-
 const getAmenityIconUrl = (fileName) => {
     if (!fileName) return null;
     return `${getBaseUrl()}/amenities/icons/${fileName}`;
@@ -103,7 +98,6 @@ module.exports = {
     getUserDocumentUrl,
     getAgentCompanyImageUrl,
     getBankIconUrl,
-    getNearbyPlaceIconUrl,
     getAmenityIconUrl,
     getFurnitureIconUrl,
     getBlogCoverImageUrl,

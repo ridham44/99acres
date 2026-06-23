@@ -225,26 +225,6 @@ const propertySchema = new mongoose.Schema(
             },
         ],
 
-        nearbyPlaces: [
-            {
-                nearbyId: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'NearbyPlace',
-                    required: true,
-                },
-                distance: {
-                    type: Number,
-                    required: true,
-                    min: 0,
-                },
-                distanceUnit: {
-                    type: String,
-                    enum: ['m', 'km'],
-                    default: 'km',
-                },
-            },
-        ],
-        
         media: [
             {
                 fileName: {
@@ -358,9 +338,8 @@ const propertySchema = new mongoose.Schema(
         // --- Technical Audit Fields ---
         nearbyLandmarks: [
             {
-                category: String,
-                icon: String,
-                places: [{ name: String, distance: String }]
+                name: String,
+                distance: String,
             }
         ],
 

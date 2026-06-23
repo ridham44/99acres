@@ -11,7 +11,6 @@ const {
   getUserProfileImageUrl,
   getPropertyBrochureUrl,
   getBankIconUrl,
-  getNearbyPlaceIconUrl,
   getAmenityIconUrl,
   getFurnitureIconUrl,
   getAgentCompanyImageUrl,
@@ -50,6 +49,7 @@ const formatPropertyCard = (item) => {
     city: item.city,
     state: item.state,
     status: item.status,
+    nearbyLandmarks: item.nearbyLandmarks || [],
     coverImage,
     postedBy:
       item.dealerId || item.ownerId
@@ -132,18 +132,6 @@ const formatFullProperty = (item) => {
         ...fur,
         furnitureIconUrl: fur.furnitureIcon ? getFurnitureIconUrl(fur.furnitureIcon) : null,
         quantity: furnishItem.quantity,
-      },
-    };
-  });
-
-  propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((placeItem) => {
-    const near = placeItem.nearbyId ? (placeItem.nearbyId._doc || placeItem.nearbyId) : {};
-    return {
-      nearbyId: {
-        ...near,
-        placeIconUrl: near.placeIcon ? getNearbyPlaceIconUrl(near.placeIcon) : null,
-        distance: placeItem.distance,
-        distanceUnit: placeItem.distanceUnit,
       },
     };
   });
@@ -261,7 +249,6 @@ exports.createProperty = async (req, res) => {
       "topAgents",
       "amenityIds",
       "furnishings",
-      "nearbyPlaces",
       "specifications",
       "whyConsider",
       "preels",
@@ -615,7 +602,7 @@ exports.getProperties = async (req, res) => {
     const [properties, total] = await Promise.all([
       Property.find(filter)
         .select(
-          "_id title propertyName propertyType propertyCategory listingType price priceUnit priceOnRequest address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing amenityIds furnishingIds nearbyIds ownership flooring waterSource otherKeyFacilities availableUnits developer",
+          "_id title propertyName propertyType propertyCategory listingType price priceUnit priceOnRequest address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing nearbyLandmarks amenityIds furnishingIds ownership flooring waterSource otherKeyFacilities availableUnits developer",
         )
         .populate("ownerId", "name role profileImage")
         .populate("dealerId", "name role profileImage")
@@ -743,7 +730,7 @@ exports.myProperty = async (req, res) => {
     const [properties, total] = await Promise.all([
       Property.find(filter)
         .select(
-          "_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt",
+          "_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing nearbyLandmarks createdAt",
         )
         .populate("ownerId", "name role profileImage")
         .populate("dealerId", "name role profileImage")
@@ -836,7 +823,7 @@ exports.getPropertiesByUser = async (req, res) => {
     const [properties, total] = await Promise.all([
       Property.find(filter)
         .select(
-          "_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt",
+          "_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing nearbyLandmarks createdAt",
         )
         .populate("ownerId", "name role profileImage")
         .populate("dealerId", "name role profileImage")
@@ -957,7 +944,7 @@ exports.getLaunchStatusProperties = async (req, res) => {
     const [properties, total] = await Promise.all([
       Property.find(filter)
         .select(
-          "_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing createdAt isLaunch launchDateOption launchDate preLaunchMonth preLaunchYear availableUnits developer",
+          "_id title propertyName propertyType propertyCategory listingType price priceUnit address locality city city_area state status ownerId dealerId media coverImage bhk bedrooms bathrooms area facing nearbyLandmarks createdAt isLaunch launchDateOption launchDate preLaunchMonth preLaunchYear availableUnits developer",
         )
         .populate("ownerId", "name role profileImage")
         .populate("dealerId", "name role profileImage")
@@ -1266,7 +1253,6 @@ exports.getPrelaunchedProperties = async (req, res) => {
         .populate("dealerId", "name email phone role profileImage")
         .populate("amenityIds", "amenityName amenityIcon")
         .populate("furnishings.furnishingId", "furnitureName furnitureIcon")
-        .populate("nearbyPlaces.nearbyId", "placeName placeType city locality placeIcon")
         .sort(sort)
         .skip(skip)
         .limit(currentLimit),
@@ -1316,8 +1302,7 @@ exports.getPropertyById = async (req, res) => {
       .populate("ownerId", "name email phone role profileImage")
       .populate("dealerId", "name email phone role profileImage")
       .populate("amenityIds", "amenityName amenityIcon")
-      .populate("furnishings.furnishingId", "furnitureName furnitureIcon")
-      .populate("nearbyPlaces.nearbyId", "placeName placeType city locality placeIcon");
+      .populate("furnishings.furnishingId", "furnitureName furnitureIcon");
 
 
     if (!property) {
@@ -1381,19 +1366,6 @@ exports.getPropertyById = async (req, res) => {
       };
     });
 
-    propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => {
-      const near = item.nearbyId ? (item.nearbyId._doc || item.nearbyId) : {};
-      return {
-        nearbyId: {
-          ...near,
-          placeIconUrl: near.placeIcon ? getNearbyPlaceIconUrl(near.placeIcon) : null,
-          distance: item.distance,
-          distanceUnit: item.distanceUnit,
-        },
-      };
-    });
-
-
     // Role-based filtering for sensitive builder fields
       // `availableUnits` and `developer` are visible to all roles in detail responses
 
@@ -1455,7 +1427,6 @@ exports.updateProperty = async (req, res) => {
       "topAgents",
       "amenityIds",
       "furnishings",
-      "nearbyPlaces",
       "specifications",
       "whyConsider",
       "preels",
@@ -1606,8 +1577,7 @@ exports.updateProperty = async (req, res) => {
       .populate("ownerId", "name email phone role profileImage")
       .populate("dealerId", "name email phone role profileImage")
       .populate("amenityIds", "amenityName amenityIcon")
-      .populate("furnishings.furnishingId", "furnitureName furnitureIcon")
-      .populate("nearbyPlaces.nearbyId", "placeName placeType city locality placeIcon");
+      .populate("furnishings.furnishingId", "furnitureName furnitureIcon");
 
 
     const propertyObj = property.toObject();
@@ -1657,19 +1627,6 @@ exports.updateProperty = async (req, res) => {
         },
       };
     });
-
-    propertyObj.nearbyPlaces = (propertyObj.nearbyPlaces || []).map((item) => {
-      const near = item.nearbyId ? (item.nearbyId._doc || item.nearbyId) : {};
-      return {
-        nearbyId: {
-          ...near,
-          placeIconUrl: near.placeIcon ? getNearbyPlaceIconUrl(near.placeIcon) : null,
-          distance: item.distance,
-          distanceUnit: item.distanceUnit,
-        },
-      };
-    });
-
 
     return res.status(status.OK).json({
       success: true,

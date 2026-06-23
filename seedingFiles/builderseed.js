@@ -23,13 +23,6 @@ const furnishingIds = [
     '6a0ea543e194ff9a92e42481',
 ];
 
-const nearbyPlaceIds = [
-    '6a0eb1e811a08f82bfa481c5',
-    '6a0eb1e811a08f82bfa481d1',
-    '6a0eb1e811a08f82bfa481c4',
-    '6a0ea5ace194ff9a92e4249f',
-];
-
 const builderProperties = [
     {
         _id: '6a170001bbb7f0be8ce9144b',
@@ -225,12 +218,6 @@ function buildBuilderProperty(item, index) {
             furnishingId: toObjectId(id),
             quantity: furnishingIndex + 1,
         })),
-        nearbyPlaces: nearbyPlaceIds.slice(index, index + 3).map((id, nearbyIndex) => ({
-            nearbyId: toObjectId(id),
-            distance: Number((1.4 + nearbyIndex * 0.8).toFixed(1)),
-            distanceUnit: 'km',
-        })),
-
         media: [
             { fileName: item.imageFileName, type: 'image', uploadedAt: createdAt },
             { fileName: `${item._id}.mp4`, type: 'video', uploadedAt: createdAt },
@@ -247,30 +234,11 @@ function buildBuilderProperty(item, index) {
         deletedAt: null,
 
         nearbyLandmarks: [
-            {
-                category: 'Educational Institute',
-                icon: 'school_outlined',
-                places: [
-                    { name: 'Ahmedabad International School', distance: '3.8 Km' },
-                    { name: 'Nirma University', distance: '5.4 Km' },
-                ],
-            },
-            {
-                category: 'Hospital',
-                icon: 'local_hospital_outlined',
-                places: [
-                    { name: 'Zydus Hospitals', distance: '4.2 Km' },
-                    { name: 'Apollo Clinic', distance: '2.6 Km' },
-                ],
-            },
-            {
-                category: 'Transit',
-                icon: 'directions_bus_outlined',
-                places: [
-                    { name: 'SG Highway BRTS', distance: '1.1 Km' },
-                    { name: 'Sardar Patel Ring Road', distance: '3.0 Km' },
-                ],
-            },
+            { name: 'Ahmedabad International School', distance: '3.8 Km' },
+            { name: 'Nirma University', distance: '5.4 Km' },
+            { name: 'Zydus Hospitals', distance: '4.2 Km' },
+            { name: 'Apollo Clinic', distance: '2.6 Km' },
+            { name: 'SG Highway BRTS', distance: '1.1 Km' },
         ],
         locationCoordinates: {
             latitude: index === 0 ? 23.1035 : 23.0748,

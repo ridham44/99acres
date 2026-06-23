@@ -10,7 +10,6 @@ const measureTypes = ['sqft', 'sqmt', 'yard', 'bigha'];
 const furnishedTypes = ['No', 'Semi', 'Yes'];
 const availableForTypes = ['Family', 'Bachelors', 'Anyone', 'Boys', 'Girls'];
 const propertyStatuses = ['Draft', 'Active', 'Inactive', 'Sold', 'Rented'];
-const distanceUnits = ['m', 'km'];
 
 const sendError = (res, message) => {
     return res.status(status.BadRequest).json({
@@ -22,6 +21,51 @@ const sendError = (res, message) => {
 const validateRequiredString = (value) => typeof value === 'string' && value.trim() !== '';
 
 const validateNonNegativeNumber = (value) => typeof value === 'number' && !Number.isNaN(value) && value >= 0;
+
+const getDistanceValue = (value) => {
+    if (typeof value === 'number') return value;
+    if (typeof value !== 'string') return NaN;
+
+    const cleanValue = value.trim().toLowerCase().replace(/\s+/g, '');
+    const match = cleanValue.match(/^(\d+(\.\d+)?)(km)?$/);
+    return match ? Number(match[1]) : NaN;
+};
+
+const normalizeKmDistance = (value) => {
+    const distanceValue = getDistanceValue(value);
+    if (Number.isNaN(distanceValue)) return value;
+
+    return `${distanceValue} km`;
+};
+
+const validateNearbyLandmarks = (nearbyLandmarks) => {
+    if (nearbyLandmarks === undefined) return null;
+
+    if (!Array.isArray(nearbyLandmarks)) {
+        return 'nearbyLandmarks must be an array';
+    }
+
+    if (nearbyLandmarks.length > 5) {
+        return 'A property can have at most 5 nearby landmarks';
+    }
+
+    for (const landmark of nearbyLandmarks) {
+        if (!landmark || typeof landmark !== 'object' || Array.isArray(landmark)) {
+            return 'Each nearbyLandmarks item must be an object';
+        }
+
+        if (!validateRequiredString(landmark.name)) {
+            return 'Place name is required in nearbyLandmarks';
+        }
+
+        const distanceValue = getDistanceValue(landmark.distance);
+        if (Number.isNaN(distanceValue) || distanceValue < 0) {
+            return 'Distance must be a non-negative km value in nearbyLandmarks';
+        }
+    }
+
+    return null;
+};
 
 const toNumber = (value) => {
     if (value === undefined || value === null || value === '') return undefined;
@@ -74,7 +118,7 @@ const normalizeBody = (req) => {
 
     req.body.amenityIds = toJsonArray(req.body.amenityIds);
     req.body.furnishings = toJsonArray(req.body.furnishings);
-    req.body.nearbyPlaces = toJsonArray(req.body.nearbyPlaces);
+    delete req.body.nearbyPlaces;
 
     // --- Technical Audit Fields Normalization ---
     req.body.nearbyLandmarks = toJsonArray(req.body.nearbyLandmarks);
@@ -128,10 +172,11 @@ const normalizeBody = (req) => {
         }));
     }
 
-    if (Array.isArray(req.body.nearbyPlaces)) {
-        req.body.nearbyPlaces = req.body.nearbyPlaces.map((item) => ({
-            ...item,
-            distance: toNumber(item.distance),
+    if (Array.isArray(req.body.nearbyLandmarks)) {
+        req.body.nearbyLandmarks = req.body.nearbyLandmarks.map((landmark) => ({
+            ...landmark,
+            name: typeof landmark.name === 'string' ? landmark.name.trim() : landmark.name,
+            distance: normalizeKmDistance(landmark.distance),
         }));
     }
 };
@@ -171,7 +216,7 @@ const validateCreateProperty = (req, res, next) => {
             maintenance,
             amenityIds,
             furnishings,
-            nearbyPlaces,
+            nearbyLandmarks,
             ownership,
             flooring,
             waterSource,
@@ -323,24 +368,9 @@ const validateCreateProperty = (req, res, next) => {
             }
         }
 
-        if (nearbyPlaces !== undefined) {
-            if (!Array.isArray(nearbyPlaces)) {
-                return sendError(res, 'nearbyPlaces must be an array');
-            }
-
-            for (const item of nearbyPlaces) {
-                if (!item.nearbyId || !isValidObjectId(item.nearbyId)) {
-                    return sendError(res, 'Invalid nearbyId in nearbyPlaces');
-                }
-
-                if (!validateNonNegativeNumber(item.distance)) {
-                    return sendError(res, 'Distance must be a non-negative number in nearbyPlaces');
-                }
-
-                if (item.distanceUnit && !distanceUnits.includes(item.distanceUnit)) {
-                    return sendError(res, 'Invalid distanceUnit in nearbyPlaces');
-                }
-            }
+        const nearbyLandmarksError = validateNearbyLandmarks(nearbyLandmarks);
+        if (nearbyLandmarksError) {
+            return sendError(res, nearbyLandmarksError);
         }
 
         next();
@@ -394,7 +424,7 @@ const validateUpdateProperty = (req, res, next) => {
             maintenance,
             amenityIds,
             furnishings,
-            nearbyPlaces,
+            nearbyLandmarks,
             ownership,
             flooring,
             waterSource,
@@ -550,24 +580,9 @@ const validateUpdateProperty = (req, res, next) => {
             }
         }
 
-        if (nearbyPlaces !== undefined) {
-            if (!Array.isArray(nearbyPlaces)) {
-                return sendError(res, 'nearbyPlaces must be an array');
-            }
-
-            for (const item of nearbyPlaces) {
-                if (!item.nearbyId || !isValidObjectId(item.nearbyId)) {
-                    return sendError(res, 'Invalid nearbyId in nearbyPlaces');
-                }
-
-                if (!validateNonNegativeNumber(item.distance)) {
-                    return sendError(res, 'Distance must be a non-negative number in nearbyPlaces');
-                }
-
-                if (item.distanceUnit !== undefined && !distanceUnits.includes(item.distanceUnit)) {
-                    return sendError(res, 'Invalid distanceUnit in nearbyPlaces');
-                }
-            }
+        const nearbyLandmarksError = validateNearbyLandmarks(nearbyLandmarks);
+        if (nearbyLandmarksError) {
+            return sendError(res, nearbyLandmarksError);
         }
 
         next();
