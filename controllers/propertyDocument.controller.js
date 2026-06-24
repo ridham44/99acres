@@ -21,14 +21,14 @@ exports.createPropertyDocument = async (req, res) => {
             });
         }
 
-        const uploaded = { fileName: 'test-file.pdf' };
+        const uploaded = await uploadToImagekit(req.file, 'properties/documents');
 
         const document = await PropertyDocument.create({
             propertyId,
             documentType,
             title,
             fileName: uploaded.fileName,
-            fileSize: (req.file && req.file.size) || 0,
+            fileSize: req.file.size || 0,
             status: 'Pending',
             createdAt: new Date(),
             updatedAt: new Date(),

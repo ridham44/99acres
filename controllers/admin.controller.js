@@ -400,9 +400,17 @@ exports.getRequirementById = async (req, res) => {
 // =============================================================================
 exports.getInquiries = async (req, res) => {
     try {
-        const { page, limit, search, status: inquiryStatus, isAgent, propertyCategory, listingType, priceRange, assigned } = req.query;
+        const { page, limit, search, status: inquiryStatus, isAgent, propertyCategory, listingType, priceRange, assigned, propertyId, inquiryId } = req.query;
 
         const filter = { deletedAt: null };
+
+        if (inquiryId) {
+            filter._id = inquiryId;
+        }
+
+        if (propertyId) {
+            filter.property_id = propertyId;
+        }
 
         if (inquiryStatus && inquiryStatus !== 'all') {
             filter.status = inquiryStatus === 'true';
@@ -506,9 +514,13 @@ exports.getInquiries = async (req, res) => {
 // =============================================================================
 exports.getAdminPropertyDocuments = async (req, res) => {
     try {
-        const { page, limit, search, status: docStatus, documentType } = req.query;
+        const { page, limit, search, status: docStatus, documentType, docId } = req.query;
 
         const filter = { deletedAt: null };
+
+        if (docId) {
+            filter._id = docId;
+        }
 
         if (docStatus && docStatus !== 'all') {
             filter.status = docStatus;
@@ -654,6 +666,55 @@ exports.updateAdminDocumentStatus = async (req, res) => {
             success: true,
             message: `Property document status updated to ${newStatus}`,
             data: document,
+        });
+    } catch (error) {
+        return res.status(status.InternalServerError).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+// =============================================================================
+// 9.  PATCH /api/admin/properties/:id/status
+//     Update property status (Active / Inactive)
+// =============================================================================
+exports.updatePropertyStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status: newStatus } = req.body;
+
+        if (!['Active', 'Inactive'].includes(newStatus)) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: 'Invalid status. Must be Active or Inactive.',
+            });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(status.BadRequest).json({
+                success: false,
+                message: 'Invalid property ID',
+            });
+        }
+
+        const property = await Property.findOneAndUpdate(
+            { _id: id, deletedAt: null },
+            { status: newStatus, updatedAt: new Date() },
+            { new: true }
+        );
+
+        if (!property) {
+            return res.status(status.NotFound).json({
+                success: false,
+                message: 'Property not found',
+            });
+        }
+
+        return res.status(status.OK).json({
+            success: true,
+            message: `Property status updated to ${newStatus} successfully`,
+            data: property,
         });
     } catch (error) {
         return res.status(status.InternalServerError).json({

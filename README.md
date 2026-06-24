@@ -1927,7 +1927,6 @@ Document status is managed by the system:
 Allowed file types: `pdf`, `jpg`, `jpeg`, `png`, `doc`, `docx`.
 Max file size: 5 MB.
 
-Note: in the current create API, the file upload result is hardcoded as `test-file.pdf`. Update API uses actual ImageKit upload.
 
 Postman test script:
 

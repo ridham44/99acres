@@ -35,4 +35,12 @@ router.patch(
   controller.updateAdminDocumentStatus,
 );
 
+// PATCH /api/admin/properties/:id/status — update property status
+router.patch(
+  "/properties/:id/status",
+  auth,
+  admin,
+  controller.updatePropertyStatus,
+);
+
 module.exports = router;

@@ -16,17 +16,17 @@ const {
   getAgentCompanyImageUrl,
 } = require("../utils/imagekitUrl");
 
-
 const { recordPropertyVisit } = require("./userHome.controller");
-
 
 const formatPropertyCard = (item) => {
   const firstImage = (item.media || []).find(
     (mediaItem) => mediaItem.type === "image",
   );
-  const coverImage = item.coverImage || (firstImage
-    ? getPropertyMediaUrl(firstImage.fileName, firstImage.type)
-    : null);
+  const coverImage =
+    item.coverImage ||
+    (firstImage
+      ? getPropertyMediaUrl(firstImage.fileName, firstImage.type)
+      : null);
 
   return {
     _id: item._id,
@@ -72,7 +72,6 @@ const formatPropertyCard = (item) => {
   };
 };
 
-
 const formatLaunchStatusPropertyCard = (item) => {
   const formatted = formatPropertyCard(item);
   return {
@@ -84,7 +83,6 @@ const formatLaunchStatusPropertyCard = (item) => {
     preLaunchYear: item.preLaunchYear || null,
   };
 };
-
 
 const formatFullProperty = (item) => {
   if (!item) return null;
@@ -114,31 +112,38 @@ const formatFullProperty = (item) => {
     url: getPropertyBrochureUrl(brochureItem.fileName),
   }));
 
-  const firstImage = propertyObj.media.find((mediaItem) => mediaItem.type === "image");
+  const firstImage = propertyObj.media.find(
+    (mediaItem) => mediaItem.type === "image",
+  );
   propertyObj.coverImage = propertyObj.coverImage || firstImage?.url || null;
 
   propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
-    const am = amenity ? (amenity._doc || amenity) : {};
+    const am = amenity ? amenity._doc || amenity : {};
     return {
       ...am,
       amenityIconUrl: am.amenityIcon ? getAmenityIconUrl(am.amenityIcon) : null,
     };
   });
 
-  propertyObj.furnishings = (propertyObj.furnishings || []).map((furnishItem) => {
-    const fur = furnishItem.furnishingId ? (furnishItem.furnishingId._doc || furnishItem.furnishingId) : {};
-    return {
-      furnishingId: {
-        ...fur,
-        furnitureIconUrl: fur.furnitureIcon ? getFurnitureIconUrl(fur.furnitureIcon) : null,
-        quantity: furnishItem.quantity,
-      },
-    };
-  });
+  propertyObj.furnishings = (propertyObj.furnishings || []).map(
+    (furnishItem) => {
+      const fur = furnishItem.furnishingId
+        ? furnishItem.furnishingId._doc || furnishItem.furnishingId
+        : {};
+      return {
+        furnishingId: {
+          ...fur,
+          furnitureIconUrl: fur.furnitureIcon
+            ? getFurnitureIconUrl(fur.furnitureIcon)
+            : null,
+          quantity: furnishItem.quantity,
+        },
+      };
+    },
+  );
 
   return propertyObj;
 };
-
 
 exports.createProperty = async (req, res) => {
   try {
@@ -190,7 +195,8 @@ exports.createProperty = async (req, res) => {
 
     // --- Validation for isLaunch (only for builder or channel_partner) ---
     if (userRole === "builder" || userRole === "channel_partner") {
-      const { isLaunch, launchDateOption, preLaunchMonth, preLaunchYear } = req.body;
+      const { isLaunch, launchDateOption, preLaunchMonth, preLaunchYear } =
+        req.body;
 
       if (isLaunch) {
         if (!["Launched", "Pre-Launch"].includes(isLaunch)) {
@@ -201,10 +207,14 @@ exports.createProperty = async (req, res) => {
         }
 
         if (isLaunch === "Launched") {
-          if (!launchDateOption || !["today", "yesterday"].includes(launchDateOption)) {
+          if (
+            !launchDateOption ||
+            !["today", "yesterday"].includes(launchDateOption)
+          ) {
             return res.status(status.BadRequest).json({
               success: false,
-              message: "For Launched status, launchDateOption is required and must be 'today' or 'yesterday'",
+              message:
+                "For Launched status, launchDateOption is required and must be 'today' or 'yesterday'",
             });
           }
 
@@ -221,7 +231,8 @@ exports.createProperty = async (req, res) => {
           if (!preLaunchMonth || !preLaunchYear) {
             return res.status(status.BadRequest).json({
               success: false,
-              message: "For Pre-Launch status, preLaunchMonth and preLaunchYear are required",
+              message:
+                "For Pre-Launch status, preLaunchMonth and preLaunchYear are required",
             });
           }
           req.body.launchDate = null;
@@ -283,12 +294,16 @@ exports.createProperty = async (req, res) => {
         const raw = u || {};
         const isCharge =
           raw.isCharge === true ||
-          raw.isCharge === 'true' ||
+          raw.isCharge === "true" ||
           raw.IsCharge === true ||
-          raw.IsCharge === 'true'
+          raw.IsCharge === "true"
             ? true
             : false;
-        const extraPrice = isCharge ? (raw.extraPrice ? Number(raw.extraPrice) : 0) : null;
+        const extraPrice = isCharge
+          ? raw.extraPrice
+            ? Number(raw.extraPrice)
+            : 0
+          : null;
         return {
           ...raw,
           isCharge,
@@ -299,7 +314,8 @@ exports.createProperty = async (req, res) => {
 
     // Coerce string booleans from FormData to actual booleans
     if (req.body.isReraApproved !== undefined) {
-      req.body.isReraApproved = req.body.isReraApproved === 'true' || req.body.isReraApproved === true;
+      req.body.isReraApproved =
+        req.body.isReraApproved === "true" || req.body.isReraApproved === true;
     }
 
     const property = await Property.create({
@@ -335,7 +351,6 @@ exports.createProperty = async (req, res) => {
   }
 };
 
-
 exports.getProperties = async (req, res) => {
   try {
     const {
@@ -345,7 +360,7 @@ exports.getProperties = async (req, res) => {
       city,
       locality,
       city_area,
-      area,           // area-wise filter: matches city_area or locality (sub-area)
+      area, // area-wise filter: matches city_area or locality (sub-area)
       state,
       listingType,
       propertyCategory,
@@ -433,7 +448,9 @@ exports.getProperties = async (req, res) => {
     if (area) {
       const areaRegex = { $regex: area.trim(), $options: "i" };
       filter.$and = filter.$and || [];
-      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
+      filter.$and.push({
+        $or: [{ city_area: areaRegex }, { locality: areaRegex }],
+      });
     }
 
     // 4. Listing Type & Category
@@ -620,9 +637,11 @@ exports.getProperties = async (req, res) => {
     const data = properties.map(formatPropertyCard);
 
     // Strip builder-only fields for non-builder / non-admin roles
-      // `availableUnits` and `developer` are visible to all roles in list responses
+    // `availableUnits` and `developer` are visible to all roles in list responses
 
-    const activeBanks = await Bank.find({ deletedAt: null }).sort({ createdAt: -1 });
+    const activeBanks = await Bank.find({ deletedAt: null }).sort({
+      createdAt: -1,
+    });
     const formattedBanks = activeBanks.map((bank) => {
       const bankObj = bank.toObject();
       return {
@@ -651,7 +670,6 @@ exports.getProperties = async (req, res) => {
   }
 };
 
-
 exports.myProperty = async (req, res) => {
   try {
     const {
@@ -661,7 +679,7 @@ exports.myProperty = async (req, res) => {
       propertyCategory,
       propertyType,
       city,
-      area,           // area-wise filter: matches city_area or locality
+      area, // area-wise filter: matches city_area or locality
       sortBy,
       page,
       limit,
@@ -713,7 +731,9 @@ exports.myProperty = async (req, res) => {
     if (area) {
       const areaRegex = { $regex: area.trim(), $options: "i" };
       filter.$and = filter.$and || [];
-      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
+      filter.$and.push({
+        $or: [{ city_area: areaRegex }, { locality: areaRegex }],
+      });
     }
 
     let sort = { createdAt: -1 };
@@ -764,12 +784,18 @@ exports.myProperty = async (req, res) => {
   }
 };
 
-
 exports.getPropertiesByUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { page, limit, listingType, propertyCategory, propertyType, area, sortBy } =
-      req.query;
+    const {
+      page,
+      limit,
+      listingType,
+      propertyCategory,
+      propertyType,
+      area,
+      sortBy,
+    } = req.query;
 
     const user = await User.findOne({ _id: userId, deletedAt: null }).lean();
     if (!user) {
@@ -782,12 +808,20 @@ exports.getPropertiesByUser = async (req, res) => {
     user.profileImageUrl = getUserProfileImageUrl(user.profileImage);
 
     if (user.role === "builder") {
-      const builderProfile = await Builder.findOne({ userId, deletedAt: null }).lean();
+      const builderProfile = await Builder.findOne({
+        userId,
+        deletedAt: null,
+      }).lean();
       user.builderProfile = builderProfile || null;
     } else if (["broker", "channel_partner"].includes(user.role)) {
-      const agentProfile = await Agent.findOne({ userId, deletedAt: null }).lean();
+      const agentProfile = await Agent.findOne({
+        userId,
+        deletedAt: null,
+      }).lean();
       if (agentProfile) {
-        agentProfile.companyImageUrl = getAgentCompanyImageUrl(agentProfile.companyImage);
+        agentProfile.companyImageUrl = getAgentCompanyImageUrl(
+          agentProfile.companyImage,
+        );
       }
       user.agentProfile = agentProfile || null;
     }
@@ -806,7 +840,9 @@ exports.getPropertiesByUser = async (req, res) => {
     if (area) {
       const areaRegex = { $regex: area.trim(), $options: "i" };
       filter.$and = filter.$and || [];
-      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
+      filter.$and.push({
+        $or: [{ city_area: areaRegex }, { locality: areaRegex }],
+      });
     }
 
     let sort = { createdAt: -1 };
@@ -858,7 +894,6 @@ exports.getPropertiesByUser = async (req, res) => {
   }
 };
 
-
 exports.getLaunchStatusProperties = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -885,19 +920,28 @@ exports.getLaunchStatusProperties = async (req, res) => {
     if (user.role !== "builder" && user.role !== "channel_partner") {
       return res.status(status.BadRequest).json({
         success: false,
-        message: "User must be a builder or channel partner to access Launched Status Flow",
+        message:
+          "User must be a builder or channel partner to access Launched Status Flow",
       });
     }
 
     user.profileImageUrl = getUserProfileImageUrl(user.profileImage);
 
     if (user.role === "builder") {
-      const builderProfile = await Builder.findOne({ userId, deletedAt: null }).lean();
+      const builderProfile = await Builder.findOne({
+        userId,
+        deletedAt: null,
+      }).lean();
       user.builderProfile = builderProfile || null;
     } else if (user.role === "channel_partner") {
-      const agentProfile = await Agent.findOne({ userId, deletedAt: null }).lean();
+      const agentProfile = await Agent.findOne({
+        userId,
+        deletedAt: null,
+      }).lean();
       if (agentProfile) {
-        agentProfile.companyImageUrl = getAgentCompanyImageUrl(agentProfile.companyImage);
+        agentProfile.companyImageUrl = getAgentCompanyImageUrl(
+          agentProfile.companyImage,
+        );
       }
       user.agentProfile = agentProfile || null;
     }
@@ -927,7 +971,9 @@ exports.getLaunchStatusProperties = async (req, res) => {
     if (area) {
       const areaRegex = { $regex: area.trim(), $options: "i" };
       filter.$and = filter.$and || [];
-      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
+      filter.$and.push({
+        $or: [{ city_area: areaRegex }, { locality: areaRegex }],
+      });
     }
 
     let sort = { createdAt: -1 };
@@ -979,7 +1025,6 @@ exports.getLaunchStatusProperties = async (req, res) => {
   }
 };
 
-
 exports.getPrelaunchedProperties = async (req, res) => {
   try {
     const {
@@ -989,7 +1034,7 @@ exports.getPrelaunchedProperties = async (req, res) => {
       city,
       locality,
       city_area,
-      area,           // area-wise filter: matches city_area or locality (sub-area)
+      area, // area-wise filter: matches city_area or locality (sub-area)
       state,
       listingType,
       propertyCategory,
@@ -1018,9 +1063,9 @@ exports.getPrelaunchedProperties = async (req, res) => {
       limit,
     } = req.query;
 
-    const filter = { 
+    const filter = {
       deletedAt: null,
-      isLaunch: "Pre-Launch"
+      isLaunch: "Pre-Launch",
     };
 
     // 1. Search
@@ -1081,7 +1126,9 @@ exports.getPrelaunchedProperties = async (req, res) => {
       // const areaRegex = { $regex: area.trim(), $options: "i" };
       const areaRegex = { $regex: `^${area.trim()}$`, $options: "i" };
       filter.$and = filter.$and || [];
-      filter.$and.push({ $or: [{ city_area: areaRegex }, { locality: areaRegex }] });
+      filter.$and.push({
+        $or: [{ city_area: areaRegex }, { locality: areaRegex }],
+      });
     }
 
     // 4. Listing Type & Category
@@ -1266,7 +1313,9 @@ exports.getPrelaunchedProperties = async (req, res) => {
 
     const data = properties.map(formatFullProperty);
 
-    const activeBanks = await Bank.find({ deletedAt: null }).sort({ createdAt: -1 });
+    const activeBanks = await Bank.find({ deletedAt: null }).sort({
+      createdAt: -1,
+    });
     const formattedBanks = activeBanks.map((bank) => {
       const bankObj = bank.toObject();
       return {
@@ -1295,7 +1344,6 @@ exports.getPrelaunchedProperties = async (req, res) => {
   }
 };
 
-
 exports.getPropertyById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -1308,7 +1356,6 @@ exports.getPropertyById = async (req, res) => {
       .populate("dealerId", "name email phone role profileImage")
       .populate("amenityIds", "amenityName amenityIcon")
       .populate("furnishings.furnishingId", "furnitureName furnitureIcon");
-
 
     if (!property) {
       return res.status(status.NotFound).json({
@@ -1353,28 +1400,36 @@ exports.getPropertyById = async (req, res) => {
     propertyObj.coverImage = propertyObj.coverImage || firstImage?.url || null;
 
     propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
-      const am = amenity ? (amenity._doc || amenity) : {};
+      const am = amenity ? amenity._doc || amenity : {};
       return {
         ...am,
-        amenityIconUrl: am.amenityIcon ? getAmenityIconUrl(am.amenityIcon) : null,
+        amenityIconUrl: am.amenityIcon
+          ? getAmenityIconUrl(am.amenityIcon)
+          : null,
       };
     });
 
     propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => {
-      const fur = item.furnishingId ? (item.furnishingId._doc || item.furnishingId) : {};
+      const fur = item.furnishingId
+        ? item.furnishingId._doc || item.furnishingId
+        : {};
       return {
         furnishingId: {
           ...fur,
-          furnitureIconUrl: fur.furnitureIcon ? getFurnitureIconUrl(fur.furnitureIcon) : null,
+          furnitureIconUrl: fur.furnitureIcon
+            ? getFurnitureIconUrl(fur.furnitureIcon)
+            : null,
           quantity: item.quantity,
         },
       };
     });
 
     // Role-based filtering for sensitive builder fields
-      // `availableUnits` and `developer` are visible to all roles in detail responses
+    // `availableUnits` and `developer` are visible to all roles in detail responses
 
-    const activeBanks = await Bank.find({ deletedAt: null }).sort({ createdAt: -1 });
+    const activeBanks = await Bank.find({ deletedAt: null }).sort({
+      createdAt: -1,
+    });
     propertyObj.banks = activeBanks.map((bank) => {
       const bankObj = bank.toObject();
       return {
@@ -1395,7 +1450,6 @@ exports.getPropertyById = async (req, res) => {
     });
   }
 };
-
 
 exports.updateProperty = async (req, res) => {
   try {
@@ -1454,7 +1508,8 @@ exports.updateProperty = async (req, res) => {
     // --- Validation for isLaunch (only for builder or channel_partner) ---
     const userRole = req.user.role;
     if (userRole === "builder" || userRole === "channel_partner") {
-      const { isLaunch, launchDateOption, preLaunchMonth, preLaunchYear } = req.body;
+      const { isLaunch, launchDateOption, preLaunchMonth, preLaunchYear } =
+        req.body;
 
       if (isLaunch) {
         if (!["Launched", "Pre-Launch"].includes(isLaunch)) {
@@ -1465,10 +1520,14 @@ exports.updateProperty = async (req, res) => {
         }
 
         if (isLaunch === "Launched") {
-          if (!launchDateOption || !["today", "yesterday"].includes(launchDateOption)) {
+          if (
+            !launchDateOption ||
+            !["today", "yesterday"].includes(launchDateOption)
+          ) {
             return res.status(status.BadRequest).json({
               success: false,
-              message: "For Launched status, launchDateOption is required and must be 'today' or 'yesterday'",
+              message:
+                "For Launched status, launchDateOption is required and must be 'today' or 'yesterday'",
             });
           }
 
@@ -1485,7 +1544,8 @@ exports.updateProperty = async (req, res) => {
           if (!preLaunchMonth || !preLaunchYear) {
             return res.status(status.BadRequest).json({
               success: false,
-              message: "For Pre-Launch status, preLaunchMonth and preLaunchYear are required",
+              message:
+                "For Pre-Launch status, preLaunchMonth and preLaunchYear are required",
             });
           }
           req.body.launchDate = null;
@@ -1510,12 +1570,16 @@ exports.updateProperty = async (req, res) => {
         const raw = u || {};
         const isCharge =
           raw.isCharge === true ||
-          raw.isCharge === 'true' ||
+          raw.isCharge === "true" ||
           raw.IsCharge === true ||
-          raw.IsCharge === 'true'
+          raw.IsCharge === "true"
             ? true
             : false;
-        const extraPrice = isCharge ? (raw.extraPrice ? Number(raw.extraPrice) : 0) : null;
+        const extraPrice = isCharge
+          ? raw.extraPrice
+            ? Number(raw.extraPrice)
+            : 0
+          : null;
         return {
           ...raw,
           isCharge,
@@ -1526,7 +1590,8 @@ exports.updateProperty = async (req, res) => {
 
     // Coerce string booleans from FormData to actual booleans
     if (req.body.isReraApproved !== undefined) {
-      req.body.isReraApproved = req.body.isReraApproved === 'true' || req.body.isReraApproved === true;
+      req.body.isReraApproved =
+        req.body.isReraApproved === "true" || req.body.isReraApproved === true;
     }
 
     const imageFiles = req.files?.images || [];
@@ -1535,7 +1600,10 @@ exports.updateProperty = async (req, res) => {
     const coverImageFile = req.files?.coverImage?.[0];
 
     if (coverImageFile) {
-      const uploaded = await uploadToImagekit(coverImageFile, "properties/images");
+      const uploaded = await uploadToImagekit(
+        coverImageFile,
+        "properties/images",
+      );
       req.body.coverImage = getPropertyMediaUrl(uploaded.fileName, "image");
     }
 
@@ -1590,7 +1658,6 @@ exports.updateProperty = async (req, res) => {
       .populate("amenityIds", "amenityName amenityIcon")
       .populate("furnishings.furnishingId", "furnitureName furnitureIcon");
 
-
     const propertyObj = property.toObject();
 
     // add `postedBy` field
@@ -1621,19 +1688,25 @@ exports.updateProperty = async (req, res) => {
     propertyObj.coverImage = propertyObj.coverImage || firstImage?.url || null;
 
     propertyObj.amenityIds = (propertyObj.amenityIds || []).map((amenity) => {
-      const am = amenity ? (amenity._doc || amenity) : {};
+      const am = amenity ? amenity._doc || amenity : {};
       return {
         ...am,
-        amenityIconUrl: am.amenityIcon ? getAmenityIconUrl(am.amenityIcon) : null,
+        amenityIconUrl: am.amenityIcon
+          ? getAmenityIconUrl(am.amenityIcon)
+          : null,
       };
     });
 
     propertyObj.furnishings = (propertyObj.furnishings || []).map((item) => {
-      const fur = item.furnishingId ? (item.furnishingId._doc || item.furnishingId) : {};
+      const fur = item.furnishingId
+        ? item.furnishingId._doc || item.furnishingId
+        : {};
       return {
         furnishingId: {
           ...fur,
-          furnitureIconUrl: fur.furnitureIcon ? getFurnitureIconUrl(fur.furnitureIcon) : null,
+          furnitureIconUrl: fur.furnitureIcon
+            ? getFurnitureIconUrl(fur.furnitureIcon)
+            : null,
           quantity: item.quantity,
         },
       };
@@ -1653,7 +1726,6 @@ exports.updateProperty = async (req, res) => {
     });
   }
 };
-
 
 exports.deleteProperty = async (req, res) => {
   try {
@@ -1686,7 +1758,6 @@ exports.deleteProperty = async (req, res) => {
     });
   }
 };
-
 
 // ─── GET /api/properties/:id/similar ─────────────────────────────────────────
 exports.getSimilarProperties = async (req, res) => {
@@ -1750,7 +1821,6 @@ exports.getSimilarProperties = async (req, res) => {
   }
 };
 
-
 // ─── GET /api/properties/:id/price-trends ───────────────────────────────────
 exports.getPropertyPriceTrends = async (req, res) => {
   try {
@@ -1810,7 +1880,6 @@ exports.getPropertyPriceTrends = async (req, res) => {
       .json({ success: false, message: error.message });
   }
 };
-
 
 // ─── GET /api/properties/popular?city=...&limit=30 ──────────────────────────
 exports.getPopularProperties = async (req, res) => {
@@ -1872,7 +1941,6 @@ exports.getPopularProperties = async (req, res) => {
       .json({ success: false, message: error.message });
   }
 };
-
 
 // ─── GET /api/properties/count?city=...&listingType=... ─────────────────────
 exports.getPropertyCount = async (req, res) => {
@@ -1945,14 +2013,17 @@ exports.uploadPropertyBrochure = async (req, res) => {
     }
 
     // Authorization Check: Must be the owner, dealer, or admin
-    const isOwner = property.ownerId && property.ownerId.toString() === req.user.id;
-    const isDealer = property.dealerId && property.dealerId.toString() === req.user.id;
+    const isOwner =
+      property.ownerId && property.ownerId.toString() === req.user.id;
+    const isDealer =
+      property.dealerId && property.dealerId.toString() === req.user.id;
     const isAdmin = req.user.role === "admin";
 
     if (!isOwner && !isDealer && !isAdmin) {
       return res.status(status.Forbidden).json({
         success: false,
-        message: "Forbidden: You are not authorized to upload a brochure to this property",
+        message:
+          "Forbidden: You are not authorized to upload a brochure to this property",
       });
     }
 
@@ -1996,4 +2067,3 @@ exports.uploadPropertyBrochure = async (req, res) => {
     });
   }
 };
-
