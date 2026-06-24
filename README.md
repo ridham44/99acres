@@ -38,12 +38,14 @@ node diagnose-db.js
 ```
 
 This will show you:
+
 - ✓ Total users in database (all types)
 - ✓ Soft-deleted users (marked with `deletedAt`)
 - ✓ Orphaned records (data from users who no longer exist)
 - ✓ Which cleanup script to run
 
 **Example Output:**
+
 ```
 ========== DATABASE DIAGNOSTIC REPORT ==========
 
@@ -77,16 +79,19 @@ Orphaned Records: 40
 Choose the appropriate cleanup script:
 
 **For soft-deleted users** (users with `deletedAt` field - any role):
+
 ```bash
 node cleanup-deleted-users.js
 ```
 
 **For hard-deleted users** (users completely removed, leaving orphaned data - any role):
+
 ```bash
 node cleanup-orphaned-data.js
 ```
 
 **What it does:**
+
 - Finds records with deleted user references (works for all user types/roles)
 - Removes all their associated data:
   - Shortlists
@@ -103,6 +108,7 @@ node cleanup-orphaned-data.js
 - Displays a detailed summary of what was cleaned
 
 **Example Output:**
+
 ```
 Starting cleanup of orphaned user data...
 
@@ -197,7 +203,7 @@ token =
 deviceId = postman-web-001
 userId =
 propertyId =
-requirementId = 
+requirementId =
 amenityId =
 furnitureId =
 nearbyPlaceId =
@@ -478,6 +484,7 @@ Admin routes for managing support tickets.
 - `DELETE {{baseUrl}}/subscription-plans/:id`
 
 > Notes:
+>
 > - Admin API paths under `privacy-policy`, `terms-conditions`, and `subscription-plans` already enforce admin access.
 > - Other useful admin-capable APIs include `GET {{baseUrl}}/properties`, `GET {{baseUrl}}/requirements/all`, and `GET {{baseUrl}}/builders`.
 
@@ -488,8 +495,8 @@ Admin routes for managing support tickets.
 `GET {{baseUrl}}/user/profile`
 
 Headers: auth required.
- 
- Response includes a `stats` object with `shortlisted`, `contacted`, and `propertyViewed` counts.
+
+Response includes a `stats` object with `shortlisted`, `contacted`, and `propertyViewed` counts.
 
 ### Update My Profile
 
@@ -534,6 +541,7 @@ Headers: auth required.
 
 **Cascading Delete:**
 When a user is deleted, the following data is also removed:
+
 - User account
 - All shortlists
 - All property visits/viewed properties
@@ -550,11 +558,13 @@ When a user is deleted, the following data is also removed:
 
 **Database-Level Cascading:**
 This cascading delete is enforced at the database level using MongoDB middleware. This means:
+
 - ✓ Cascading deletes work when deleting via API endpoint
 - ✓ Cascading deletes also work if a user is deleted directly from the database
 - ✓ All related data is automatically cleaned up regardless of deletion method
 
 **Response Example:**
+
 ```json
 {
   "success": true,
@@ -584,17 +594,17 @@ Handles both creation and update of the agent profile for the logged-in user.
 
 **Fields:**
 
-| Key | Type | Description |
-| :--- | :--- | :--- |
-| `name` | `String` | Full name of the agent. (Allowed in Register & Update) |
-| `email` | `String` | Contact email. (Allowed in Register & Update) |
-| `phone number` | `String` | Contact phone number. (Allowed in Register & Update) |
-| `agency_name` | `String` | Name of the real estate agency. (Allowed in Register & Update) |
-| `country` | `String` | Country (Default: India). (Allowed in Register & Update) |
-| `state` | `String` | State. (Allowed in Register & Update) |  
-| `city` | `String` | City. (Allowed in Register & Update) |
-| `expertInAreas` | `Array/String` | Areas of expertise. (**Update Only**) |
-| `companyImage` | `File` | Optional company image. (**Update Only**) |
+| Key             | Type           | Description                                                    |
+| :-------------- | :------------- | :------------------------------------------------------------- |
+| `name`          | `String`       | Full name of the agent. (Allowed in Register & Update)         |
+| `email`         | `String`       | Contact email. (Allowed in Register & Update)                  |
+| `phone number`  | `String`       | Contact phone number. (Allowed in Register & Update)           |
+| `agency_name`   | `String`       | Name of the real estate agency. (Allowed in Register & Update) |
+| `country`       | `String`       | Country (Default: India). (Allowed in Register & Update)       |
+| `state`         | `String`       | State. (Allowed in Register & Update)                          |
+| `city`          | `String`       | City. (Allowed in Register & Update)                           |
+| `expertInAreas` | `Array/String` | Areas of expertise. (**Update Only**)                          |
+| `companyImage`  | `File`         | Optional company image. (**Update Only**)                      |
 
 **Example (form-data):**
 
@@ -619,10 +629,12 @@ Returns a list of agents who are experts in the specified location.
 **Headers:** auth required.
 
 **Path Parameter:**
-* `location`: The area name to search for in agent expertise (e.g., `Satellite`).
+
+- `location`: The area name to search for in agent expertise (e.g., `Satellite`).
 
 **Query Parameters:**
-* `page`, `limit` (optional)
+
+- `page`, `limit` (optional)
 
 ## Expert In Area APIs
 
@@ -691,11 +703,11 @@ Returns the list of active expert areas registered by the **currently logged-in 
 
 **Query Parameters:**
 
-| Param | Type | Description |
-|:--|:--|:--|
+| Param    | Type     | Description                                             |
+| :------- | :------- | :------------------------------------------------------ |
 | `search` | `String` | Optional. Case-insensitive partial match on `areaName`. |
-| `page` | `Number` | Optional. For pagination. |
-| `limit` | `Number` | Optional. For pagination. |
+| `page`   | `Number` | Optional. For pagination.                               |
+| `limit`  | `Number` | Optional. For pagination.                               |
 
 **Example:**
 
@@ -766,6 +778,7 @@ Updates the `areaName` of an expert area record owned by the logged-in user.
 ```
 
 **Validation:**
+
 - Returns `403 Forbidden` if the record belongs to another user.
 - Returns `409 Conflict` if the user already has another active area with the same name.
 - `areaName` is normalized to Sentence Case.
@@ -851,9 +864,10 @@ Public list of builders.
 `GET {{baseUrl}}/builders?page=1&limit=10&search=Siddhi`
 
 **Query Parameters:**
-* `page`: Page number (default: 1)
-* `limit`: Items per page (default: 10)
-* `search`: Search by company name
+
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `search`: Search by company name
 
 ### Get Builder By ID
 
@@ -1057,12 +1071,14 @@ if (json.data && json.data._id) {
 ```
 
 **Schema:**
+
 - `areaName` (String, required, unique) - Name of the area where agents have expertise.
 - `createdAt` (Date) - Record creation timestamp.
 - `updatedAt` (Date) - Record last update timestamp.
 - `deletedAt` (Date) - Soft delete timestamp (null if not deleted).
 
 **Response Example (List):**
+
 ```json
 {
   "success": true,
@@ -1088,7 +1104,7 @@ if (json.data && json.data._id) {
 }
 ```
 
-  ## Property APIs
+## Property APIs
 
 All property endpoints require auth.
 
@@ -1206,6 +1222,7 @@ When a user with the `builder` or `channel_partner` role creates or updates a pr
 
 > [!IMPORTANT]
 > **Launched Status Flow:**
+>
 > - Set `isLaunch` = `"Launched"`
 > - Pass `launchDateOption` = `"today"` or `"yesterday"` (required)
 > - The backend automatically calculates and records the real-time `launchDate` (based on the chosen option).
@@ -1213,6 +1230,7 @@ When a user with the `builder` or `channel_partner` role creates or updates a pr
 
 > [!IMPORTANT]
 > **Pre-Launch Status Flow:**
+>
 > - Set `isLaunch` = `"Pre-Launch"`
 > - Pass `preLaunchMonth` (string, e.g. `"June"`) and `preLaunchYear` (number, e.g. `2026`) (both required)
 > - `launchDate` and `launchDateOption` are cleared (`null`).
@@ -1236,32 +1254,31 @@ Returns paginated property cards/list data with advanced filtering based on the 
 
 **Comprehensive Filtering Parameters:**
 
-| Key | Type | Description |
-| :--- | :--- | :--- |
-| `locations` | `String` | Comma-separated cities, localities, or areas (searches city, locality, area, and address fields). |
-| `propertyCategory`| `String` | Main category: `Residential`, `Commercial`, or `PG`. |
-| `propertyTypes` | `String` | Comma-separated sub-types (e.g., `Flat/Apartment,House/Villa,Ready Offices`). |
-| `minBudget` | `Number` | Minimum price (budget) in INR. |
-| `maxBudget` | `Number` | Maximum price (budget) in INR. |
-| `minArea` | `Number` | Minimum area size. |
-| `maxArea` | `Number` | Maximum area size. |
-| `postedBy` | `String` | Comma-separated poster types: `Owner`, `Agent`, `Builder`. |
-| `saleType` | `String` | Comma-separated: `New`, `Resale`. (Maps to property age). |
-| `furnishing` | `String` | Comma-separated: `Furnished`, `Semi-Furnished`, `Unfurnished`. |
-| `amenities` | `String` | Comma-separated amenity names (e.g., `Parking,Lift,Pool`). Case-insensitive lookup. |
-| `facing` | `String` | Comma-separated directions (e.g., `East,North,West-Facing`). |
-| `minFloor` | `String` | Min floor level (e.g., `Ground`, `Basement`, `1`, `5th`). |
-| `maxFloor` | `String` | Max floor level (e.g., `10`, `Top Floor`). |
-| `sortBy` | `String` | `Price (H-L)`, `Price (L-H)`, `Most Recent`, `price_desc`, `price_asc`, `newest`, `oldest`. |
-| `search` | `String` | Global keyword search across title, name, type, and address. |
-| `page` / `limit` | `Number` | Pagination controls (Default: page 1, limit 10). |
+| Key                | Type     | Description                                                                                       |
+| :----------------- | :------- | :------------------------------------------------------------------------------------------------ |
+| `locations`        | `String` | Comma-separated cities, localities, or areas (searches city, locality, area, and address fields). |
+| `propertyCategory` | `String` | Main category: `Residential`, `Commercial`, or `PG`.                                              |
+| `propertyTypes`    | `String` | Comma-separated sub-types (e.g., `Flat/Apartment,House/Villa,Ready Offices`).                     |
+| `minBudget`        | `Number` | Minimum price (budget) in INR.                                                                    |
+| `maxBudget`        | `Number` | Maximum price (budget) in INR.                                                                    |
+| `minArea`          | `Number` | Minimum area size.                                                                                |
+| `maxArea`          | `Number` | Maximum area size.                                                                                |
+| `postedBy`         | `String` | Comma-separated poster types: `Owner`, `Agent`, `Builder`.                                        |
+| `saleType`         | `String` | Comma-separated: `New`, `Resale`. (Maps to property age).                                         |
+| `furnishing`       | `String` | Comma-separated: `Furnished`, `Semi-Furnished`, `Unfurnished`.                                    |
+| `amenities`        | `String` | Comma-separated amenity names (e.g., `Parking,Lift,Pool`). Case-insensitive lookup.               |
+| `facing`           | `String` | Comma-separated directions (e.g., `East,North,West-Facing`).                                      |
+| `minFloor`         | `String` | Min floor level (e.g., `Ground`, `Basement`, `1`, `5th`).                                         |
+| `maxFloor`         | `String` | Max floor level (e.g., `10`, `Top Floor`).                                                        |
+| `sortBy`           | `String` | `Price (H-L)`, `Price (L-H)`, `Most Recent`, `price_desc`, `price_asc`, `newest`, `oldest`.       |
+| `search`           | `String` | Global keyword search across title, name, type, and address.                                      |
+| `page` / `limit`   | `Number` | Pagination controls (Default: page 1, limit 10).                                                  |
 
 **Legacy / ID-based filters (Still Supported):**
 `city`, `locality`, `city_area`, `state`, `listingType`, `bhk`, `bedrooms`, `bathrooms`, `minPrice`, `maxPrice`, `ownerId`, `dealerId`.
 
 **Example Complex Query:**
 `{{baseUrl}}/properties?locations=Ahmedabad,Gota&propertyCategory=Residential&propertyTypes=Flat/Apartment&minBudget=5000000&postedBy=Agent&amenities=Parking,Lift&sortBy=Price (H-L)`
-
 
 ### Get Pre-Launch Properties
 
@@ -1274,7 +1291,6 @@ Returns paginated Pre-Launch properties (`isLaunch === "Pre-Launch"`) containing
 **Filters & Sorting:** Supports the identical comprehensive filtering, pagination, and sorting parameters as the standard `GET /properties` endpoint.
 
 ---
-
 
 ### Get My Properties
 
@@ -1304,11 +1320,12 @@ limit
 Returns all properties associated with a specific user (where they are either the owner or the dealer), along with the complete profile details of the user. If the user has a Builder or Broker (Agent) profile, those details are also nested within the response.
 
 `GET {{baseUrl}}/properties/user/:userId?page=1&limit=10&listingType=Sale&status=Active`
-  
+
 **Headers:** auth required.
 
 **Path Parameter:**
-* `userId`: The ID of the user whose properties you want to retrieve.
+
+- `userId`: The ID of the user whose properties you want to retrieve.
 
 **Optional Filters:**
 `page`, `limit`, `status`, `listingType`, `propertyCategory`, `propertyType`, `sortBy`.
@@ -1318,6 +1335,7 @@ Returns all properties associated with a specific user (where they are either th
 `sortBy` values: `price_asc`, `price_desc`, `oldest`, `newest`.
 
 **Response Example:**
+
 ```json
 {
   "success": true,
@@ -1394,20 +1412,23 @@ Returns all properties under the launch flow (where `isLaunch` is either `"Launc
 **Headers:** auth required.
 
 **Path Parameter:**
-* `userId`: The ID of the user (must have a `builder` or `channel_partner` role) whose launch properties you want to retrieve.
+
+- `userId`: The ID of the user (must have a `builder` or `channel_partner` role) whose launch properties you want to retrieve.
 
 **Optional Filters:**
-* `page` (Number): Page number (default: 1)
-* `limit` (Number): Items per page (default: 10)
-* `isLaunch` (String): Filter strictly by `"Launched"` or `"Pre-Launch"`. If omitted, returns both.
-* `status` (String): Filter by property status (e.g., `"Active"`, `"Inactive"`, `"Draft"`, `"Sold"`, `"Rented"`).
-* `listingType` (String): `"Sale"` or `"Rent"`.
-* `propertyCategory` (String): `"Residential"`, `"Commercial"`, or `"PG"`.
-* `propertyType` (String): Sub-type of property.
-* `area` (String): Matches `city_area` or `locality` fields.
-* `sortBy` (String): `"price_asc"`, `"price_desc"`, `"oldest"`, or `"newest"`.
+
+- `page` (Number): Page number (default: 1)
+- `limit` (Number): Items per page (default: 10)
+- `isLaunch` (String): Filter strictly by `"Launched"` or `"Pre-Launch"`. If omitted, returns both.
+- `status` (String): Filter by property status (e.g., `"Active"`, `"Inactive"`, `"Draft"`, `"Sold"`, `"Rented"`).
+- `listingType` (String): `"Sale"` or `"Rent"`.
+- `propertyCategory` (String): `"Residential"`, `"Commercial"`, or `"PG"`.
+- `propertyType` (String): Sub-type of property.
+- `area` (String): Matches `city_area` or `locality` fields.
+- `sortBy` (String): `"price_asc"`, `"price_desc"`, `"oldest"`, or `"newest"`.
 
 **Response Example:**
+
 ```json
 {
   "success": true,
@@ -1487,6 +1508,7 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
 `GET {{baseUrl}}/properties/{{propertyId}}`
 
 **Headers:**
+
 - `Authorization: Bearer {{token}}`
 
 **Response Example:**
@@ -1519,8 +1541,17 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
       }
     ],
     "keyHighlights": {
-      "propertyFeatures": ["Pet Friendly", "Power Backup", "Visitor Parking", "Security"],
-      "projectHighlights": ["Green Project", "1.25 Lakh sq.ft. Central Park", "Modern Design"]
+      "propertyFeatures": [
+        "Pet Friendly",
+        "Power Backup",
+        "Visitor Parking",
+        "Security"
+      ],
+      "projectHighlights": [
+        "Green Project",
+        "1.25 Lakh sq.ft. Central Park",
+        "Modern Design"
+      ]
     },
     "floorPlans": [
       {
@@ -1547,7 +1578,11 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
       "timeframe": "1Y"
     },
     "aiSummary": "Unique Luxuria in Gota is a highly recommended project with modern design...",
-    "reviewTopics": ["Excellent Construction", "Timely Possession", "Luxurious Flats"],
+    "reviewTopics": [
+      "Excellent Construction",
+      "Timely Possession",
+      "Luxurious Flats"
+    ],
     "aboutProject": {
       "name": "Yash Arian",
       "priceRange": "37.5 Lac - 1.05 Cr Onwards",
@@ -1578,9 +1613,7 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
       "passengerLifts": "3 lifts",
       "occupancyCertificate": "Yes"
     },
-    "media": [
-      { "type": "image", "url": "https://ik.imagekit.io/..." }
-    ],
+    "media": [{ "type": "image", "url": "https://ik.imagekit.io/..." }],
     "postedBy": {
       "_id": "6742fb0b28e23588df8e9766",
       "name": "John Doe",
@@ -1593,14 +1626,16 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
 }
 ```
 
-  Notes:
-  - The single-property response now includes a `postedBy` field (same semantics as the list `postedBy`): it contains the `dealerId` if present, otherwise the `ownerId`. 
-  - `postedBy` includes `profileImageUrl` and `url` for the user's photo.
+Notes:
+
+- The single-property response now includes a `postedBy` field (same semantics as the list `postedBy`): it contains the `dealerId` if present, otherwise the `ownerId`.
+- `postedBy` includes `profileImageUrl` and `url` for the user's photo.
   Quick verification (replace placeholders):
-  ```bash
-  curl -H "Authorization: Bearer <TOKEN>" \
-    "{{baseUrl}}/properties/<propertyId>"
-  ```
+
+```bash
+curl -H "Authorization: Bearer <TOKEN>" \
+  "{{baseUrl}}/properties/<propertyId>"
+```
 
 ---
 
@@ -1608,56 +1643,93 @@ Returns full property details with populated owner/dealer/amenities/media URLs. 
 
 The following new fields are accepted in the `POST /api/properties` and `PUT /api/properties/:id` body (send as JSON strings in `form-data` or directly in a JSON body):
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `specifications` | `Array<String>` | Bullet points about construction & build quality. |
-| `whyConsider` | `Array<String>` | Selling points / USPs of the property. |
-| `preels` | `Array<Object>` | Short video reel highlights. See schema below. |
-| `expertReviews` | `Array<Object>` | Market expert review cards. See schema below. |
-| `legalCertificates` | `Array<Object>` | **Restructured** — now a per-certificate array. See schema below. |
-| `projectInfo` | `Object` | Price range and total units for the project. |
-| `localityInfo` | `Object` | Locality metadata: name, city, pincode, rating, reviewCount. |
-| `developerInfo` | `Object` | Developer name, experience, address. |
-| `viewStats` | `Object` | View count and period (auto-tracked or manually set). |
-| `availableUnits` | `Array<Object>` | **Builder-Only** — Unit configurations/pricing for large projects. |
-| `developer` | `Object` | **Builder-Only** — Rich developer/builder profile details. |
+| Field               | Type            | Description                                                        |
+| :------------------ | :-------------- | :----------------------------------------------------------------- |
+| `specifications`    | `Array<String>` | Bullet points about construction & build quality.                  |
+| `whyConsider`       | `Array<String>` | Selling points / USPs of the property.                             |
+| `preels`            | `Array<Object>` | Short video reel highlights. See schema below.                     |
+| `expertReviews`     | `Array<Object>` | Market expert review cards. See schema below.                      |
+| `legalCertificates` | `Array<Object>` | **Restructured** — now a per-certificate array. See schema below.  |
+| `projectInfo`       | `Object`        | Price range and total units for the project.                       |
+| `localityInfo`      | `Object`        | Locality metadata: name, city, pincode, rating, reviewCount.       |
+| `developerInfo`     | `Object`        | Developer name, experience, address.                               |
+| `viewStats`         | `Object`        | View count and period (auto-tracked or manually set).              |
+| `availableUnits`    | `Array<Object>` | **Builder-Only** — Unit configurations/pricing for large projects. |
+| `developer`         | `Object`        | **Builder-Only** — Rich developer/builder profile details.         |
 
 **`preels` item schema:**
+
 ```json
-{ "imageUrl": "https://...", "title": "Project Name", "location": "Locality", "views": 150, "videoUrl": "https://..." }
+{
+  "imageUrl": "https://...",
+  "title": "Project Name",
+  "location": "Locality",
+  "views": 150,
+  "videoUrl": "https://..."
+}
 ```
 
 **`expertReviews` item schema:**
+
 ```json
-{ "videoThumbnail": "https://...", "videoUrl": "https://...", "reviewerName": "Expert", "channelName": "Channel", "subscribers": 124, "views": 5010 }
+{
+  "videoThumbnail": "https://...",
+  "videoUrl": "https://...",
+  "reviewerName": "Expert",
+  "channelName": "Channel",
+  "subscribers": 124,
+  "views": 5010
+}
 ```
 
 **`legalCertificates` item schema** (replaces the old `{lastUpdated, certificates[]}` format):
+
 ```json
-{ "name": "Commencement Certificate", "isAvailable": true, "documentUrl": "https://...", "previewImageUrl": "https://...", "lastUpdated": "2025-09-09" }
+{
+  "name": "Commencement Certificate",
+  "isAvailable": true,
+  "documentUrl": "https://...",
+  "previewImageUrl": "https://...",
+  "lastUpdated": "2025-09-09"
+}
 ```
 
 **`projectInfo` schema:**
+
 ```json
 { "priceRange": { "min": 3750000, "max": 10500000 }, "totalUnits": 183 }
 ```
 
 **`localityInfo` schema:**
+
 ```json
-{ "name": "Memnagar", "city": "Ahmedabad", "pincode": "380052", "rating": 4.0, "reviewCount": 20 }
+{
+  "name": "Memnagar",
+  "city": "Ahmedabad",
+  "pincode": "380052",
+  "rating": 4.0,
+  "reviewCount": 20
+}
 ```
 
 **`developerInfo` schema:**
+
 ```json
-{ "name": "Yash Group", "yearsExperience": 34, "address": "Parshwanath Business Park..." }
+{
+  "name": "Yash Group",
+  "yearsExperience": 34,
+  "address": "Parshwanath Business Park..."
+}
 ```
 
 **`viewStats` schema:**
+
 ```json
 { "viewCount": 67, "daysPeriod": 73 }
 ```
 
 **`availableUnits` item schema (Builder/Admin Only):**
+
 ```json
 {
   "bhk": "2 BHK Apartment",
@@ -1675,6 +1747,7 @@ The following new fields are accepted in the `POST /api/properties` and `PUT /ap
 ```
 
 **`developer` schema (Builder/Admin Only):**
+
 ```json
 {
   "name": "Vivaan Group",
@@ -1704,6 +1777,7 @@ Returns properties similar to a given property (same city, category, and type).
 **Query:** `limit` (optional, default 10).
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1735,6 +1809,7 @@ Returns the PropWorth chart data (project + locality price trends) stored agains
 **Headers:** auth required.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1769,14 +1844,15 @@ Returns the most recently active properties — used for the "Popular Projects" 
 
 **Query Parameters:**
 
-| Key | Type | Description |
-| :--- | :--- | :--- |
-| `city` | `String` | Filter by city (case-insensitive). |
-| `limit` | `Number` | Max results (default 30). |
-| `listingType` | `String` | `Sale` or `Rent`. |
+| Key                | Type     | Description                           |
+| :----------------- | :------- | :------------------------------------ |
+| `city`             | `String` | Filter by city (case-insensitive).    |
+| `limit`            | `Number` | Max results (default 30).             |
+| `listingType`      | `String` | `Sale` or `Rent`.                     |
 | `propertyCategory` | `String` | `Residential`, `Commercial`, or `PG`. |
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1811,6 +1887,7 @@ Returns the count of active properties matching the given filters — used for t
 **Query Parameters:** `city`, `listingType`, `propertyCategory`, `status` (optional — defaults to `Active`).
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1821,7 +1898,6 @@ Returns the count of active properties matching the given filters — used for t
 ---
 
 ### Update Property
-
 
 Updates property fields and optionally appends new images/videos.
 
@@ -1863,15 +1939,18 @@ Uploads a standalone brochure PDF for a property. Only the authorized owner/deal
 `POST {{baseUrl}}/properties/{{propertyId}}/brochure`
 
 Headers:
+
 - `Authorization: Bearer <ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data):
+
 - `brochure` (file, required): select PDF file (max 5 MB).
 
 Note: Each property can have at most 3 brochures. Uploaded brochures are appended.
 
 Response Example (`200 OK`):
+
 ```json
 {
   "success": true,
@@ -1918,15 +1997,14 @@ Other
 ```
 
 Document status is managed by the system:
+
 - Default on upload: `Pending`
 - Admin approves: `Approved`
 - Admin rejects: `Rejected`
 - User edits document: automatically reset to `Pending`
 
-
 Allowed file types: `pdf`, `jpg`, `jpeg`, `png`, `doc`, `docx`.
 Max file size: 5 MB.
-
 
 Postman test script:
 
@@ -1946,9 +2024,11 @@ Headers: auth required.
 Optional filters: `propertyId`, `documentType`, `status`, `page`, `limit`.
 
 Notes:
+
 - This endpoint is restricted to documents belonging to properties owned or managed by the requesting user. If you query with `propertyId`, the API will verify that the logged-in user is the `ownerId` or `dealerId` of that property (admins bypass this check). If the user does not own/manage the property, a `403 Forbidden` is returned.
 
 Quick verification (replace placeholders):
+
 ```bash
 # Get documents for a specific property (will verify ownership)
 curl -H "Authorization: Bearer <TOKEN>" \
@@ -1999,11 +2079,10 @@ Allowed `status` values: `Pending`, `Approved`, `Rejected`.
 
 Error cases:
 
-| Status | Reason |
-|--------|--------|
-| `400 Bad Request` | Invalid status value |
-| `404 Not Found` | Document does not exist or has been soft-deleted |
-
+| Status            | Reason                                           |
+| ----------------- | ------------------------------------------------ |
+| `400 Bad Request` | Invalid status value                             |
+| `404 Not Found`   | Document does not exist or has been soft-deleted |
 
 ### Delete Property Document
 
@@ -2022,10 +2101,12 @@ Creates one review per user per property.
 **Headers:** auth required.
 
 **Validations:**
-* **Inquiry Check**: The user must have previously submitted an inquiry for this property. If not, returns `403 Forbidden`.
-* **Self-Review Prevention**: The user cannot be the owner or dealer of the property. If so, returns `403 Forbidden`.
+
+- **Inquiry Check**: The user must have previously submitted an inquiry for this property. If not, returns `403 Forbidden`.
+- **Self-Review Prevention**: The user cannot be the owner or dealer of the property. If so, returns `403 Forbidden`.
 
 **Body:**
+
 ```json
 {
   "propertyId": "{{propertyId}}",
@@ -2037,8 +2118,8 @@ Creates one review per user per property.
 }
 ```
 
-* `rating` is required and must be a number from 1 to 5.
-* `comment` and `name` are optional.
+- `rating` is required and must be a number from 1 to 5.
+- `comment` and `name` are optional.
 
 ### Get Reviews
 
@@ -2056,6 +2137,7 @@ Public endpoint. Returns the overall average rating and list of reviews for a pa
 `GET {{baseUrl}}/reviews/property/{{propertyId}}`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2253,6 +2335,7 @@ All subscription plan endpoints require an admin auth token (`Authorization: Bea
 `POST {{baseUrl}}/subscription-plans`
 
 **Body:**
+
 ```json
 {
   "planName": "Premium Plan",
@@ -2337,9 +2420,10 @@ Allowed `status` values: `pending`, `active`, `expired`, `cancelled`.
 
 ## Payment (Razorpay) APIs
 
-These APIs handle the actual payment gateway integration for buying subscription plans using Razorpay. 
+These APIs handle the actual payment gateway integration for buying subscription plans using Razorpay.
 
 **Frontend Integration Flow:**
+
 1. User selects a subscription plan.
 2. Call `POST /payments/create-order` with the `planId`. It returns an `orderId` and amount in paise.
 3. Initialize the Razorpay SDK (Checkout Modal) using the returned `orderId` and the test Key ID (`rzp_test_Sz48XKolevveez`).
@@ -2355,6 +2439,7 @@ Validates the requested plan, generates a Razorpay Order ID, and creates a `pend
 **Headers:** auth required.
 
 **Body:**
+
 ```json
 {
   "planId": "{{subscriptionPlanId}}"
@@ -2362,6 +2447,7 @@ Validates the requested plan, generates a Razorpay Order ID, and creates a `pend
 ```
 
 **Success Response `201 Created`:**
+
 ```json
 {
   "success": true,
@@ -2374,7 +2460,8 @@ Validates the requested plan, generates a Razorpay Order ID, and creates a `pend
   }
 }
 ```
-> *Note: The `amount` returned is in paise (e.g., `49900` = `₹499`).*
+
+> _Note: The `amount` returned is in paise (e.g., `49900` = `₹499`)._
 
 ### 2. Verify Payment & Activate Subscription
 
@@ -2385,6 +2472,7 @@ Verifies the Razorpay signature to ensure data integrity. If valid, marks the tr
 **Headers:** auth required.
 
 **Body:**
+
 ```json
 {
   "razorpay_order_id": "order_P1abc123xyz",
@@ -2394,6 +2482,7 @@ Verifies the Razorpay signature to ensure data integrity. If valid, marks the tr
 ```
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -2515,6 +2604,7 @@ Returns a list of requirements submitted by the logged-in user. By default, only
 `GET {{baseUrl}}/requirements/my`
 
 **Query Parameters:**
+
 - `status` (string, optional) - Filter by status (e.g., `Active`, `Inactive`, `Fulfilled`, `Closed`). Use `All` to see everything.
 
 ### Get All Requirements (Lead Discovery for Agents)
@@ -2526,6 +2616,7 @@ Allows agents to discover buyer/renter leads. By default, only **Active** requir
 **Constraint:** Only accessible by users with roles `broker`, `channel_partner`, `builder`, or `admin`.
 
 **Query Parameters:**
+
 - `status` (string, optional) - Filter by status (defaults to `Active`).
 - `transactionType`, `city`, `minBudget`, `maxBudget`, `page`, `limit`.
 
@@ -2541,11 +2632,11 @@ Returns requirements **automatically filtered based on the logged-in user's role
 
 #### How Filtering Works
 
-| Role | What is returned |
-|:--|:--|
-| `broker` | Requirements whose `locations[]` **contains the broker's city** AND whose `area` **matches one of the broker's registered ExpertInArea records** (case-insensitive). Requirements with **no area set** are always included for city-matched brokers (open requirements). |
-| `builder` / `channel_partner` | Requirements whose `locations[]` **contains the user's city** (no area check). |
-| `admin` | **All** requirements — no location filter applied. |
+| Role                          | What is returned                                                                                                                                                                                                                                                         |
+| :---------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `broker`                      | Requirements whose `locations[]` **contains the broker's city** AND whose `area` **matches one of the broker's registered ExpertInArea records** (case-insensitive). Requirements with **no area set** are always included for city-matched brokers (open requirements). |
+| `builder` / `channel_partner` | Requirements whose `locations[]` **contains the user's city** (no area check).                                                                                                                                                                                           |
+| `admin`                       | **All** requirements — no location filter applied.                                                                                                                                                                                                                       |
 
 > **Important:** The user's `city` field in their profile is used as the location anchor. If the logged-in user does not have a `city` set in their profile, the API returns `400 Bad Request` with a message prompting them to update their profile first.
 
@@ -2553,12 +2644,12 @@ Returns requirements **automatically filtered based on the logged-in user's role
 
 #### Query Parameters
 
-| Param | Type | Default | Description |
-|:--|:--|:--|:--|
-| `reqStatus` | `String` | `Active` | Filter by requirement status. Use `All` to return all statuses. Allowed: `Active`, `Inactive`, `Fulfilled`, `Closed`, `All`. |
-| `transactionType` | `String` | — | Optional. Filter by transaction type: `Buy`, `Rent`, `Commercial`. |
-| `page` | `Number` | `1` | Page number for pagination. |
-| `limit` | `Number` | `10` | Results per page. |
+| Param             | Type     | Default  | Description                                                                                                                  |
+| :---------------- | :------- | :------- | :--------------------------------------------------------------------------------------------------------------------------- |
+| `reqStatus`       | `String` | `Active` | Filter by requirement status. Use `All` to return all statuses. Allowed: `Active`, `Inactive`, `Fulfilled`, `Closed`, `All`. |
+| `transactionType` | `String` | —        | Optional. Filter by transaction type: `Buy`, `Rent`, `Commercial`.                                                           |
+| `page`            | `Number` | `1`      | Page number for pagination.                                                                                                  |
+| `limit`           | `Number` | `10`     | Results per page.                                                                                                            |
 
 #### Example Requests
 
@@ -2609,10 +2700,10 @@ GET {{baseUrl}}/requirements/for-me?transactionType=Buy&page=2&limit=5
 
 #### Error Cases
 
-| Status | Reason |
-|:--|:--|
-| `400 Bad Request` | The logged-in user's profile does not have a `city` set. |
-| `403 Forbidden` | The user's role is `user` — endpoint is professional-only. |
+| Status            | Reason                                                     |
+| :---------------- | :--------------------------------------------------------- |
+| `400 Bad Request` | The logged-in user's profile does not have a `city` set.   |
+| `403 Forbidden`   | The user's role is `user` — endpoint is professional-only. |
 
 ---
 
@@ -2699,8 +2790,8 @@ Example Response:
 
 Error cases:
 
-| Status | Reason |
-|--------|--------|
+| Status          | Reason                                              |
+| --------------- | --------------------------------------------------- |
 | `403 Forbidden` | Logged-in user is not the owner of this requirement |
 | `404 Not Found` | Requirement does not exist or has been soft-deleted |
 
@@ -2711,6 +2802,7 @@ Toggles the status of a requirement between `Active` and `Inactive`. This replac
 `PATCH {{baseUrl}}/requirements/{{requirementId}}/status`
 
 **Response Example:**
+
 ```json
 {
   "success": true,
@@ -2718,7 +2810,6 @@ Toggles the status of a requirement between `Active` and `Inactive`. This replac
   "data": { ... }
 }
 ```
-
 
 ## Privacy Policy APIs
 
@@ -2767,6 +2858,7 @@ Body (JSON — `content` is HTML):
 ```
 
 Rules:
+
 - If `isActive` is `true`, all other existing policies are automatically deactivated.
 - If `content` is omitted, the built-in default HTML content is used.
 - Only one policy should be active at a time.
@@ -2816,7 +2908,6 @@ Soft deletes the policy and sets `isActive: false`.
 
 ---
 
-
 ## Terms & Conditions APIs
 
 ### Get Active Terms & Conditions (Public — User Side)
@@ -2864,6 +2955,7 @@ Body (JSON — `content` is HTML):
 ```
 
 Rules:
+
 - If `isActive` is `true`, all other existing records are automatically deactivated.
 - If `content` is omitted, the built-in default HTML content (full T&C) is used.
 - Only one record should be active at a time.
@@ -2920,17 +3012,20 @@ This section outlines the API endpoints, database fields, and JSON payloads requ
             enum: ['buy', 'rent', 'sell', 'property', 'payment', 'subscription', 'account', 'broker', 'builder', 'general'],
             required: true,
         },
-        
+
+
 ### 1. Fetch Support Data & FAQs
+
 Fetches support contact details, help topics, and frequently asked questions (FAQs). Supports search and category filtering. If the database is empty, it automatically populates default data.
 
-*   **Method:** `GET`
-*   **Path:** `{{baseUrl}}/support`
-*   **Query Parameters:**
-    *   `search` (string, optional) - Filters FAQs based on the search query (questions and answers).
-    *   `topic` (string, optional) - Filters FAQs by a specific Help Topic ID.
+- **Method:** `GET`
+- **Path:** `{{baseUrl}}/support`
+- **Query Parameters:**
+  - `search` (string, optional) - Filters FAQs based on the search query (questions and answers).
+  - `topic` (string, optional) - Filters FAQs by a specific Help Topic ID.
 
 #### Response JSON Payload (`200 OK`)
+
 ```json
 {
   "success": true,
@@ -2997,12 +3092,14 @@ Fetches support contact details, help topics, and frequently asked questions (FA
 ```
 
 ### 2. Submit Support Ticket
+
 Allows users to submit a support request.
 
-*   **Method:** `POST`
-*   **Path:** `{{baseUrl}}/support/ticket`
-*   **Request Body JSON:**
-```json
+- **Method:** `POST`
+- **Path:** `{{baseUrl}}/support/ticket`
+- **Request Body JSON:**
+
+````json
 {
   "subject": "User Inquiry from App Help Section",
   "message": "User needs assistance with billing packages.",
@@ -3020,12 +3117,14 @@ Allows users to submit a support request.
   "question": "How can I de-activate my account?",
   "answer": "To deactivate your RealEstate account, please login to your profile settings and select the 'Deactivate Account' option. Your data will be preserved for 30 days."
 }
-```
+````
 
 #### Update FAQ (Admin)
+
 `PATCH {{baseUrl}}/support/admin/faqs/{{faqId}}`
 
 **Body:**
+
 ```json
 {
   "question": "Updated question?",
@@ -3034,6 +3133,7 @@ Allows users to submit a support request.
 ```
 
 #### Delete FAQ (Admin)
+
 `DELETE {{baseUrl}}/support/admin/faqs/{{faqId}}`
 
 ---
@@ -3052,14 +3152,14 @@ Allows users to submit a support request.
    - `POST /nearby-places`
    - `POST /positive-keywords`
    - `POST /negative-keywords`
-6. `POST /properties` using form-data.
-7. `POST /requirements` to share what you need.
-8. `GET /requirements/{{requirementId}}/matches` to see properties matching the requirement.
-9. `POST /reviews`.
-10. `GET /reviews/property/{{propertyId}}/summary`.
-11. `POST /shortlist`, then `GET /shortlist/my`.
-12. `GET /user-home`.
-13. `POST /auth/logout`.
+8. `POST /properties` using form-data.
+9. `POST /requirements` to share what you need.
+10. `GET /requirements/{{requirementId}}/matches` to see properties matching the requirement.
+11. `POST /reviews`.
+12. `GET /reviews/property/{{propertyId}}/summary`.
+13. `POST /shortlist`, then `GET /shortlist/my`.
+14. `GET /user-home`.
+15. `POST /auth/logout`.
 
 ## Frontend Notes
 
@@ -3108,12 +3208,12 @@ Body (JSON):
 
 **Field rules:**
 
-| Field | Type | Required | Validation |
-|---|---|---|---|
-| `username` | string | ✅ | Non-empty string |
-| `phoneNumber` | string | ✅ | 10 digits, must start with 6–9 |
-| `property_id` | string | ✅ | Valid MongoDB ObjectId of an existing, non-deleted property |
-| `isAgent` | string | ❌ | "Yes" or "No" (defaults to "No") |
+| Field         | Type   | Required | Validation                                                  |
+| ------------- | ------ | -------- | ----------------------------------------------------------- |
+| `username`    | string | ✅       | Non-empty string                                            |
+| `phoneNumber` | string | ✅       | 10 digits, must start with 6–9                              |
+| `property_id` | string | ✅       | Valid MongoDB ObjectId of an existing, non-deleted property |
+| `isAgent`     | string | ❌       | "Yes" or "No" (defaults to "No")                            |
 
 **Duplicate prevention:** If the user has already submitted an open (`status: true`) inquiry for the same property, a `409 Conflict` is returned.
 
@@ -3166,11 +3266,40 @@ Body (JSON):
         }
       ],
       "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg",
-      "ownerId": { "_id": "...", "name": "...", "email": "...", "phone": "...", "role": "user" },
-      "dealerId": { "_id": "...", "name": "Amit Broker", "email": "amit@example.com", "phone": "9123456789", "role": "broker" },
+      "ownerId": {
+        "_id": "...",
+        "name": "...",
+        "email": "...",
+        "phone": "...",
+        "role": "user"
+      },
+      "dealerId": {
+        "_id": "...",
+        "name": "Amit Broker",
+        "email": "amit@example.com",
+        "phone": "9123456789",
+        "role": "broker"
+      },
       "amenityIds": [{ "_id": "...", "amenityName": "Swimming Pool" }],
-      "furnishings": [{ "furnishingId": { "_id": "...", "furnitureName": "Sofa", "quantity": 1 } }],
-      "nearbyPlaces": [{ "nearbyId": { "_id": "...", "placeName": "Metro Station", "distance": 0.5, "distanceUnit": "km" } }],
+      "furnishings": [
+        {
+          "furnishingId": {
+            "_id": "...",
+            "furnitureName": "Sofa",
+            "quantity": 1
+          }
+        }
+      ],
+      "nearbyPlaces": [
+        {
+          "nearbyId": {
+            "_id": "...",
+            "placeName": "Metro Station",
+            "distance": 0.5,
+            "distanceUnit": "km"
+          }
+        }
+      ],
       "createdAt": "2026-05-01T08:00:00.000Z"
     }
   }
@@ -3179,11 +3308,11 @@ Body (JSON):
 
 **Error cases:**
 
-| Status | Reason |
-|---|---|
+| Status            | Reason                                                         |
+| ----------------- | -------------------------------------------------------------- |
 | `400 Bad Request` | Missing or invalid `username`, `phoneNumber`, or `property_id` |
-| `404 Not Found` | Property not found or soft-deleted |
-| `409 Conflict` | User already has an open inquiry for this property |
+| `404 Not Found`   | Property not found or soft-deleted                             |
+| `409 Conflict`    | User already has an open inquiry for this property             |
 
 Postman test script:
 
@@ -3268,7 +3397,7 @@ limit = 10
 
 > If the user has no properties listed, returns `data: []` immediately without a DB scan.
 
-```
+````
 
 ### 3. Check Inquiry Status
 
@@ -3289,8 +3418,7 @@ Headers: auth required.
     "isInquired": true
   }
 }
-```
-
+````
 
 ### 4. My Contacts (User — Inquiries I Submitted)
 
@@ -3306,7 +3434,6 @@ Optional query params:
 page  = 1
 limit = 10
 ```
-
 
 **Success Response `200 OK`:**
 
@@ -3342,11 +3469,40 @@ limit = 10
           }
         ],
         "coverImage": "https://ik.imagekit.io/aj6cyp5nm/properties/images/property-img-1.jpg",
-        "ownerId": { "_id": "...", "name": "Owner Name", "email": "owner@example.com", "phone": "9000000001", "role": "user" },
-        "dealerId": { "_id": "...", "name": "Amit Broker", "email": "amit@example.com", "phone": "9123456789", "role": "broker" },
+        "ownerId": {
+          "_id": "...",
+          "name": "Owner Name",
+          "email": "owner@example.com",
+          "phone": "9000000001",
+          "role": "user"
+        },
+        "dealerId": {
+          "_id": "...",
+          "name": "Amit Broker",
+          "email": "amit@example.com",
+          "phone": "9123456789",
+          "role": "broker"
+        },
         "amenityIds": [{ "_id": "...", "amenityName": "Swimming Pool" }],
-        "furnishings": [{ "furnishingId": { "_id": "...", "furnitureName": "Sofa", "quantity": 1 } }],
-        "nearbyPlaces": [{ "nearbyId": { "_id": "...", "placeName": "Metro Station", "distance": 0.5, "distanceUnit": "km" } }],
+        "furnishings": [
+          {
+            "furnishingId": {
+              "_id": "...",
+              "furnitureName": "Sofa",
+              "quantity": 1
+            }
+          }
+        ],
+        "nearbyPlaces": [
+          {
+            "nearbyId": {
+              "_id": "...",
+              "placeName": "Metro Station",
+              "distance": 0.5,
+              "distanceUnit": "km"
+            }
+          }
+        ],
         "createdAt": "2026-05-01T08:00:00.000Z"
       }
     }
@@ -3364,18 +3520,19 @@ limit = 10
 
 ### Inquiry Schema Reference
 
-| Field | Type | Description |
-|---|---|---|
-| `_id` | ObjectId | Auto-generated |
-| `userId` | ObjectId (ref: User) | Logged-in user who submitted |
-| `property_id` | ObjectId (ref: Property) | Target property |
-| `username` | String | Contact name provided by user |
-| `phoneNumber` | String | 10-digit phone starting with 6–9 |
-| `isAgent` | String | "Yes" or "No" |
-| `status` | Boolean | `true` = open, `false` = resolved/closed |
-| `createdAt` | Date | Submission timestamp |
-| `updatedAt` | Date | Last update timestamp |
-| `deletedAt` | Date | Soft delete marker (null = active) |
+| Field         | Type                     | Description                              |
+| ------------- | ------------------------ | ---------------------------------------- |
+| `_id`         | ObjectId                 | Auto-generated                           |
+| `userId`      | ObjectId (ref: User)     | Logged-in user who submitted             |
+| `property_id` | ObjectId (ref: Property) | Target property                          |
+| `username`    | String                   | Contact name provided by user            |
+| `phoneNumber` | String                   | 10-digit phone starting with 6–9         |
+| `isAgent`     | String                   | "Yes" or "No"                            |
+| `status`      | Boolean                  | `true` = open, `false` = resolved/closed |
+| `createdAt`   | Date                     | Submission timestamp                     |
+| `updatedAt`   | Date                     | Last update timestamp                    |
+| `deletedAt`   | Date                     | Soft delete marker (null = active)       |
+
 ---
 
 ## Admin APIs
@@ -3383,6 +3540,7 @@ limit = 10
 All admin routes require a valid JWT token representing a user with the `admin` role.
 
 ### 1. Get All Users (Admin View)
+
 Returns a list of all registered users on the platform excluding admin users.
 
 `GET {{baseUrl}}/admin/users`
@@ -3390,6 +3548,7 @@ Returns a list of all registered users on the platform excluding admin users.
 Headers: Auth required. Admin access only.
 
 Optional query params:
+
 ```txt
 page   = 1
 limit  = 10
@@ -3398,6 +3557,7 @@ role   = broker (user, broker, channel_partner, builder)
 ```
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3428,6 +3588,7 @@ role   = broker (user, broker, channel_partner, builder)
 ---
 
 ### 2. Get User Detail (Admin View)
+
 Returns full details of a specific user, along with a list of properties they own or deal, and a count of those properties grouped by status.
 
 `GET {{baseUrl}}/admin/users/{{userId}}`
@@ -3435,6 +3596,7 @@ Returns full details of a specific user, along with a list of properties they ow
 Headers: Auth required. Admin access only.
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3488,6 +3650,7 @@ Headers: Auth required. Admin access only.
 ---
 
 ### 3. Get All Properties (Admin View)
+
 Returns all properties across all users on the platform.
 
 `GET {{baseUrl}}/admin/properties`
@@ -3495,6 +3658,7 @@ Returns all properties across all users on the platform.
 Headers: Auth required. Admin access only.
 
 Optional query params:
+
 ```txt
 page             = 1
 limit            = 10
@@ -3505,6 +3669,7 @@ propertyCategory = Residential
 ```
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3542,6 +3707,7 @@ propertyCategory = Residential
 ---
 
 ### 4. Get Requirements (Admin View)
+
 Returns a list of all active requirements in the platform, populated with basic user details, along with a count of active properties matching each requirement.
 
 `GET {{baseUrl}}/admin/requirements`
@@ -3549,6 +3715,7 @@ Returns a list of all active requirements in the platform, populated with basic 
 Headers: Auth required. Admin access only.
 
 Optional query params:
+
 ```txt
 page            = 1
 limit           = 10
@@ -3558,6 +3725,7 @@ transactionType = Buy
 ```
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3594,6 +3762,7 @@ transactionType = Buy
 ---
 
 ### 5. Get Requirement Detail (Admin View)
+
 Returns full details of a specific requirement, along with up to 5 loosely-matched properties.
 
 `GET {{baseUrl}}/admin/requirements/{{requirementId}}`
@@ -3601,6 +3770,7 @@ Returns full details of a specific requirement, along with up to 5 loosely-match
 Headers: Auth required. Admin access only.
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3648,6 +3818,7 @@ Headers: Auth required. Admin access only.
 ---
 
 ### 6. Get All Inquiries (Admin View)
+
 Returns a list of all inquiries across the platform with user and property details.
 
 `GET {{baseUrl}}/admin/inquiries`
@@ -3655,6 +3826,7 @@ Returns a list of all inquiries across the platform with user and property detai
 Headers: Auth required. Admin access only.
 
 Optional query params:
+
 ```txt
 page    = 1
 limit   = 10
@@ -3664,7 +3836,8 @@ isAgent = Yes (Yes or No)
 ```
 
 **Success Response `200 OK`:**
-```json
+
+````json
 {
   "success": true,
   "message": "Inquiries fetched successfully",
@@ -3726,9 +3899,10 @@ limit        = 10
 status       = Pending (Pending, Approved, or Rejected)
 documentType = Floor Plan (Ownership Proof, Agreement, Floor Plan, Brochure, etc.)
 search       = Rahul (searches across document title, property title/name, user name, email, or phone)
-```
+````
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3777,6 +3951,7 @@ Updates verification status of a property document, which triggers Socket.io and
 Headers: Auth required. Admin access only.
 
 Body (JSON):
+
 ```json
 {
   "status": "Approved"
@@ -3785,11 +3960,12 @@ Body (JSON):
 
 **Field rules:**
 
-| Field | Type | Required | Validation |
-|---|---|---|---|
-| `status` | string | ✅ | "Pending", "Approved", or "Rejected" |
+| Field    | Type   | Required | Validation                           |
+| -------- | ------ | -------- | ------------------------------------ |
+| `status` | string | ✅       | "Pending", "Approved", or "Rejected" |
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3815,15 +3991,17 @@ All endpoints require valid JWT authentication (`Authorization: Bearer {{token}}
 **Base Path:** `{{baseUrl}}/notifications`
 
 #### 1. Get My Notifications
+
 Retrieves historical notifications targeting the logged-in user, paginated. If the logged-in user has the `admin` role, the response also includes system-wide and admin-targeted notifications.
 
-*   **Method:** `GET`
-*   **Path:** `{{baseUrl}}/notifications`
-*   **Query Parameters:**
-    *   `page` (number, optional, default: 1)
-    *   `limit` (number, optional, default: 10)
+- **Method:** `GET`
+- **Path:** `{{baseUrl}}/notifications`
+- **Query Parameters:**
+  - `page` (number, optional, default: 1)
+  - `limit` (number, optional, default: 10)
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3861,12 +4039,14 @@ Retrieves historical notifications targeting the logged-in user, paginated. If t
 ```
 
 #### 2. Mark Single Notification As Read
+
 Marks a specific notification as read.
 
-*   **Method:** `PUT`
-*   **Path:** `{{baseUrl}}/notifications/:id/read`
+- **Method:** `PUT`
+- **Path:** `{{baseUrl}}/notifications/:id/read`
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3883,12 +4063,14 @@ Marks a specific notification as read.
 ```
 
 #### 3. Mark All Notifications As Read
+
 Marks all notifications for the authenticated user as read.
 
-*   **Method:** `PUT`
-*   **Path:** `{{baseUrl}}/notifications/mark-all-read`
+- **Method:** `PUT`
+- **Path:** `{{baseUrl}}/notifications/mark-all-read`
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3897,12 +4079,14 @@ Marks all notifications for the authenticated user as read.
 ```
 
 #### 4. Delete Notification
+
 Soft deletes a specific notification.
 
-*   **Method:** `DELETE`
-*   **Path:** `{{baseUrl}}/notifications/:id`
+- **Method:** `DELETE`
+- **Path:** `{{baseUrl}}/notifications/:id`
 
 **Success Response `200 OK`:**
+
 ```json
 {
   "success": true,
@@ -3915,26 +4099,31 @@ Soft deletes a specific notification.
 ### Real-Time Socket.io Connection & Flow
 
 #### 1. Establishing Connection
+
 To connect, client libraries should pass the JWT token in `auth` handshake configurations or `query` parameters.
 
 ```javascript
 const socket = io("http://localhost:5000", {
   auth: {
-    token: "YOUR_JWT_ACCESS_TOKEN"
-  }
+    token: "YOUR_JWT_ACCESS_TOKEN",
+  },
 });
 ```
 
 #### 2. Client Room Routing (Auto-Joined)
+
 When a client successfully authenticates and connects, the backend automatically joins them to target rooms:
+
 - **Individual Room**: `user_{{userId}}` AND the raw `{{userId}}` (For direct, user-specific notifications)
 - **Admin Room**: `admins` (Only joined if the user's role is `admin`, receives general admin alerts)
 
 The backend also handles standard custom register/join/login subscription events emitted from client-side controllers (e.g., Flutter) dynamically.
 
 #### 3. Real-Time Events
+
 - **Event Name**: `notification`
 - **Emitted Data Format**:
+
 ```json
 {
   "id": "6a19246d183b54c9357d78c0",
@@ -3959,7 +4148,6 @@ When a user submits a new inquiry on a property, the backend dynamically capture
 
 1. **Brokers**:
    - **Matching Rules**: Must match BOTH `city` (exact case-insensitive match on the `User` document) **AND** the property's `city_area` must match one of the broker's registered active expert areas inside `ExpertInArea` (`models/expertInArea.model.js`).
-   
 2. **Channel Partners & Builders**:
    - **Matching Rules**: Must match `city` (exact case-insensitive match on the `User` document) alone.
 
@@ -3967,8 +4155,10 @@ When a user submits a new inquiry on a property, the backend dynamically capture
    - The buyer submitting the inquiry and the direct owner/dealer of the property are automatically filtered out of the broadcast to prevent duplicate or irrelevant alerts.
 
 #### Expert In Area Updates
+
 - **Ownership**: `models/expertInArea.model.js` includes `userId` pointing to the `User` model, recording who registered the area.
 - **GET Profile integration**: The `GET /api/users/profile` (`controllers/user.controller.js`) endpoint now dynamically returns the logged-in user's list of registered active expert areas:
+
 ```json
 {
   "success": true,
@@ -3995,12 +4185,12 @@ When a user submits a new property **requirement** (via `POST /api/requirements`
 
 #### Matching Rules
 
-| Role | Matching Condition |
-|:---|:---|
-| `broker` | User's `city` matches one of the requirement's `locations` **AND** the user has an active `ExpertInArea` record whose `areaName` matches the requirement's `area` |
-| `channel_partner` | User's `city` matches one of the requirement's `locations` (city match only) |
-| `builder` | User's `city` matches one of the requirement's `locations` (city match only) |
-| `admin` | Always notified (regardless of location) |
+| Role              | Matching Condition                                                                                                                                                |
+| :---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `broker`          | User's `city` matches one of the requirement's `locations` **AND** the user has an active `ExpertInArea` record whose `areaName` matches the requirement's `area` |
+| `channel_partner` | User's `city` matches one of the requirement's `locations` (city match only)                                                                                      |
+| `builder`         | User's `city` matches one of the requirement's `locations` (city match only)                                                                                      |
+| `admin`           | Always notified (regardless of location)                                                                                                                          |
 
 > **Note:** If the requirement has **no `area`** set, brokers are qualified by **city match alone** (same rule as channel_partner/builder).
 
@@ -4032,6 +4222,7 @@ When a user submits a new property **requirement** (via `POST /api/requirements`
 #### Example Scenarios
 
 **Scenario A**: Requirement submitted for `locations: ["Ahmedabad"]`, `area: "Satellite"`
+
 - Broker in Ahmedabad with ExpertInArea `"Satellite"` → ✅ Notified
 - Broker in Ahmedabad with ExpertInArea `"Prahlad Nagar"` → ❌ Not notified (area mismatch)
 - Broker in Surat → ❌ Not notified (city mismatch)
@@ -4040,6 +4231,7 @@ When a user submits a new property **requirement** (via `POST /api/requirements`
 - Admin → ✅ Always notified
 
 **Scenario B**: Requirement submitted for `locations: ["Ahmedabad"]`, no `area`
+
 - Broker in Ahmedabad (any expert area) → ✅ Notified (no area filter applied)
 - Channel partner in Ahmedabad → ✅ Notified
 - All other cities → ❌ Not notified
@@ -4055,16 +4247,19 @@ CRUD endpoints to manage banks. Creating, updating, and deleting bank records re
 `POST {{baseUrl}}/banks`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data):
+
 - `bankName` (string, required): Name of the bank.
 - `interest` (number, required): Interest rate percentage (e.g. 8.5).
 - `about` (string, optional): Short description about the bank.
 - `bankIcon` (file, optional): Bank logo/icon image (`jpg`, `jpeg`, `png`, `webp` max 5 MB).
 
 Response Example (`201 Created`):
+
 ```json
 {
   "success": true,
@@ -4090,11 +4285,13 @@ Fetches a list of all active banks.
 `GET {{baseUrl}}/banks`
 
 Optional query params:
+
 - `search` (string): Filter banks by name.
 - `page` (number): Page number for pagination.
 - `limit` (number): Number of banks per page.
 
 Response Example (`200 OK`):
+
 ```json
 {
   "success": true,
@@ -4127,10 +4324,12 @@ Response Example (`200 OK`):
 `PUT {{baseUrl}}/banks/:id`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data) - any optional fields:
+
 - `bankName` (string)
 - `interest` (number)
 - `about` (string)
@@ -4143,6 +4342,7 @@ Soft deletes a bank.
 `DELETE {{baseUrl}}/banks/:id`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 
 ---
@@ -4150,6 +4350,7 @@ Headers:
 ## Property Integration with Banks
 
 All active banks and their interest rates are automatically returned when querying property information:
+
 1. **Property List GET API (`GET /properties`)**: Returns a `banks` array at the top level of the JSON response.
 2. **Property Detail GET API (`GET /properties/:id`)**: Returns a `banks` array directly nested inside the property's `data` object.
 
@@ -4164,14 +4365,17 @@ CRUD endpoints to manage amenities. Creating, updating, and deleting amenities r
 `POST {{baseUrl}}/amenities`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data):
+
 - `amenityName` (string, required): Name of the amenity.
 - `amenityIcon` (file, optional): Amenity logo/icon image (`jpg`, `jpeg`, `png`, `webp` max 5 MB).
 
 Response Example (`201 Created`):
+
 ```json
 {
   "success": true,
@@ -4195,6 +4399,7 @@ Fetches a list of all active amenities.
 `GET {{baseUrl}}/amenities`
 
 Optional query params:
+
 - `search` (string): Filter amenities by name.
 - `page` (number): Page number.
 - `limit` (number): Number of amenities per page.
@@ -4208,10 +4413,12 @@ Optional query params:
 `PUT {{baseUrl}}/amenities/:id`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data) - any optional fields:
+
 - `amenityName` (string)
 - `amenityIcon` (file)
 
@@ -4222,6 +4429,7 @@ Soft deletes an amenity.
 `DELETE {{baseUrl}}/amenities/:id`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 
 ---
@@ -4235,14 +4443,17 @@ CRUD endpoints to manage furniture items. Creating, updating, and deleting furni
 `POST {{baseUrl}}/furniture`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data):
+
 - `furnitureName` (string, required): Name of the furniture item.
 - `furnitureIcon` (file, optional): Furniture logo/icon image (`jpg`, `jpeg`, `png`, `webp` max 5 MB).
 
 Response Example (`201 Created`):
+
 ```json
 {
   "success": true,
@@ -4266,6 +4477,7 @@ Fetches a list of all active furniture items.
 `GET {{baseUrl}}/furniture`
 
 Optional query params:
+
 - `search` (string): Filter furniture items by name.
 - `page` (number): Page number.
 - `limit` (number): Number of items per page.
@@ -4279,10 +4491,12 @@ Optional query params:
 `PUT {{baseUrl}}/furniture/:id`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data) - any optional fields:
+
 - `furnitureName` (string)
 - `furnitureIcon` (file)
 
@@ -4293,6 +4507,7 @@ Soft deletes a furniture item.
 `DELETE {{baseUrl}}/furniture/:id`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 
 ---
@@ -4306,10 +4521,12 @@ CRUD endpoints to manage nearby landmarks. Creating, updating, and deleting near
 `POST {{baseUrl}}/nearby-places`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data):
+
 - `city` (string, required): City name.
 - `locality` (string, required): Locality name.
 - `placeName` (string, required): Name of the landmark.
@@ -4317,6 +4534,7 @@ Body (Form Data):
 - `placeIcon` (file, optional): Landmark logo/icon image (`jpg`, `jpeg`, `png`, `webp` max 5 MB).
 
 Response Example (`201 Created`):
+
 ```json
 {
   "success": true,
@@ -4343,6 +4561,7 @@ Fetches a list of all active landmarks.
 `GET {{baseUrl}}/nearby-places`
 
 Optional query params:
+
 - `search` (string): Filter landmarks by name, type, city, or locality.
 - `city` (string)
 - `locality` (string)
@@ -4359,10 +4578,12 @@ Optional query params:
 `PUT {{baseUrl}}/nearby-places/:id`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 - `Content-Type: multipart/form-data`
 
 Body (Form Data) - any optional fields:
+
 - `city` (string)
 - `locality` (string)
 - `placeName` (string)
@@ -4376,6 +4597,7 @@ Soft deletes a landmark.
 `DELETE {{baseUrl}}/nearby-places/:id`
 
 Headers:
+
 - `Authorization: Bearer <ADMIN_ACCESS_TOKEN>`
 
 ---
@@ -4383,10 +4605,8 @@ Headers:
 ## Property Integration with Landmarks
 
 Landmarks are automatically returned when querying property details or updates:
+
 1. **Property Detail GET API (`GET /properties/:id`)** & **Property Update API (`PUT /properties/:id`)**: The `nearbyPlaces` list populated inside the property `data` object now includes a fully qualified `placeIconUrl` resolved from the landmark's icon file.
-
-
-
 
 ## Blogs API
 
@@ -4427,39 +4647,39 @@ search=ahmedabad
 &limit=10
 
 {
-    "success": true,
-    "message": "Blogs fetched successfully",
-    "data": [
-        {
-            "_id": "6a1ea941a4e315ba7658def6",
-            "title": "Best Areas to Buy Property in Ahmedabad in 2026",
-            "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
-            "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
-            "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
-            "coverImage": "1780394303068-b.jpg",
-            "category": "Property Buying Guide",
-            "authorName": "99acres Editorial Team",
-            "adminId": "6a199b556ff5abc84f938084",
-            "views": 2,
-            "status": "published",
-            "isFeatured": true,
-            "publishedAt": "2026-06-02T09:58:25.154Z",
-            "deletedAt": null,
-            "createdAt": "2026-06-02T09:58:25.164Z",
-            "updatedAt": "2026-06-02T11:02:09.083Z",
-            "__v": 1,
-            "readTime": 8,
-            "tags": [
-                "#sell",
-                "#surat"
-            ],
-            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
-        }
-    ],
-    "pagination": null,
-    "meta": {
-        "totalBlogs": 1
-    }
+"success": true,
+"message": "Blogs fetched successfully",
+"data": [
+{
+"\_id": "6a1ea941a4e315ba7658def6",
+"title": "Best Areas to Buy Property in Ahmedabad in 2026",
+"slug": "best-areas-to-buy-property-in-ahmedabad-2026",
+"summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
+"content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
+"coverImage": "1780394303068-b.jpg",
+"category": "Property Buying Guide",
+"authorName": "99acres Editorial Team",
+"adminId": "6a199b556ff5abc84f938084",
+"views": 2,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T09:58:25.154Z",
+"deletedAt": null,
+"createdAt": "2026-06-02T09:58:25.164Z",
+"updatedAt": "2026-06-02T11:02:09.083Z",
+"\_\_v": 1,
+"readTime": 8,
+"tags": [
+"#sell",
+"#surat"
+],
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
+}
+],
+"pagination": null,
+"meta": {
+"totalBlogs": 1
+}
 }
 
 Auth: not required.
@@ -4483,33 +4703,33 @@ Auth: not required.
 Each successful detail call increments `views` by `1`.
 
 {
-    "success": true,
-    "message": "Blog fetched successfully",
-    "data": {
-        "_id": "6a1ea941a4e315ba7658def6",
-        "title": "Best Areas to Buy Property in Ahmedabad in 2026",
-        "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
-        "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
-        "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
-        "coverImage": "1780394303068-b.jpg",
-        "category": "Property Buying Guide",
-        "authorName": "99acres Editorial Team",
-        "adminId": "6a199b556ff5abc84f938084",
-        "views": 3,
-        "status": "published",
-        "isFeatured": true,
-        "publishedAt": "2026-06-02T09:58:25.154Z",
-        "deletedAt": null,
-        "createdAt": "2026-06-02T09:58:25.164Z",
-        "updatedAt": "2026-06-02T11:03:56.076Z",
-        "__v": 1,
-        "readTime": 8,
-        "tags": [
-            "#sell",
-            "#surat"
-        ],
-        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
-    }
+"success": true,
+"message": "Blog fetched successfully",
+"data": {
+"\_id": "6a1ea941a4e315ba7658def6",
+"title": "Best Areas to Buy Property in Ahmedabad in 2026",
+"slug": "best-areas-to-buy-property-in-ahmedabad-2026",
+"summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
+"content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
+"coverImage": "1780394303068-b.jpg",
+"category": "Property Buying Guide",
+"authorName": "99acres Editorial Team",
+"adminId": "6a199b556ff5abc84f938084",
+"views": 3,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T09:58:25.154Z",
+"deletedAt": null,
+"createdAt": "2026-06-02T09:58:25.164Z",
+"updatedAt": "2026-06-02T11:03:56.076Z",
+"\_\_v": 1,
+"readTime": 8,
+"tags": [
+"#sell",
+"#surat"
+],
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
+}
 }
 
 #### Get Published Blog By Slug
@@ -4554,33 +4774,30 @@ Example response:
 
 ```json
 {
-    "success": true,
-    "message": "Blog updated successfully",
-    "data": {
-        "readTime": 8,
-        "tags": [
-            "#sell",
-            "#surat"
-        ],
-        "_id": "6a1ea941a4e315ba7658def6",
-        "title": "Best Areas to Buy Property in Ahmedabad in 2026",
-        "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
-        "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
-        "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
-        "coverImage": "1780394303068-b.jpg",
-        "category": "Property Buying Guide",
-        "authorName": "99acres Editorial Team",
-        "adminId": "6a199b556ff5abc84f938084",
-        "views": 2,
-        "status": "published",
-        "isFeatured": true,
-        "publishedAt": "2026-06-02T09:58:25.154Z",
-        "deletedAt": null,
-        "createdAt": "2026-06-02T09:58:25.164Z",
-        "updatedAt": "2026-06-02T11:02:09.083Z",
-        "__v": 1,
-        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
-    }
+  "success": true,
+  "message": "Blog updated successfully",
+  "data": {
+    "readTime": 8,
+    "tags": ["#sell", "#surat"],
+    "_id": "6a1ea941a4e315ba7658def6",
+    "title": "Best Areas to Buy Property in Ahmedabad in 2026",
+    "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
+    "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
+    "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
+    "coverImage": "1780394303068-b.jpg",
+    "category": "Property Buying Guide",
+    "authorName": "99acres Editorial Team",
+    "adminId": "6a199b556ff5abc84f938084",
+    "views": 2,
+    "status": "published",
+    "isFeatured": true,
+    "publishedAt": "2026-06-02T09:58:25.154Z",
+    "deletedAt": null,
+    "createdAt": "2026-06-02T09:58:25.164Z",
+    "updatedAt": "2026-06-02T11:02:09.083Z",
+    "__v": 1,
+    "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
+  }
 }
 ```
 
@@ -4591,78 +4808,78 @@ Example response:
 Returns draft, published, and archived blogs unless `status` is supplied. Admin reads do not increase `views`.
 
 {
-    "success": true,
-    "message": "Blogs fetched successfully",
-    "data": [
-        {
-            "_id": "6a1eb7f42b0d0df023f4e1f8",
-            "title": "Best Areas to Buy Property in Surat in 2026",
-            "slug": "best-areas-to-buy-property-in-surat-in-2026",
-            "summary": "Discover the top localities in Surat for property investment and future growth.",
-            "content": "<h2>Why Invest in Surat?</h2><p>Surat has emerged as one of India's fastest-growing real estate markets...</p>",
-            "coverImage": "1780398067008-b.jpg",
-            "category": "Property Buying Guide",
-            "authorName": "99acres Editorial Team",
-            "readTime": 6,
-            "tags": [
-                "#sell",
-                "#surat"
-            ],
-            "adminId": {
-                "_id": "6a199b556ff5abc84f938084",
-                "name": "Reva",
-                "role": "admin",
-                "phone": "9754641232",
-                "email": "reva@test.com"
-            },
-            "views": 0,
-            "status": "draft",
-            "isFeatured": false,
-            "publishedAt": null,
-            "deletedAt": null,
-            "createdAt": "2026-06-02T11:01:08.832Z",
-            "updatedAt": "2026-06-02T11:01:08.832Z",
-            "__v": 0,
-            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780398067008-b.jpg"
-        },
-        {
-            "_id": "6a1ea941a4e315ba7658def6",
-            "title": "Best Areas to Buy Property in Ahmedabad in 2026",
-            "slug": "best-areas-to-buy-property-in-ahmedabad-2026",
-            "summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
-            "content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
-            "coverImage": "1780394303068-b.jpg",
-            "category": "Property Buying Guide",
-            "authorName": "99acres Editorial Team",
-            "adminId": {
-                "_id": "6a199b556ff5abc84f938084",
-                "name": "Reva",
-                "role": "admin",
-                "phone": "9754641232",
-                "email": "reva@test.com"
-            },
-            "views": 3,
-            "status": "published",
-            "isFeatured": true,
-            "publishedAt": "2026-06-02T09:58:25.154Z",
-            "deletedAt": null,
-            "createdAt": "2026-06-02T09:58:25.164Z",
-            "updatedAt": "2026-06-02T11:03:56.076Z",
-            "__v": 1,
-            "readTime": 8,
-            "tags": [
-                "#sell",
-                "#surat"
-            ],
-            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
-        }
-    ],
-    "pagination": {
-        "total": 2,
-        "page": 1,
-        "limit": 10,
-        "totalPages": 1
-    }
+"success": true,
+"message": "Blogs fetched successfully",
+"data": [
+{
+"\_id": "6a1eb7f42b0d0df023f4e1f8",
+"title": "Best Areas to Buy Property in Surat in 2026",
+"slug": "best-areas-to-buy-property-in-surat-in-2026",
+"summary": "Discover the top localities in Surat for property investment and future growth.",
+"content": "<h2>Why Invest in Surat?</h2><p>Surat has emerged as one of India's fastest-growing real estate markets...</p>",
+"coverImage": "1780398067008-b.jpg",
+"category": "Property Buying Guide",
+"authorName": "99acres Editorial Team",
+"readTime": 6,
+"tags": [
+"#sell",
+"#surat"
+],
+"adminId": {
+"\_id": "6a199b556ff5abc84f938084",
+"name": "Reva",
+"role": "admin",
+"phone": "9754641232",
+"email": "reva@test.com"
+},
+"views": 0,
+"status": "draft",
+"isFeatured": false,
+"publishedAt": null,
+"deletedAt": null,
+"createdAt": "2026-06-02T11:01:08.832Z",
+"updatedAt": "2026-06-02T11:01:08.832Z",
+"**v": 0,
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780398067008-b.jpg"
+},
+{
+"\_id": "6a1ea941a4e315ba7658def6",
+"title": "Best Areas to Buy Property in Ahmedabad in 2026",
+"slug": "best-areas-to-buy-property-in-ahmedabad-2026",
+"summary": "Discover the top localities in Ahmedabad for property investment and future growth.",
+"content": "<h2>Why Invest in Ahmedabad?</h2><p>Ahmedabad has emerged as one of India's fastest-growing real estate markets...</p>",
+"coverImage": "1780394303068-b.jpg",
+"category": "Property Buying Guide",
+"authorName": "99acres Editorial Team",
+"adminId": {
+"\_id": "6a199b556ff5abc84f938084",
+"name": "Reva",
+"role": "admin",
+"phone": "9754641232",
+"email": "reva@test.com"
+},
+"views": 3,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T09:58:25.154Z",
+"deletedAt": null,
+"createdAt": "2026-06-02T09:58:25.164Z",
+"updatedAt": "2026-06-02T11:03:56.076Z",
+"**v": 1,
+"readTime": 8,
+"tags": [
+"#sell",
+"#surat"
+],
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780394303068-b.jpg"
+}
+],
+"pagination": {
+"total": 2,
+"page": 1,
+"limit": 10,
+"totalPages": 1
+}
 }
 
 #### Get Blog By ID For Admin
@@ -4672,39 +4889,39 @@ Returns draft, published, and archived blogs unless `status` is supplied. Admin 
 Admin detail reads do not increase `views`.
 
 {
-    "success": true,
-    "message": "Blog fetched successfully",
-    "data": {
-        "_id": "6a1eb7f42b0d0df023f4e1f8",
-        "title": "Best Areas to Buy Property in Surat in 2026",
-        "slug": "best-areas-to-buy-property-in-surat-in-2026",
-        "summary": "Discover the top localities in Surat for property investment and future growth.",
-        "content": "<h2>Why Invest in Surat?</h2><p>Surat has emerged as one of India's fastest-growing real estate markets...</p>",
-        "coverImage": "1780398067008-b.jpg",
-        "category": "Property Buying Guide",
-        "authorName": "99acres Editorial Team",
-        "readTime": 6,
-        "tags": [
-            "#sell",
-            "#surat"
-        ],
-        "adminId": {
-            "_id": "6a199b556ff5abc84f938084",
-            "name": "Reva",
-            "role": "admin",
-            "phone": "9754641232",
-            "email": "reva@test.com"
-        },
-        "views": 0,
-        "status": "draft",
-        "isFeatured": false,
-        "publishedAt": null,
-        "deletedAt": null,
-        "createdAt": "2026-06-02T11:01:08.832Z",
-        "updatedAt": "2026-06-02T11:01:08.832Z",
-        "__v": 0,
-        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780398067008-b.jpg"
-    }
+"success": true,
+"message": "Blog fetched successfully",
+"data": {
+"\_id": "6a1eb7f42b0d0df023f4e1f8",
+"title": "Best Areas to Buy Property in Surat in 2026",
+"slug": "best-areas-to-buy-property-in-surat-in-2026",
+"summary": "Discover the top localities in Surat for property investment and future growth.",
+"content": "<h2>Why Invest in Surat?</h2><p>Surat has emerged as one of India's fastest-growing real estate markets...</p>",
+"coverImage": "1780398067008-b.jpg",
+"category": "Property Buying Guide",
+"authorName": "99acres Editorial Team",
+"readTime": 6,
+"tags": [
+"#sell",
+"#surat"
+],
+"adminId": {
+"\_id": "6a199b556ff5abc84f938084",
+"name": "Reva",
+"role": "admin",
+"phone": "9754641232",
+"email": "reva@test.com"
+},
+"views": 0,
+"status": "draft",
+"isFeatured": false,
+"publishedAt": null,
+"deletedAt": null,
+"createdAt": "2026-06-02T11:01:08.832Z",
+"updatedAt": "2026-06-02T11:01:08.832Z",
+"\_\_v": 0,
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/blogs/covers/1780398067008-b.jpg"
+}
 }
 
 #### Update Blog
@@ -4763,117 +4980,116 @@ Use `form-data` when uploading `coverImage` or `images`; otherwise JSON is accep
 
 Without auth, returns only published user-side news. With a valid admin token, returns all statuses and supports `status=draft|published|archived`.
 
-
 response with admin auth
 {
-    "success": true,
-    "message": "Property news fetched successfully",
-    "data": [
-        {
-            "_id": "6a1ec0e1e657b3d081305595",
-            "title": "Ahmedabad Metro Phase 2 Expected to Boost Property Prices",
-            "slug": "ahmedabad-metro-phase-2-expected-to-boost-property-prices",
-            "summary": "Real estate experts predict significant appreciation in property values along the new metro corridor.",
-            "content": "<p>Ahmedabad Metro Phase 2 is expected to improve connectivity and increase demand for residential properties...</p>",
-            "coverImage": "1780400345476-b.jpg",
-            "images": [
-                "1780400347151-download.png",
-                "1780400348455-download.png",
-                "1780400349742-download.png",
-                "1780400351053-download.png",
-                "1780400352405-download.png"
-            ],
-            "city": "Ahmedabad",
-            "authorName": "99acres News Desk",
-            "adminId": {
-                "_id": "6a199b556ff5abc84f938084",
-                "name": "Reva",
-                "role": "admin",
-                "phone": "9754641232",
-                "email": "reva@test.com"
-            },
-            "views": 0,
-            "status": "published",
-            "isFeatured": true,
-            "publishedAt": "2026-06-02T11:39:13.835Z",
-            "createdAt": "2026-06-02T11:39:14.008Z",
-            "updatedAt": "2026-06-02T11:39:14.008Z",
-            "__v": 0,
-            "source": "Government Press Release",
-            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780400345476-b.jpg",
-            "imageUrls": [
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400347151-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400348455-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400349742-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400351053-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400352405-download.png"
-            ]
-        }
-    ],
-    "pagination": null,
-    "meta": {
-        "totalPropertyNews": 1,
-        "mode": "admin"
-    }
+"success": true,
+"message": "Property news fetched successfully",
+"data": [
+{
+"\_id": "6a1ec0e1e657b3d081305595",
+"title": "Ahmedabad Metro Phase 2 Expected to Boost Property Prices",
+"slug": "ahmedabad-metro-phase-2-expected-to-boost-property-prices",
+"summary": "Real estate experts predict significant appreciation in property values along the new metro corridor.",
+"content": "<p>Ahmedabad Metro Phase 2 is expected to improve connectivity and increase demand for residential properties...</p>",
+"coverImage": "1780400345476-b.jpg",
+"images": [
+"1780400347151-download.png",
+"1780400348455-download.png",
+"1780400349742-download.png",
+"1780400351053-download.png",
+"1780400352405-download.png"
+],
+"city": "Ahmedabad",
+"authorName": "99acres News Desk",
+"adminId": {
+"\_id": "6a199b556ff5abc84f938084",
+"name": "Reva",
+"role": "admin",
+"phone": "9754641232",
+"email": "reva@test.com"
+},
+"views": 0,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T11:39:13.835Z",
+"createdAt": "2026-06-02T11:39:14.008Z",
+"updatedAt": "2026-06-02T11:39:14.008Z",
+"\_\_v": 0,
+"source": "Government Press Release",
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780400345476-b.jpg",
+"imageUrls": [
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400347151-download.png",
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400348455-download.png",
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400349742-download.png",
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400351053-download.png",
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780400352405-download.png"
+]
+}
+],
+"pagination": null,
+"meta": {
+"totalPropertyNews": 1,
+"mode": "admin"
+}
 }
 
-response without auth or user auth 
+response without auth or user auth
 {
-    "success": true,
-    "message": "Property news fetched successfully",
-    "data": [
-        {
-            "_id": "6a1ec661e657b3d081305596",
-            "title": "Ahmedabad Metro Phase 2 Expected to Boost Property Prices",
-            "slug": "ahmedabad-metro-phase-2-expected-to-boost-property-prices",
-            "summary": "Real estate experts predict significant appreciation in property values along the new metro corridor.",
-            "content": "<p>Ahmedabad Metro Phase 2 is expected to improve connectivity and increase demand for residential properties...</p>",
-            "coverImage": "1780401752936-b.jpg",
-            "images": [
-                "1780401754451-download.png",
-                "1780401755766-download.png",
-                "1780401757102-download.png",
-                "1780401758411-download.png",
-                "1780401759726-download.png"
-            ],
-            "city": "Ahmedabad",
-            "authorName": "99acres News Desk",
-            "adminId": "6a199b556ff5abc84f938084",
-            "views": 0,
-            "status": "published",
-            "isFeatured": true,
-            "publishedAt": "2026-06-02T12:02:41.101Z",
-            "createdAt": "2026-06-02T12:02:41.147Z",
-            "updatedAt": "2026-06-02T12:02:41.147Z",
-            "__v": 0,
-            "source": "Government Press Release",
-            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780401752936-b.jpg",
-            "imageUrls": [
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401754451-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401755766-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401757102-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401758411-download.png",
-                "https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401759726-download.png"
-            ]
-        }
-    ],
-    "pagination": {
-        "total": 1,
-        "page": "1",
-        "limit": "10",
-        "totalPages": 1
-    },
-    "meta": {
-        "totalPropertyNews": 1,
-        "mode": "public"
-    }
+"success": true,
+"message": "Property news fetched successfully",
+"data": [
+{
+"\_id": "6a1ec661e657b3d081305596",
+"title": "Ahmedabad Metro Phase 2 Expected to Boost Property Prices",
+"slug": "ahmedabad-metro-phase-2-expected-to-boost-property-prices",
+"summary": "Real estate experts predict significant appreciation in property values along the new metro corridor.",
+"content": "<p>Ahmedabad Metro Phase 2 is expected to improve connectivity and increase demand for residential properties...</p>",
+"coverImage": "1780401752936-b.jpg",
+"images": [
+"1780401754451-download.png",
+"1780401755766-download.png",
+"1780401757102-download.png",
+"1780401758411-download.png",
+"1780401759726-download.png"
+],
+"city": "Ahmedabad",
+"authorName": "99acres News Desk",
+"adminId": "6a199b556ff5abc84f938084",
+"views": 0,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T12:02:41.101Z",
+"createdAt": "2026-06-02T12:02:41.147Z",
+"updatedAt": "2026-06-02T12:02:41.147Z",
+"\_\_v": 0,
+"source": "Government Press Release",
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/property-news/covers/1780401752936-b.jpg",
+"imageUrls": [
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401754451-download.png",
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401755766-download.png",
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401757102-download.png",
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401758411-download.png",
+"https://ik.imagekit.io/aj6cyp5nm/property-news/images/1780401759726-download.png"
+]
+}
+],
+"pagination": {
+"total": 1,
+"page": "1",
+"limit": "10",
+"totalPages": 1
+},
+"meta": {
+"totalPropertyNews": 1,
+"mode": "public"
+}
 }
 
 #### Get Property News By ID
 
 `GET {{baseUrl}}/property-news/:id`
 
-same condtion response with admin auth will show tatus=draft|published|archived` also addtional info admin like id name etc 
+same condtion response with admin auth will show tatus=draft|published|archived`also addtional info admin like id name etc 
 without auth or user auth it will only show published and no admin info 
 {
     "success": true,
@@ -4913,7 +5129,7 @@ without auth or user auth it will only show published and no admin info
         ]
     }
 }
-Without auth, returns only published news and increments `views`. With a valid admin token, returns any status and does not increment `views`.
+Without auth, returns only published news and increments`views`. With a valid admin token, returns any status and does not increment `views`.
 
 #### Update Property News
 
@@ -4945,7 +5161,6 @@ Supported filters:
 `GET {{baseUrl}}/property-news/:id`
 
 Each successful public detail call increments `views` by `1`.
-
 
 ## Guides API
 
@@ -5000,32 +5215,33 @@ Supported filters:
 - `page`, `limit` - optional pagination.
 
 {
-    "success": true,
-    "message": "Guides fetched successfully",
-    "data": [
-        {
-            "_id": "6a1ed4d4ebe30a59a7ce1fab",
-            "title": "Home Buyer Guide",
-            "slug": "home-buyer-guide",
-            "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
-            "coverImage": "1780405459099-b.jpg",
-            "authorName": "Research Panel",
-            "adminId": "6a199b556ff5abc84f938084",
-            "views": 0,
-            "status": "published",
-            "isFeatured": true,
-            "publishedAt": "2026-06-02T13:04:20.685Z",
-            "createdAt": "2026-06-02T13:04:20.689Z",
-            "updatedAt": "2026-06-02T13:04:20.689Z",
-            "__v": 0,
-            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg"
-        }
-    ],
-    "pagination": null,
-    "meta": {
-        "totalGuides": 1
-    }
+"success": true,
+"message": "Guides fetched successfully",
+"data": [
+{
+"_id": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Home Buyer Guide",
+"slug": "home-buyer-guide",
+"shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+"coverImage": "1780405459099-b.jpg",
+"authorName": "Research Panel",
+"adminId": "6a199b556ff5abc84f938084",
+"views": 0,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T13:04:20.685Z",
+"createdAt": "2026-06-02T13:04:20.689Z",
+"updatedAt": "2026-06-02T13:04:20.689Z",
+"__v": 0,
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg"
 }
+],
+"pagination": null,
+"meta": {
+"totalGuides": 1
+}
+}
+
 #### Get Published Guide By ID
 
 `GET {{baseUrl}}/guides/:id`
@@ -5034,78 +5250,79 @@ Auth: not required.
 
 Returns the guide with ordered `chapters` and `takeaways`. Each successful public detail call increments `views` by `1`.
 {
-    "success": true,
-    "message": "Guide fetched successfully",
-    "data": {
-        "_id": "6a1ed4d4ebe30a59a7ce1fab",
-        "title": "Home Buyer Guide",
-        "slug": "home-buyer-guide",
-        "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
-        "coverImage": "1780405459099-b.jpg",
-        "authorName": "Research Panel",
-        "adminId": "6a199b556ff5abc84f938084",
-        "views": 1,
-        "status": "published",
-        "isFeatured": true,
-        "publishedAt": "2026-06-02T13:04:20.685Z",
-        "createdAt": "2026-06-02T13:04:20.689Z",
-        "updatedAt": "2026-06-02T13:31:38.629Z",
-        "__v": 0,
-        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
-        "chapters": [
-            {
-                "_id": "6a1ed7758f6765bad3bad218",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Capital Allocation & Pre-Approval",
-                "content": "Before cross-referencing neighborhood listing modules...",
-                "sortOrder": 1,
-                "createdAt": "2026-06-02T13:15:33.533Z",
-                "updatedAt": "2026-06-02T13:15:33.533Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1ed7b58f6765bad3bad219",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Micro-Market Due Diligence",
-                "content": "Evaluate locality growth indicators...",
-                "sortOrder": 2,
-                "createdAt": "2026-06-02T13:16:38.035Z",
-                "updatedAt": "2026-06-02T13:16:38.035Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1ed8ed8f6765bad3bad21b",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Transaction Execution & Escrow",
-                "content": "The closing sequence requires processing...",
-                "sortOrder": 3,
-                "createdAt": "2026-06-02T13:21:49.575Z",
-                "updatedAt": "2026-06-02T13:21:49.575Z",
-                "__v": 0
-            }
-        ],
-        "takeaways": [
-            {
-                "_id": "6a1ed9808f6765bad3bad21c",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "content": "Always verify builder RERA indices prior to initial allocation",
-                "sortOrder": 1,
-                "createdAt": "2026-06-02T13:24:16.128Z",
-                "updatedAt": "2026-06-02T13:24:16.128Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1edae68f6765bad3bad21e",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "content": "Maintain a 5% liquid capital cushion for registration fees.",
-                "sortOrder": 2,
-                "createdAt": "2026-06-02T13:30:14.263Z",
-                "updatedAt": "2026-06-02T13:30:14.263Z",
-                "__v": 0
-            }
-        ]
-    }
+"success": true,
+"message": "Guide fetched successfully",
+"data": {
+"\_id": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Home Buyer Guide",
+"slug": "home-buyer-guide",
+"shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+"coverImage": "1780405459099-b.jpg",
+"authorName": "Research Panel",
+"adminId": "6a199b556ff5abc84f938084",
+"views": 1,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T13:04:20.685Z",
+"createdAt": "2026-06-02T13:04:20.689Z",
+"updatedAt": "2026-06-02T13:31:38.629Z",
+"**v": 0,
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
+"chapters": [
+{
+"\_id": "6a1ed7758f6765bad3bad218",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Capital Allocation & Pre-Approval",
+"content": "Before cross-referencing neighborhood listing modules...",
+"sortOrder": 1,
+"createdAt": "2026-06-02T13:15:33.533Z",
+"updatedAt": "2026-06-02T13:15:33.533Z",
+"**v": 0
+},
+{
+"\_id": "6a1ed7b58f6765bad3bad219",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Micro-Market Due Diligence",
+"content": "Evaluate locality growth indicators...",
+"sortOrder": 2,
+"createdAt": "2026-06-02T13:16:38.035Z",
+"updatedAt": "2026-06-02T13:16:38.035Z",
+"**v": 0
+},
+{
+"\_id": "6a1ed8ed8f6765bad3bad21b",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Transaction Execution & Escrow",
+"content": "The closing sequence requires processing...",
+"sortOrder": 3,
+"createdAt": "2026-06-02T13:21:49.575Z",
+"updatedAt": "2026-06-02T13:21:49.575Z",
+"**v": 0
 }
+],
+"takeaways": [
+{
+"_id": "6a1ed9808f6765bad3bad21c",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"content": "Always verify builder RERA indices prior to initial allocation",
+"sortOrder": 1,
+"createdAt": "2026-06-02T13:24:16.128Z",
+"updatedAt": "2026-06-02T13:24:16.128Z",
+"__v": 0
+},
+{
+"_id": "6a1edae68f6765bad3bad21e",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"content": "Maintain a 5% liquid capital cushion for registration fees.",
+"sortOrder": 2,
+"createdAt": "2026-06-02T13:30:14.263Z",
+"updatedAt": "2026-06-02T13:30:14.263Z",
+"__v": 0
+}
+]
+}
+}
+
 #### Get Published Guide By Slug
 
 `GET {{baseUrl}}/guides/slug/:slug`
@@ -5115,77 +5332,77 @@ Auth: not required.
 Returns the guide with ordered `chapters` and `takeaways`. Each successful public detail call increments `views` by `1`.
 
 {
-    "success": true,
-    "message": "Guide fetched successfully",
-    "data": {
-        "_id": "6a1ed4d4ebe30a59a7ce1fab",
-        "title": "Home Buyer Guide",
-        "slug": "home-buyer-guide",
-        "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
-        "coverImage": "1780405459099-b.jpg",
-        "authorName": "Research Panel",
-        "adminId": "6a199b556ff5abc84f938084",
-        "views": 3,
-        "status": "published",
-        "isFeatured": true,
-        "publishedAt": "2026-06-02T13:04:20.685Z",
-        "createdAt": "2026-06-02T13:04:20.689Z",
-        "updatedAt": "2026-06-02T13:33:06.737Z",
-        "__v": 0,
-        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
-        "chapters": [
-            {
-                "_id": "6a1ed7758f6765bad3bad218",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Capital Allocation & Pre-Approval",
-                "content": "Before cross-referencing neighborhood listing modules...",
-                "sortOrder": 1,
-                "createdAt": "2026-06-02T13:15:33.533Z",
-                "updatedAt": "2026-06-02T13:15:33.533Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1ed7b58f6765bad3bad219",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Micro-Market Due Diligence",
-                "content": "Evaluate locality growth indicators...",
-                "sortOrder": 2,
-                "createdAt": "2026-06-02T13:16:38.035Z",
-                "updatedAt": "2026-06-02T13:16:38.035Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1ed8ed8f6765bad3bad21b",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Transaction Execution & Escrow",
-                "content": "The closing sequence requires processing...",
-                "sortOrder": 3,
-                "createdAt": "2026-06-02T13:21:49.575Z",
-                "updatedAt": "2026-06-02T13:21:49.575Z",
-                "__v": 0
-            }
-        ],
-        "takeaways": [
-            {
-                "_id": "6a1ed9808f6765bad3bad21c",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "content": "Always verify builder RERA indices prior to initial allocation",
-                "sortOrder": 1,
-                "createdAt": "2026-06-02T13:24:16.128Z",
-                "updatedAt": "2026-06-02T13:24:16.128Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1edae68f6765bad3bad21e",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "content": "Maintain a 5% liquid capital cushion for registration fees.",
-                "sortOrder": 2,
-                "createdAt": "2026-06-02T13:30:14.263Z",
-                "updatedAt": "2026-06-02T13:30:14.263Z",
-                "__v": 0
-            }
-        ]
-    }
+"success": true,
+"message": "Guide fetched successfully",
+"data": {
+"\_id": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Home Buyer Guide",
+"slug": "home-buyer-guide",
+"shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+"coverImage": "1780405459099-b.jpg",
+"authorName": "Research Panel",
+"adminId": "6a199b556ff5abc84f938084",
+"views": 3,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T13:04:20.685Z",
+"createdAt": "2026-06-02T13:04:20.689Z",
+"updatedAt": "2026-06-02T13:33:06.737Z",
+"**v": 0,
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
+"chapters": [
+{
+"\_id": "6a1ed7758f6765bad3bad218",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Capital Allocation & Pre-Approval",
+"content": "Before cross-referencing neighborhood listing modules...",
+"sortOrder": 1,
+"createdAt": "2026-06-02T13:15:33.533Z",
+"updatedAt": "2026-06-02T13:15:33.533Z",
+"**v": 0
+},
+{
+"\_id": "6a1ed7b58f6765bad3bad219",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Micro-Market Due Diligence",
+"content": "Evaluate locality growth indicators...",
+"sortOrder": 2,
+"createdAt": "2026-06-02T13:16:38.035Z",
+"updatedAt": "2026-06-02T13:16:38.035Z",
+"**v": 0
+},
+{
+"\_id": "6a1ed8ed8f6765bad3bad21b",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Transaction Execution & Escrow",
+"content": "The closing sequence requires processing...",
+"sortOrder": 3,
+"createdAt": "2026-06-02T13:21:49.575Z",
+"updatedAt": "2026-06-02T13:21:49.575Z",
+"**v": 0
+}
+],
+"takeaways": [
+{
+"_id": "6a1ed9808f6765bad3bad21c",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"content": "Always verify builder RERA indices prior to initial allocation",
+"sortOrder": 1,
+"createdAt": "2026-06-02T13:24:16.128Z",
+"updatedAt": "2026-06-02T13:24:16.128Z",
+"__v": 0
+},
+{
+"_id": "6a1edae68f6765bad3bad21e",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"content": "Maintain a 5% liquid capital cushion for registration fees.",
+"sortOrder": 2,
+"createdAt": "2026-06-02T13:30:14.263Z",
+"updatedAt": "2026-06-02T13:30:14.263Z",
+"__v": 0
+}
+]
+}
 }
 
 ### Admin Guide APIs
@@ -5207,39 +5424,39 @@ Use `form-data` when uploading `coverImage`; otherwise JSON is accepted.
 Returns draft, published, and archived guides. Admin reads do not increase `views`.
 
 {
-    "success": true,
-    "message": "Guides fetched successfully",
-    "data": [
-        {
-            "_id": "6a1ed4d4ebe30a59a7ce1fab",
-            "title": "Home Buyer Guide",
-            "slug": "home-buyer-guide",
-            "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
-            "coverImage": "1780405459099-b.jpg",
-            "authorName": "Research Panel",
-            "adminId": {
-                "_id": "6a199b556ff5abc84f938084",
-                "name": "Reva",
-                "role": "admin",
-                "phone": "9754641232",
-                "email": "reva@test.com"
-            },
-            "views": 0,
-            "status": "published",
-            "isFeatured": true,
-            "publishedAt": "2026-06-02T13:04:20.685Z",
-            "createdAt": "2026-06-02T13:04:20.689Z",
-            "updatedAt": "2026-06-02T13:04:20.689Z",
-            "__v": 0,
-            "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg"
-        }
-    ],
-    "pagination": {
-        "total": 1,
-        "page": 1,
-        "limit": 10,
-        "totalPages": 1
-    }
+"success": true,
+"message": "Guides fetched successfully",
+"data": [
+{
+"_id": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Home Buyer Guide",
+"slug": "home-buyer-guide",
+"shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+"coverImage": "1780405459099-b.jpg",
+"authorName": "Research Panel",
+"adminId": {
+"_id": "6a199b556ff5abc84f938084",
+"name": "Reva",
+"role": "admin",
+"phone": "9754641232",
+"email": "reva@test.com"
+},
+"views": 0,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T13:04:20.685Z",
+"createdAt": "2026-06-02T13:04:20.689Z",
+"updatedAt": "2026-06-02T13:04:20.689Z",
+"__v": 0,
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg"
+}
+],
+"pagination": {
+"total": 1,
+"page": 1,
+"limit": 10,
+"totalPages": 1
+}
 }
 
 #### Get Guide By ID For Admin
@@ -5249,83 +5466,83 @@ Returns draft, published, and archived guides. Admin reads do not increase `view
 Returns the guide with all ordered chapters and takeaways. Admin reads do not increase `views`.
 
 {
-    "success": true,
-    "message": "Guide fetched successfully",
-    "data": {
-        "_id": "6a1ed4d4ebe30a59a7ce1fab",
-        "title": "Home Buyer Guide",
-        "slug": "home-buyer-guide",
-        "shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
-        "coverImage": "1780405459099-b.jpg",
-        "authorName": "Research Panel",
-        "adminId": {
-            "_id": "6a199b556ff5abc84f938084",
-            "name": "Reva",
-            "role": "admin",
-            "phone": "9754641232",
-            "email": "reva@test.com"
-        },
-        "views": 0,
-        "status": "published",
-        "isFeatured": true,
-        "publishedAt": "2026-06-02T13:04:20.685Z",
-        "createdAt": "2026-06-02T13:04:20.689Z",
-        "updatedAt": "2026-06-02T13:04:20.689Z",
-        "__v": 0,
-        "coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
-        "chapters": [
-            {
-                "_id": "6a1ed7758f6765bad3bad218",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Capital Allocation & Pre-Approval",
-                "content": "Before cross-referencing neighborhood listing modules...",
-                "sortOrder": 1,
-                "createdAt": "2026-06-02T13:15:33.533Z",
-                "updatedAt": "2026-06-02T13:15:33.533Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1ed7b58f6765bad3bad219",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Micro-Market Due Diligence",
-                "content": "Evaluate locality growth indicators...",
-                "sortOrder": 2,
-                "createdAt": "2026-06-02T13:16:38.035Z",
-                "updatedAt": "2026-06-02T13:16:38.035Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1ed8ed8f6765bad3bad21b",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "title": "Transaction Execution & Escrow",
-                "content": "The closing sequence requires processing...",
-                "sortOrder": 3,
-                "createdAt": "2026-06-02T13:21:49.575Z",
-                "updatedAt": "2026-06-02T13:21:49.575Z",
-                "__v": 0
-            }
-        ],
-        "takeaways": [
-            {
-                "_id": "6a1ed9808f6765bad3bad21c",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "content": "Always verify builder RERA indices prior to initial allocation",
-                "sortOrder": 1,
-                "createdAt": "2026-06-02T13:24:16.128Z",
-                "updatedAt": "2026-06-02T13:24:16.128Z",
-                "__v": 0
-            },
-            {
-                "_id": "6a1ed99b8f6765bad3bad21d",
-                "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-                "content": "Maintain a 5% liquid capital cushion for registration fees.",
-                "sortOrder": 2,
-                "createdAt": "2026-06-02T13:24:43.331Z",
-                "updatedAt": "2026-06-02T13:24:43.331Z",
-                "__v": 0
-            }
-        ]
-    }
+"success": true,
+"message": "Guide fetched successfully",
+"data": {
+"\_id": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Home Buyer Guide",
+"slug": "home-buyer-guide",
+"shortDescription": "A comprehensive step-by-step handbook engineered to simplify, secure and accelerate the modern home buying process.",
+"coverImage": "1780405459099-b.jpg",
+"authorName": "Research Panel",
+"adminId": {
+"\_id": "6a199b556ff5abc84f938084",
+"name": "Reva",
+"role": "admin",
+"phone": "9754641232",
+"email": "reva@test.com"
+},
+"views": 0,
+"status": "published",
+"isFeatured": true,
+"publishedAt": "2026-06-02T13:04:20.685Z",
+"createdAt": "2026-06-02T13:04:20.689Z",
+"updatedAt": "2026-06-02T13:04:20.689Z",
+"**v": 0,
+"coverImageUrl": "https://ik.imagekit.io/aj6cyp5nm/guides/covers/1780405459099-b.jpg",
+"chapters": [
+{
+"\_id": "6a1ed7758f6765bad3bad218",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Capital Allocation & Pre-Approval",
+"content": "Before cross-referencing neighborhood listing modules...",
+"sortOrder": 1,
+"createdAt": "2026-06-02T13:15:33.533Z",
+"updatedAt": "2026-06-02T13:15:33.533Z",
+"**v": 0
+},
+{
+"\_id": "6a1ed7b58f6765bad3bad219",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Micro-Market Due Diligence",
+"content": "Evaluate locality growth indicators...",
+"sortOrder": 2,
+"createdAt": "2026-06-02T13:16:38.035Z",
+"updatedAt": "2026-06-02T13:16:38.035Z",
+"**v": 0
+},
+{
+"\_id": "6a1ed8ed8f6765bad3bad21b",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Transaction Execution & Escrow",
+"content": "The closing sequence requires processing...",
+"sortOrder": 3,
+"createdAt": "2026-06-02T13:21:49.575Z",
+"updatedAt": "2026-06-02T13:21:49.575Z",
+"**v": 0
+}
+],
+"takeaways": [
+{
+"_id": "6a1ed9808f6765bad3bad21c",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"content": "Always verify builder RERA indices prior to initial allocation",
+"sortOrder": 1,
+"createdAt": "2026-06-02T13:24:16.128Z",
+"updatedAt": "2026-06-02T13:24:16.128Z",
+"__v": 0
+},
+{
+"_id": "6a1ed99b8f6765bad3bad21d",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"content": "Maintain a 5% liquid capital cushion for registration fees.",
+"sortOrder": 2,
+"createdAt": "2026-06-02T13:24:43.331Z",
+"updatedAt": "2026-06-02T13:24:43.331Z",
+"__v": 0
+}
+]
+}
 }
 
 #### Update Guide
@@ -5350,40 +5567,40 @@ Hard deletes the guide and permanently deletes its chapters and takeaways.
 
 `GET {{baseUrl}}/guides/admin/:guideId/chapters`
 {
-    "success": true,
-    "message": "Guide chapters fetched successfully",
-    "data": [
-        {
-            "_id": "6a1ed7758f6765bad3bad218",
-            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-            "title": "Capital Allocation & Pre-Approval",
-            "content": "Before cross-referencing neighborhood listing modules...",
-            "sortOrder": 1,
-            "createdAt": "2026-06-02T13:15:33.533Z",
-            "updatedAt": "2026-06-02T13:15:33.533Z",
-            "__v": 0
-        },
-        {
-            "_id": "6a1ed7b58f6765bad3bad219",
-            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-            "title": "Micro-Market Due Diligence",
-            "content": "Evaluate locality growth indicators...",
-            "sortOrder": 2,
-            "createdAt": "2026-06-02T13:16:38.035Z",
-            "updatedAt": "2026-06-02T13:16:38.035Z",
-            "__v": 0
-        },
-        {
-            "_id": "6a1ed7f88f6765bad3bad21a",
-            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-            "title": "Transaction Execution & Escrow",
-            "content": "The closing sequence requires processing...",
-            "sortOrder": 3,
-            "createdAt": "2026-06-02T13:17:44.603Z",
-            "updatedAt": "2026-06-02T13:17:44.603Z",
-            "__v": 0
-        }
-    ]
+"success": true,
+"message": "Guide chapters fetched successfully",
+"data": [
+{
+"_id": "6a1ed7758f6765bad3bad218",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Capital Allocation & Pre-Approval",
+"content": "Before cross-referencing neighborhood listing modules...",
+"sortOrder": 1,
+"createdAt": "2026-06-02T13:15:33.533Z",
+"updatedAt": "2026-06-02T13:15:33.533Z",
+"__v": 0
+},
+{
+"_id": "6a1ed7b58f6765bad3bad219",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Micro-Market Due Diligence",
+"content": "Evaluate locality growth indicators...",
+"sortOrder": 2,
+"createdAt": "2026-06-02T13:16:38.035Z",
+"updatedAt": "2026-06-02T13:16:38.035Z",
+"__v": 0
+},
+{
+"_id": "6a1ed7f88f6765bad3bad21a",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"title": "Transaction Execution & Escrow",
+"content": "The closing sequence requires processing...",
+"sortOrder": 3,
+"createdAt": "2026-06-02T13:17:44.603Z",
+"updatedAt": "2026-06-02T13:17:44.603Z",
+"__v": 0
+}
+]
 }
 
 #### Update Chapter
@@ -5407,28 +5624,28 @@ Hard deletes the chapter.
 `GET {{baseUrl}}/guides/admin/:guideId/takeaways`
 
 {
-    "success": true,
-    "message": "Guide takeaways fetched successfully",
-    "data": [
-        {
-            "_id": "6a1ed9808f6765bad3bad21c",
-            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-            "content": "Always verify builder RERA indices prior to initial allocation",
-            "sortOrder": 1,
-            "createdAt": "2026-06-02T13:24:16.128Z",
-            "updatedAt": "2026-06-02T13:24:16.128Z",
-            "__v": 0
-        },
-        {
-            "_id": "6a1ed99b8f6765bad3bad21d",
-            "guideId": "6a1ed4d4ebe30a59a7ce1fab",
-            "content": "Maintain a 5% liquid capital cushion for registration fees.",
-            "sortOrder": 2,
-            "createdAt": "2026-06-02T13:24:43.331Z",
-            "updatedAt": "2026-06-02T13:24:43.331Z",
-            "__v": 0
-        }
-    ]
+"success": true,
+"message": "Guide takeaways fetched successfully",
+"data": [
+{
+"_id": "6a1ed9808f6765bad3bad21c",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"content": "Always verify builder RERA indices prior to initial allocation",
+"sortOrder": 1,
+"createdAt": "2026-06-02T13:24:16.128Z",
+"updatedAt": "2026-06-02T13:24:16.128Z",
+"__v": 0
+},
+{
+"_id": "6a1ed99b8f6765bad3bad21d",
+"guideId": "6a1ed4d4ebe30a59a7ce1fab",
+"content": "Maintain a 5% liquid capital cushion for registration fees.",
+"sortOrder": 2,
+"createdAt": "2026-06-02T13:24:43.331Z",
+"updatedAt": "2026-06-02T13:24:43.331Z",
+"__v": 0
+}
+]
 }
 
 #### Update Takeaway
@@ -5440,6 +5657,7 @@ Hard deletes the chapter.
 `DELETE {{baseUrl}}/guides/admin/takeaways/:id`
 
 Hard deletes the takeaway.
+
 ## Sponsors API
 
 Sponsors support public active reads and protected admin CRUD. Sponsor logos are uploaded to ImageKit under `sponsors/logos/`. Only the uploaded ImageKit file name is stored in MongoDB as `logo`; API responses include `logoUrl`.
@@ -5478,44 +5696,44 @@ Supported filters:
 - `page`, `limit` - optional pagination.
 
 {
-    "success": true,
-    "message": "Sponsors fetched successfully",
-    "data": [
-        {
-            "_id": "6a1edf5002dcc6b11d0e5faf",
-            "name": "Shreeji",
-            "logo": "1780408142538-b.jpg",
-            "location": "Ahmedabad",
-            "websiteUrl": "www.webearl.com",
-            "displayOrder": 1,
-            "status": "active",
-            "startDate": "2026-06-02T00:00:00.000Z",
-            "endDate": "2026-11-02T00:00:00.000Z",
-            "createdAt": "2026-06-02T13:49:04.774Z",
-            "updatedAt": "2026-06-02T13:49:04.774Z",
-            "__v": 0,
-            "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
-        },
-        {
-            "_id": "6a1ee08502dcc6b11d0e5fb1",
-            "name": "Trump",
-            "logo": "1780408451959-b.jpg",
-            "location": "Ahmedabad",
-            "websiteUrl": "www.webearl.com",
-            "displayOrder": 2,
-            "status": "active",
-            "startDate": null,
-            "endDate": null,
-            "createdAt": "2026-06-02T13:54:13.454Z",
-            "updatedAt": "2026-06-02T13:54:13.454Z",
-            "__v": 0,
-            "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408451959-b.jpg"
-        }
-    ],
-    "pagination": null,
-    "meta": {
-        "totalSponsors": 2
-    }
+"success": true,
+"message": "Sponsors fetched successfully",
+"data": [
+{
+"_id": "6a1edf5002dcc6b11d0e5faf",
+"name": "Shreeji",
+"logo": "1780408142538-b.jpg",
+"location": "Ahmedabad",
+"websiteUrl": "www.webearl.com",
+"displayOrder": 1,
+"status": "active",
+"startDate": "2026-06-02T00:00:00.000Z",
+"endDate": "2026-11-02T00:00:00.000Z",
+"createdAt": "2026-06-02T13:49:04.774Z",
+"updatedAt": "2026-06-02T13:49:04.774Z",
+"__v": 0,
+"logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
+},
+{
+"_id": "6a1ee08502dcc6b11d0e5fb1",
+"name": "Trump",
+"logo": "1780408451959-b.jpg",
+"location": "Ahmedabad",
+"websiteUrl": "www.webearl.com",
+"displayOrder": 2,
+"status": "active",
+"startDate": null,
+"endDate": null,
+"createdAt": "2026-06-02T13:54:13.454Z",
+"updatedAt": "2026-06-02T13:54:13.454Z",
+"__v": 0,
+"logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408451959-b.jpg"
+}
+],
+"pagination": null,
+"meta": {
+"totalSponsors": 2
+}
 }
 
 #### Get Active Sponsor By ID
@@ -5543,46 +5761,46 @@ Use `form-data` when uploading `logo`; otherwise JSON is accepted.
 Returns active and inactive sponsors unless `status` is supplied.
 
 {
-    "success": true,
-    "message": "Sponsors fetched successfully",
-    "data": [
-        {
-            "_id": "6a1edf5002dcc6b11d0e5faf",
-            "name": "Shreeji",
-            "logo": "1780408142538-b.jpg",
-            "location": "Ahmedabad",
-            "websiteUrl": "www.webearl.com",
-            "displayOrder": 1,
-            "status": "active",
-            "startDate": "2026-06-02T00:00:00.000Z",
-            "endDate": "2026-11-02T00:00:00.000Z",
-            "createdAt": "2026-06-02T13:49:04.774Z",
-            "updatedAt": "2026-06-02T13:49:04.774Z",
-            "__v": 0,
-            "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
-        },
-        {
-            "_id": "6a1edf9302dcc6b11d0e5fb0",
-            "name": "Trump",
-            "logo": "1780408210497-b.jpg",
-            "location": "Ahmedabad",
-            "websiteUrl": "www.webearl.com",
-            "displayOrder": 2,
-            "status": "inactive",
-            "startDate": null,
-            "endDate": null,
-            "createdAt": "2026-06-02T13:50:11.932Z",
-            "updatedAt": "2026-06-02T13:50:11.932Z",
-            "__v": 0,
-            "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408210497-b.jpg"
-        }
-    ],
-    "pagination": {
-        "total": 2,
-        "page": 1,
-        "limit": 10,
-        "totalPages": 1
-    }
+"success": true,
+"message": "Sponsors fetched successfully",
+"data": [
+{
+"_id": "6a1edf5002dcc6b11d0e5faf",
+"name": "Shreeji",
+"logo": "1780408142538-b.jpg",
+"location": "Ahmedabad",
+"websiteUrl": "www.webearl.com",
+"displayOrder": 1,
+"status": "active",
+"startDate": "2026-06-02T00:00:00.000Z",
+"endDate": "2026-11-02T00:00:00.000Z",
+"createdAt": "2026-06-02T13:49:04.774Z",
+"updatedAt": "2026-06-02T13:49:04.774Z",
+"__v": 0,
+"logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
+},
+{
+"_id": "6a1edf9302dcc6b11d0e5fb0",
+"name": "Trump",
+"logo": "1780408210497-b.jpg",
+"location": "Ahmedabad",
+"websiteUrl": "www.webearl.com",
+"displayOrder": 2,
+"status": "inactive",
+"startDate": null,
+"endDate": null,
+"createdAt": "2026-06-02T13:50:11.932Z",
+"updatedAt": "2026-06-02T13:50:11.932Z",
+"__v": 0,
+"logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408210497-b.jpg"
+}
+],
+"pagination": {
+"total": 2,
+"page": 1,
+"limit": 10,
+"totalPages": 1
+}
 }
 
 #### Get Sponsor By ID For Admin
@@ -5590,23 +5808,23 @@ Returns active and inactive sponsors unless `status` is supplied.
 `GET {{baseUrl}}/sponsors/admin/:id`
 
 {
-    "success": true,
-    "message": "Sponsor fetched successfully",
-    "data": {
-        "_id": "6a1edf5002dcc6b11d0e5faf",
-        "name": "Shreeji",
-        "logo": "1780408142538-b.jpg",
-        "location": "Ahmedabad",
-        "websiteUrl": "www.webearl.com",
-        "displayOrder": 1,
-        "status": "active",
-        "startDate": "2026-06-02T00:00:00.000Z",
-        "endDate": "2026-11-02T00:00:00.000Z",
-        "createdAt": "2026-06-02T13:49:04.774Z",
-        "updatedAt": "2026-06-02T13:49:04.774Z",
-        "__v": 0,
-        "logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
-    }
+"success": true,
+"message": "Sponsor fetched successfully",
+"data": {
+"\_id": "6a1edf5002dcc6b11d0e5faf",
+"name": "Shreeji",
+"logo": "1780408142538-b.jpg",
+"location": "Ahmedabad",
+"websiteUrl": "www.webearl.com",
+"displayOrder": 1,
+"status": "active",
+"startDate": "2026-06-02T00:00:00.000Z",
+"endDate": "2026-11-02T00:00:00.000Z",
+"createdAt": "2026-06-02T13:49:04.774Z",
+"updatedAt": "2026-06-02T13:49:04.774Z",
+"\_\_v": 0,
+"logoUrl": "https://ik.imagekit.io/aj6cyp5nm/sponsors/logos/1780408142538-b.jpg"
+}
 }
 
 #### Update Sponsor
@@ -5640,10 +5858,10 @@ Fields:
 
 ```json
 {
-    "title": "Privacy policy update",
-    "content": "We updated our privacy policy content.",
-    "status": "active",
-    "publishedAt": "2026-06-03T00:00:00.000Z"
+  "title": "Privacy policy update",
+  "content": "We updated our privacy policy content.",
+  "status": "active",
+  "publishedAt": "2026-06-03T00:00:00.000Z"
 }
 ```
 
@@ -5656,54 +5874,55 @@ Filters:
 - `page` - positive integer, default `1`
 - `limit` - positive integer, default `10`
 - `status` - 'active','inactive'
-{
-    "success": true,
-    "message": "Policy changes fetched successfully",
-    "data": [
-        {
-            "_id": "6a1fc4538f54a534d908bdea",
-            "title": "Terms of Service",
-            "content": "<h2>Account Security & Verification</h2><p>Welcome to our digital platform ecosystem...</p><h2>Prohibited Platform Misuse</h2><p>You explicitly agree not to deploy automated scrapers...</p>",
-            "status": "active",
-            "publishedAt": "2026-06-03T06:06:11.711Z",
-            "createdAt": "2026-06-03T06:06:11.817Z",
-            "updatedAt": "2026-06-03T06:06:11.817Z",
-            "__v": 0
-        },
-        {
-            "_id": "6a1fbf5f4f47eebde8fa8f63",
-            "title": "Privacy policy update",
-            "content": "We updated our privacy policy content.",
-            "status": "inactive",
-            "publishedAt": null,
-            "createdAt": "2026-06-03T05:45:03.225Z",
-            "updatedAt": "2026-06-03T05:45:03.225Z",
-            "__v": 0
-        }
-    ],
-    "pagination": {
-        "total": 2,
-        "page": 1,
-        "limit": 10,
-        "totalPages": 1
-    }
-}
+  {
+  "success": true,
+  "message": "Policy changes fetched successfully",
+  "data": [
+  {
+  "_id": "6a1fc4538f54a534d908bdea",
+  "title": "Terms of Service",
+  "content": "<h2>Account Security & Verification</h2><p>Welcome to our digital platform ecosystem...</p><h2>Prohibited Platform Misuse</h2><p>You explicitly agree not to deploy automated scrapers...</p>",
+  "status": "active",
+  "publishedAt": "2026-06-03T06:06:11.711Z",
+  "createdAt": "2026-06-03T06:06:11.817Z",
+  "updatedAt": "2026-06-03T06:06:11.817Z",
+  "__v": 0
+  },
+  {
+  "_id": "6a1fbf5f4f47eebde8fa8f63",
+  "title": "Privacy policy update",
+  "content": "We updated our privacy policy content.",
+  "status": "inactive",
+  "publishedAt": null,
+  "createdAt": "2026-06-03T05:45:03.225Z",
+  "updatedAt": "2026-06-03T05:45:03.225Z",
+  "__v": 0
+  }
+  ],
+  "pagination": {
+  "total": 2,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1
+  }
+  }
+
 #### Get Policy Change By ID
 
 `GET {{baseUrl}}/policy-changes/:id`
 {
-    "success": true,
-    "message": "Policy change created successfully",
-    "data": {
-        "title": "Terms of Service",
-        "content": "<h2>Account Security & Verification</h2><p>Welcome to our digital platform ecosystem...</p><h2>Prohibited Platform Misuse</h2><p>You explicitly agree not to deploy automated scrapers...</p>",
-        "status": "active",
-        "publishedAt": "2026-06-03T06:06:11.711Z",
-        "_id": "6a1fc4538f54a534d908bdea",
-        "createdAt": "2026-06-03T06:06:11.817Z",
-        "updatedAt": "2026-06-03T06:06:11.817Z",
-        "__v": 0
-    }
+"success": true,
+"message": "Policy change created successfully",
+"data": {
+"title": "Terms of Service",
+"content": "<h2>Account Security & Verification</h2><p>Welcome to our digital platform ecosystem...</p><h2>Prohibited Platform Misuse</h2><p>You explicitly agree not to deploy automated scrapers...</p>",
+"status": "active",
+"publishedAt": "2026-06-03T06:06:11.711Z",
+"\_id": "6a1fc4538f54a534d908bdea",
+"createdAt": "2026-06-03T06:06:11.817Z",
+"updatedAt": "2026-06-03T06:06:11.817Z",
+"\_\_v": 0
+}
 }
 
 #### Update Policy Change
@@ -5712,10 +5931,10 @@ Filters:
 
 ```json
 {
-    "title": "Updated policy title",
-    "content": "Updated policy change content.",
-    "status": "draft",
-    "publishedAt": null
+  "title": "Updated policy title",
+  "content": "Updated policy change content.",
+  "status": "draft",
+  "publishedAt": null
 }
 ```
 

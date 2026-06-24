@@ -614,7 +614,7 @@ exports.getAdminPropertyDocuments = async (req, res) => {
 exports.updateAdminDocumentStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status: newStatus } = req.body;
+        const { status: newStatus, rejectReason } = req.body;
 
         if (!['Pending', 'Approved', 'Rejected'].includes(newStatus)) {
             return res.status(status.BadRequest).json({
@@ -623,9 +623,22 @@ exports.updateAdminDocumentStatus = async (req, res) => {
             });
         }
 
+        const updateFields = { status: newStatus, updatedAt: new Date() };
+        if (newStatus === 'Rejected') {
+            if (!rejectReason || typeof rejectReason !== 'string' || rejectReason.trim() === '') {
+                return res.status(status.BadRequest).json({
+                    success: false,
+                    message: 'Rejection reason is required when rejecting a document',
+                });
+            }
+            updateFields.rejectReason = rejectReason;
+        } else if (newStatus === 'Approved') {
+            updateFields.rejectReason = null;
+        }
+
         const document = await PropertyDocument.findOneAndUpdate(
             { _id: id, deletedAt: null },
-            { status: newStatus, updatedAt: new Date() },
+            updateFields,
             { new: true },
         ).populate('propertyId', 'title propertyName ownerId dealerId');
 
@@ -648,13 +661,14 @@ exports.updateAdminDocumentStatus = async (req, res) => {
             // Get unique user IDs to avoid double-notification if ownerId === dealerId
             const uniqueRecipients = [...new Set(recipients)];
 
+            const reasonText = newStatus === 'Rejected' && rejectReason ? `. Reason: ${rejectReason}` : '';
             for (const recipientId of uniqueRecipients) {
                 await createAndSendNotification({
                     senderId: req.user.id,
                     recipientId: recipientId,
                     recipientType: 'user',
                     title: `Property Document Status: ${newStatus}`,
-                    message: `Your document "${document.title}" for property "${property.title || property.propertyName}" has been ${newStatus.toLowerCase()}.`,
+                    message: `Your document "${document.title}" for property "${property.title || property.propertyName}" has been ${newStatus.toLowerCase()}${reasonText}.`,
                     type: 'property_approval',
                     relatedId: document._id,
                     relatedModel: 'PropertyDocument',

@@ -37,6 +37,11 @@ const propertyDocumentSchema = new mongoose.Schema(
             default: 'Pending',
         },
 
+        rejectReason: {
+            type: String,
+            default: null,
+        },
+
         createdAt: {
             type: Date,
             default: Date.now,
